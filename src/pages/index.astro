@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { mangaList } from '../data/manga';
+---
+<BaseLayout title="Crescent Reader — Web truyện demo">
+<section class="hero"><h1>Đọc truyện thật nhẹ.</h1><p>Starter đã có trang chủ, trang truyện, chapter, reader, giao diện chap khóa và admin demo. Hiện dữ liệu là mẫu; bước tiếp theo mới nối Supabase và R2.</p></section>
+<div class="section-title"><h2>Truyện mới cập nhật</h2><span class="meta">{mangaList.length} truyện demo</span></div>
+<section class="grid">
+{mangaList.map((manga)=>(<a class="card" href={`/manga/${manga.slug}`}><div class="cover">{manga.title}</div><div class="card-body"><h3>{manga.title}</h3><div class="meta">Chap {manga.chapters[0]?.number} · {manga.status}</div></div></a>))}
+</section>
+</BaseLayout>

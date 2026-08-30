@@ -1,0 +1,6 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Admin demo — Crescent Reader">
+<section class="admin-card"><h1>Admin demo</h1><p class="description">Trang này chỉ minh họa workflow. Chưa có đăng nhập hay upload thật.</p><div class="notice">Bước tiếp theo: Supabase Auth → role admin → upload ảnh vào R2 → ghi metadata vào Supabase.</div><label class="field">Tên truyện<select><option>Alpha Trauma</option><option>Moonlight Note</option></select></label><label class="field">Số chapter<input type="number" value="44" /></label><label class="field">Ảnh chapter<input type="file" multiple disabled /></label><button class="button" disabled>Upload (nối R2 ở bước sau)</button></section>
+</BaseLayout>

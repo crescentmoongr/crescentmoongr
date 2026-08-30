@@ -1,0 +1,21 @@
+---
+import '../styles/global.css';
+const { title = 'Crescent Reader' } = Astro.props;
+---
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <meta name="description" content="Starter web truyện Astro + Cloudflare" />
+  <title>{title}</title>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="/">☾ Crescent Reader</a>
+  <nav><a href="/">Trang chủ</a><a href="/admin">Admin demo</a></nav>
+</header>
+<main class="shell"><slot /></main>
+<footer class="footer">Starter Astro + Cloudflare Workers</footer>
+</body>
+</html>

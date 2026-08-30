@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { findManga } from '../../data/manga';
+const { slug } = Astro.params;
+const manga = slug ? findManga(slug) : undefined;
+if (!manga) return Astro.redirect('/');
+---
+<BaseLayout title={`${manga.title} — Crescent Reader`}>
+<section class="manga-head"><div class="cover">{manga.title}</div><div><h1>{manga.title}</h1><div class="meta">Tác giả: {manga.author} · {manga.status}</div><div class="pills">{manga.genres.map((g)=><span class="pill">{g}</span>)}</div><p class="description">{manga.description}</p></div></section>
+<div class="section-title"><h2>Danh sách chương</h2><span class="meta">{manga.chapters.length} chap</span></div>
+<div class="chapter-list">{manga.chapters.map((c)=><a class="chapter" href={`/read/${manga.slug}/${c.number}`}><span>Chapter {c.number}</span><span class={c.locked?'lock':'meta'}>{c.locked?'🔒 Khóa':'Đọc →'}</span></a>)}</div>
+</BaseLayout>
