@@ -1,9 +1,9 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { getAdminSeriesById, getAdminChapters, hasAdminSeriesPassword } from '../../../lib/supabase';
-import { getAdminFromToken } from '../../../lib/auth';
+import { requireAdminSession } from '../../../lib/auth';
 export const prerender=false;
-const token=Astro.cookies.get('cm_access_token')?.value||''; const admin=await getAdminFromToken(token); if(!admin) return Astro.redirect('/login');
+const adminSession=await requireAdminSession(Astro.cookies); if(!adminSession) return Astro.redirect('/login?next=/admin'); const token=adminSession.token; const admin=adminSession.user;
 const id=Astro.params.id||''; const series=await getAdminSeriesById(id,token); if(!series) return new Response('Không tìm thấy truyện.',{status:404});
 const chapters=await getAdminChapters(id,token); const hasPassword=series.access_type==='password' ? await hasAdminSeriesPassword(id,token) : false;
 const success=Astro.url.searchParams.get('success'); const error=Astro.url.searchParams.get('error');

@@ -2,20 +2,22 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { getChapter,getSeriesBySlug,getPublicChapterPages } from '../../../lib/supabase';
 import { ensureReaderSession,isSeriesUnlocked,signPageUrl } from '../../../lib/readerSecurity';
+import { getSessionUser } from '../../../lib/auth';
 export const prerender=false;
 const {slug,chapter}=Astro.params; if(!slug||!chapter) return Astro.redirect('/');
 const series=await getSeriesBySlug(slug); const current=series?await getChapter(series.id,chapter):null; if(!series||!current) return new Response('Không tìm thấy chapter.',{status:404});
 const readerSession=ensureReaderSession(Astro.cookies);
 let allowed=series.access_type==='public';
 if(series.access_type==='password') allowed=await isSeriesUnlocked(readerSession,series.id);
-if(series.access_type==='member') allowed=false;
+const accountUser=series.access_type==='member'?await getSessionUser(Astro.cookies):null;
+if(series.access_type==='member') allowed=!!accountUser;
 const pages=allowed?await getPublicChapterPages(current.id):[];
 const rendered=allowed?await Promise.all(pages.map(async pg=>({ ...pg, url:await signPageUrl(pg.id,series.id,current.id,readerSession,300) }))):[];
 const unlockError=Astro.url.searchParams.get('unlock_error');
 ---
 <BaseLayout title={`Chapter ${current.chapter_number} — ${series.title}`}>
 <h1>{series.title} — Chapter {current.chapter_number}</h1>
-{!allowed&&series.access_type==='password'?<section class="lock-panel"><h2>🔒 Truyện cần mật khẩu</h2><p class="description">Chỉ cần nhập một lần để mở toàn bộ chapter của bộ này trong 12 giờ trên trình duyệt hiện tại.</p>{unlockError&&<div class="notice error">{unlockError}</div>}<form method="POST" action="/api/series-unlock"><input type="hidden" name="slug" value={series.slug}/><input type="hidden" name="return_to" value={`/read/${series.slug}/${current.chapter_number}`}/><label class="field"><span>Mật khẩu</span><input name="password" type="password" required autocomplete="current-password"/></label><button class="button" type="submit">Mở khóa truyện</button></form></section>:!allowed&&series.access_type==='member'?<section class="lock-panel"><h2>🔒 Truyện dành cho thành viên</h2><p class="description">Quyền thành viên sẽ được nối với hệ thống tài khoản ở bước sau.</p></section>:<><div class="reader-nav"><a class="button secondary" href={`/manga/${series.slug}`}>← Danh sách chap</a><span class="meta">{pages.length} trang</span></div>{pages.length?<div class="reader-pages" data-protected-reader>{rendered.map(pg=><div class="reader-canvas-wrap" data-page={pg.page_number}><canvas class="reader-canvas" data-src={pg.url} aria-label={`Trang ${pg.page_number}`}></canvas><div class="reader-loading">Đang tải trang {pg.page_number}…</div></div>)}</div>:<div class="empty-state">Chapter chưa có ảnh.</div>}</>}
+{!allowed&&series.access_type==='password'?<section class="lock-panel"><h2>🔒 Truyện cần mật khẩu</h2><p class="description">Chỉ cần nhập một lần để mở toàn bộ chapter của bộ này trong 12 giờ trên trình duyệt hiện tại.</p>{unlockError&&<div class="notice error">{unlockError}</div>}<form method="POST" action="/api/series-unlock"><input type="hidden" name="slug" value={series.slug}/><input type="hidden" name="return_to" value={`/read/${series.slug}/${current.chapter_number}`}/><label class="field"><span>Mật khẩu</span><input name="password" type="password" required autocomplete="current-password"/></label><button class="button" type="submit">Mở khóa truyện</button></form></section>:!allowed&&series.access_type==='member'?<section class="lock-panel"><h2>🔒 Truyện dành cho thành viên</h2><p class="description">Đăng nhập tài khoản để đọc bộ truyện này.</p><a class="button" href={`/login?next=${encodeURIComponent(`/read/${series.slug}/${current.chapter_number}`)}`}>Đăng nhập</a></section>:<><div class="reader-nav"><a class="button secondary" href={`/manga/${series.slug}`}>← Danh sách chap</a><span class="meta">{pages.length} trang</span></div>{pages.length?<div class="reader-pages" data-protected-reader>{rendered.map(pg=><div class="reader-canvas-wrap" data-page={pg.page_number}><canvas class="reader-canvas" data-src={pg.url} aria-label={`Trang ${pg.page_number}`}></canvas><div class="reader-loading">Đang tải trang {pg.page_number}…</div></div>)}</div>:<div class="empty-state">Chapter chưa có ảnh.</div>}</>}
 </BaseLayout>
 <script>
 const wraps=[...document.querySelectorAll('.reader-canvas-wrap')];

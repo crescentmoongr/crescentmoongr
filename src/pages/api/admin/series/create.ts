@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
-import { getAdminFromToken } from '../../../../lib/auth';
+import { requireAdminSession } from '../../../../lib/auth';
 import { supabasePost, supabaseDelete, supabaseRpc, type Series } from '../../../../lib/supabase';
 export const prerender=false;
 const validStatus=new Set(['ongoing','completed','hiatus','dropped']);
@@ -9,7 +9,7 @@ const validMime:Record<string,string>={'image/jpeg':'jpg','image/png':'png','ima
 const clean=(v:FormDataEntryValue|null)=>String(v||'').trim();
 const safeSlug=(v:string)=>v.toLowerCase().trim().replace(/[^a-z0-9-]+/g,'-').replace(/-+/g,'-').replace(/^-+|-+$/g,'');
 export const POST:APIRoute=async({request,cookies,redirect})=>{
-  const token=cookies.get('cm_access_token')?.value||''; if(!await getAdminFromToken(token)) return redirect('/login');
+  const adminSession=await requireAdminSession(cookies); if(!adminSession) return redirect('/login?next=/admin'); const token=adminSession.token;
   let coverKey=''; let seriesId='';
   try{
     const f=await request.formData(); const title=clean(f.get('title')); const slug=safeSlug(clean(f.get('slug'))); const status=clean(f.get('status')); const access=clean(f.get('access_type'))||'public'; const password=clean(f.get('series_password'));

@@ -24,3 +24,16 @@ Trước khi deploy v6, chạy `supabase-v6-series-lock.sql` một lần trong S
 - Không có cơ chế web nào ngăn screenshot/DevTools/extension có quyền sâu 100%; v6 tập trung làm cào tự động và lấy URL hàng loạt khó hơn.
 
 V6 dùng KV binding `SESSION` đã có sẵn để lưu khóa ký HMAC và trạng thái unlock tạm thời.
+
+
+## v7 – Account System + 30-day login
+
+- Admin và Member đều giữ đăng nhập tối đa 30 ngày.
+- Supabase access token tự refresh bằng refresh token; refresh không kéo dài quá deadline 30 ngày ban đầu.
+- Đăng ký / đăng nhập / đăng xuất cho Member.
+- Tài khoản mới luôn có role `member`; không thể tự đổi role qua profile API.
+- Trang `/account`: tên hiển thị, username, avatar, đổi mật khẩu.
+- Avatar lưu private trong R2, JPG/PNG/WebP tối đa 2 MB.
+- Truyện `member` đọc được sau khi đăng nhập.
+- Chạy `supabase-v7-accounts.sql` một lần trước khi deploy v7.
+- Sau khi deploy v7, phiên admin v6 cũ không có refresh token nên có thể phải đăng nhập lại đúng 1 lần.

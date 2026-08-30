@@ -1,26 +1,15 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-export const prerender = false;
-
-const token = Astro.cookies.get('cm_access_token')?.value;
-if (token) return Astro.redirect('/admin');
-const error = Astro.url.searchParams.get('error');
+import { getSession } from '../lib/auth';
+export const prerender=false;
+const current=await getSession(Astro.cookies);
+const next=Astro.url.searchParams.get('next')||'';
+if(current) return Astro.redirect(next.startsWith('/')&&!next.startsWith('//')?next:(current.user.role==='admin'?'/admin':'/account'));
+const error=Astro.url.searchParams.get('error'); const success=Astro.url.searchParams.get('success');
 ---
-<BaseLayout title="Đăng nhập Admin — Crescent Reader">
-<section class="admin-card">
-  <h1>Đăng nhập Admin</h1>
-  <p class="description">Dùng tài khoản quản trị đã tạo trong Supabase.</p>
-  {error && <div class="notice error">{error}</div>}
-  <form method="POST" action="/api/auth/login">
-    <label class="field">
-      <span>Email</span>
-      <input name="email" type="email" autocomplete="email" required />
-    </label>
-    <label class="field">
-      <span>Mật khẩu</span>
-      <input name="password" type="password" autocomplete="current-password" required />
-    </label>
-    <button class="button" type="submit">Đăng nhập</button>
-  </form>
-</section>
+<BaseLayout title="Đăng nhập — Crescent Reader">
+<section class="admin-card auth-card"><h1>Đăng nhập</h1><p class="description">Tài khoản được giữ đăng nhập tối đa 30 ngày trên trình duyệt này.</p>
+{error&&<div class="notice error">{error}</div>}{success&&<div class="notice success">{success}</div>}
+<form method="POST" action="/api/auth/login"><input type="hidden" name="next" value={next}/><label class="field"><span>Email</span><input name="email" type="email" autocomplete="email" required/></label><label class="field"><span>Mật khẩu</span><input name="password" type="password" autocomplete="current-password" required/></label><button class="button" type="submit">Đăng nhập</button></form>
+<p class="auth-switch">Chưa có tài khoản? <a href={`/register${next?`?next=${encodeURIComponent(next)}`:''}`}>Đăng ký</a></p></section>
 </BaseLayout>

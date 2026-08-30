@@ -1,12 +1,12 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
-import { getAdminFromToken } from '../../../../lib/auth';
+import { requireAdminSession } from '../../../../lib/auth';
 import { getAdminSeriesById, hasAdminSeriesPassword, supabasePatch, supabaseRpc } from '../../../../lib/supabase';
 export const prerender=false;
 const mime:Record<string,string>={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
 const clean=(v:any)=>String(v||'').trim(); const safeSlug=(s:string)=>s.toLowerCase().trim().replace(/[^a-z0-9-]+/g,'-').replace(/-+/g,'-').replace(/^-+|-+$/g,'');
 export const POST:APIRoute=async({request,cookies,redirect})=>{
-  const token=cookies.get('cm_access_token')?.value||''; if(!await getAdminFromToken(token)) return redirect('/login'); const f=await request.formData(); const id=clean(f.get('id')); let newCover='';
+  const adminSession=await requireAdminSession(cookies); if(!adminSession) return redirect('/login?next=/admin'); const token=adminSession.token; const f=await request.formData(); const id=clean(f.get('id')); let newCover='';
   try{
     const old=await getAdminSeriesById(id,token); if(!old) throw new Error('Không tìm thấy truyện.'); const access=clean(f.get('access_type'))||'public'; if(!['public','password','member'].includes(access)) throw new Error('Quyền đọc không hợp lệ.'); const password=clean(f.get('series_password'));
     if(access==='password'&&!password&&!await hasAdminSeriesPassword(id,token)) throw new Error('Hãy nhập mật khẩu cho truyện.');
