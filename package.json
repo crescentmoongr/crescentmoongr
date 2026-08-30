@@ -1,0 +1,18 @@
+{
+  "name": "crescent-reader-starter",
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "latest",
+    "astro": "latest"
+  },
+  "devDependencies": {
+    "wrangler": "latest"
+  }
+}
