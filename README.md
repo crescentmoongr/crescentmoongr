@@ -163,3 +163,9 @@ Trang chi tiết truyện:
 - Bỏ Mới đăng.
 - Logo, favicon, footer, status badge.
 - View cooldown 3 phút.
+
+
+### v11 layout revision
+- Desktop: thông tin truyện chia thành 2 cột.
+- Mobile: giữ bố cục ảnh bìa trên, thông tin một cột bên dưới.
+- Bookmark và Bắt đầu đọc/Đọc tiếp trở lại dạng nút ngắn theo nội dung trên cả desktop và mobile.
