@@ -6,5 +6,36 @@ const { title = 'Crescent Moon Translation' } = Astro.props;
 const user = await getSessionUser(Astro.cookies);
 ---
 <!doctype html><html lang="vi"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width"/><meta name="description" content="Crescent Moon Translation"/><link rel="icon" type="image/png" href="/honeymoon_4213586.png"/><link rel="shortcut icon" href="/honeymoon_4213586.png"/><title>{title}</title></head><body>
-<header class="site-header"><a class="brand" href="/"><img src="/crescent-moon-logo.png" alt="Crescent Moon" class="site-logo" /></a><nav><a href="/">Trang chủ</a><a href="/search">Tìm kiếm</a>{user?.role==='admin'&&<a href="/admin">Admin</a>}{user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}</nav></header>
-<main class="shell"><slot /></main><footer class="footer">2024 Crescent Moon Translation</footer></body></html>
+<header class="site-header"><a class="brand" href="/"><img src="/crescent-moon-logo.png" alt="Crescent Moon" class="site-logo" /></a><nav><a href="/">Trang chủ</a><a href="/search">Tìm kiếm</a><a href="/password">Mật khẩu</a>{user?.role==='admin'&&<a href="/admin">Admin</a>}{user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}</nav></header>
+<main class="shell"><slot /></main><footer class="footer">2024 Crescent Moon Translation</footer><script is:inline data-copy-protection>
+(() => {
+  const canEdit = (target) => {
+    if (!(target instanceof Element)) return false;
+    return !!target.closest('input, textarea, select, [contenteditable="true"], .rich-editor, .rich-editor-shell');
+  };
+
+  document.addEventListener('copy', (event) => {
+    if (!canEdit(event.target)) event.preventDefault();
+  });
+
+  document.addEventListener('cut', (event) => {
+    if (!canEdit(event.target)) event.preventDefault();
+  });
+
+  document.addEventListener('contextmenu', (event) => {
+    if (!canEdit(event.target)) event.preventDefault();
+  });
+
+  document.addEventListener('dragstart', (event) => {
+    if (!canEdit(event.target)) event.preventDefault();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (canEdit(event.target)) return;
+    const key = String(event.key || '').toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && ['c','x','a','s','u'].includes(key)) {
+      event.preventDefault();
+    }
+  });
+})();
+</script></body></html>

@@ -169,3 +169,25 @@ Trang chi tiết truyện:
 - Desktop: thông tin truyện chia thành 2 cột.
 - Mobile: giữ bố cục ảnh bìa trên, thông tin một cột bên dưới.
 - Bookmark và Bắt đầu đọc/Đọc tiếp trở lại dạng nút ngắn theo nội dung trên cả desktop và mobile.
+
+
+## v11.2
+
+### Lịch sử đọc
+- Sửa cơ chế ghi lịch sử: khi tài khoản đã đăng nhập mở một chapter mà tài khoản có quyền đọc, web sẽ cập nhật `reading_history` ngay.
+- Không còn phụ thuộc vào việc chapter phải có ảnh/canvas mới ghi lịch sử.
+- Trang chủ tiếp tục chỉ hiện mục **Lịch sử đọc gần đây** khi tài khoản có lịch sử.
+
+### Chặn copy toàn web
+- Chặn chọn/copy/cut/right-click/drag văn bản trên phần nội dung công khai.
+- Chặn Ctrl/Cmd + C, X, A, S, U ngoài các ô nhập liệu.
+- Không chặn input/textarea/select/contenteditable và Rich Text Editor trong Admin.
+
+### Trang Mật khẩu
+- Thêm menu **Mật khẩu** trên header.
+- URL: `/password`
+- Thêm đầy đủ lưu ý và gợi ý mật khẩu theo nội dung đã yêu cầu.
+
+### SQL
+- Không có SQL mới cho v11.2.
+- Nếu đã chạy `supabase-v11-site-settings.sql` ở v11 thì không cần chạy lại.
