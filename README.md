@@ -1,16 +1,15 @@
-# Crescent Reader v2
+# Crescent Reader v3
 
-Astro + Cloudflare Workers + Supabase + private Cloudflare R2.
+Astro + Cloudflare Workers + Supabase + private R2.
 
-## v2 đã nối
-- `series` từ Supabase
-- `chapters` từ Supabase
-- trạng thái khóa `public/password/member`
-- R2 binding `MANGA_STORAGE` → `manga-storage`
-- `/api/health` để kiểm tra kết nối
+## v3
+- `/login`: đăng nhập bằng Supabase Auth.
+- `/admin`: chỉ tài khoản có `profiles.role = 'admin'`.
+- Session access token được giữ trong HttpOnly cookie.
+- `/api/auth/logout`: đăng xuất.
+- `/api/health`: kiểm tra Supabase + R2.
 
-## Cloudflare runtime variables
+Cloudflare runtime cần:
 - `SUPABASE_URL`
 - `SUPABASE_PUBLISHABLE_KEY`
-
-Không commit secret/service-role key vào GitHub.
+- R2 binding `MANGA_STORAGE`

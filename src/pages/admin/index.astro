@@ -1,16 +1,42 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getSeriesList } from '../../lib/supabase';
+import { getAdminFromToken } from '../../lib/auth';
 export const prerender = false;
+
+const token = Astro.cookies.get('cm_access_token')?.value || '';
+const admin = await getAdminFromToken(token);
+if (!admin) return Astro.redirect('/login');
+
 let count = 0;
 let connected = false;
-try { const rows = await getSeriesList(); count = rows.length; connected = true; } catch {}
+try {
+  const rows = await getSeriesList();
+  count = rows.length;
+  connected = true;
+} catch {}
 ---
 <BaseLayout title="Admin — Crescent Reader">
 <section class="admin-card">
-  <h1>Admin</h1>
-  <div class={connected ? 'notice success' : 'notice error'}>{connected ? `Supabase đã kết nối · ${count} truyện hiện có` : 'Chưa kết nối được Supabase'}</div>
-  <p class="description">Đây vẫn là giao diện chuẩn bị. Bước sau sẽ thêm đăng nhập admin và form Thêm truyện → Thêm chapter → Upload ảnh lên R2.</p>
-  <button class="button" disabled>Thêm truyện (bước sau)</button>
+  <div class="admin-top">
+    <div>
+      <h1>Admin</h1>
+      <p class="meta">Đăng nhập: {admin.email}</p>
+    </div>
+    <form method="POST" action="/api/auth/logout">
+      <button class="button secondary" type="submit">Đăng xuất</button>
+    </form>
+  </div>
+
+  <div class={connected ? 'notice success' : 'notice error'}>
+    {connected ? `Supabase đã kết nối · ${count} truyện hiện có` : 'Chưa kết nối được Supabase'}
+  </div>
+
+  <p class="description">
+    Trang này đã được bảo vệ bằng Supabase Auth và role admin.
+    Bản tiếp theo sẽ thêm form tạo truyện và upload ảnh bìa vào R2.
+  </p>
+
+  <button class="button" disabled>Thêm truyện — bước tiếp theo</button>
 </section>
 </BaseLayout>
