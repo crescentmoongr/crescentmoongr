@@ -1,52 +1,17 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { accessLabel, getChapters, getSeriesBySlug, statusLabel } from '../../lib/supabase';
-
-export const prerender = false;
-const { slug } = Astro.params;
-if (!slug) return Astro.redirect('/');
-
-let series = null;
-let chapters = [];
-let error = '';
-try {
-  series = await getSeriesBySlug(slug);
-  if (series) chapters = await getChapters(series.id);
-} catch (e) {
-  error = e instanceof Error ? e.message : 'Không thể tải dữ liệu.';
-}
-if (!series && !error) return new Response('Không tìm thấy truyện.', { status: 404 });
+import { getChapters, getSeriesBySlug, statusLabel } from '../../lib/supabase';
+export const prerender=false;
+const {slug}=Astro.params; if(!slug) return Astro.redirect('/');
+let series=null; let chapters=[]; let error='';
+try{series=await getSeriesBySlug(slug); if(series) chapters=await getChapters(series.id)}catch(e){error=e instanceof Error?e.message:'Không thể tải dữ liệu.'}
+if(!series&&!error) return new Response('Không tìm thấy truyện.',{status:404});
+const accessText=series?.access_type==='password'?'🔒 Khóa mật khẩu cả bộ':series?.access_type==='member'?'🔒 Dành cho thành viên':'Public';
 ---
-<BaseLayout title={series ? `${series.title} — Crescent Reader` : 'Lỗi — Crescent Reader'}>
-{error ? (
-  <div class="notice error">{error}</div>
-) : series ? (
-  <>
-    <section class="manga-head">
-      <div class="cover">{series.cover_key ? <img src={`/api/cover/${series.id}`} alt={`Bìa ${series.title}`} /> : <span>{series.title}</span>}</div>
-      <div>
-        <h1>{series.title}</h1>
-        <div class="meta">{series.author ? `Tác giả: ${series.author} · ` : ''}{statusLabel(series.status)}</div>
-        <div class="pills">
-          {series.type && <span class="pill">{series.type}</span>}
-          {series.artist && <span class="pill">Họa sĩ: {series.artist}</span>}
-        </div>
-        <p class="description">{series.description || 'Chưa có mô tả.'}</p>
-      </div>
-    </section>
-    <div class="section-title"><h2>Danh sách chương</h2><span class="meta">{chapters.length} chap</span></div>
-    {chapters.length === 0 ? (
-      <div class="empty-state">Chưa có chapter được đăng.</div>
-    ) : (
-      <div class="chapter-list">
-        {chapters.map((chapter) => (
-          <a class="chapter" href={`/read/${series.slug}/${chapter.chapter_number}`}>
-            <span>Chapter {chapter.chapter_number}{chapter.title ? ` — ${chapter.title}` : ''}</span>
-            <span class={chapter.access_type === 'public' ? 'meta' : 'lock'}>{accessLabel(chapter.access_type)}</span>
-          </a>
-        ))}
-      </div>
-    )}
-  </>
-) : null}
+<BaseLayout title={series?`${series.title} — Crescent Reader`:'Lỗi — Crescent Reader'}>
+{error?<div class="notice error">{error}</div>:series?<>
+<section class="manga-head"><div class="cover">{series.cover_key?<img src={`/api/cover/${series.id}`} alt={`Bìa ${series.title}`}/>:<span>{series.title}</span>}</div><div><h1>{series.title}</h1><div class="meta">{series.author?`Tác giả: ${series.author} · `:''}{statusLabel(series.status)} · {accessText}</div><div class="pills">{series.type&&<span class="pill">{series.type}</span>}{series.artist&&<span class="pill">Họa sĩ: {series.artist}</span>}</div><p class="description">{series.description||'Chưa có mô tả.'}</p></div></section>
+<div class="section-title"><h2>Danh sách chương</h2><span class="meta">{chapters.length} chap</span></div>
+{chapters.length===0?<div class="empty-state">Chưa có chapter được đăng.</div>:<div class="chapter-list">{chapters.map(ch=><a class="chapter" href={`/read/${series.slug}/${ch.chapter_number}`}><span>Chapter {ch.chapter_number}{ch.title?` — ${ch.title}`:''}</span><span class={series.access_type==='public'?'meta':'lock'}>{series.access_type==='password'?'🔒 Mật khẩu':series.access_type==='member'?'🔒 Thành viên':'Đọc'}</span></a>)}</div>}
+</>:null}
 </BaseLayout>

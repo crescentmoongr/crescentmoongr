@@ -4,7 +4,7 @@ export type Series = {
   id: string; title: string; slug: string; description: string | null;
   author: string | null; artist: string | null; cover_key: string | null;
   type: string | null; status: 'ongoing'|'completed'|'hiatus'|'dropped';
-  is_published: boolean; created_at: string; updated_at: string;
+  is_published: boolean; access_type: 'public'|'password'|'member'; created_at: string; updated_at: string;
 };
 export type Chapter = {
   id: string; series_id: string; chapter_number: number; title: string | null;
@@ -33,6 +33,8 @@ export const supabaseGet=<T>(path:string,token?:string)=>req<T>('GET',path,token
 export const supabasePost=<T>(path:string,token:string,body:unknown)=>req<T>('POST',path,token,body);
 export const supabasePatch=<T>(path:string,token:string,body:unknown)=>req<T>('PATCH',path,token,body);
 export const supabaseDelete=<T>(path:string,token:string)=>req<T>('DELETE',path,token);
+export const supabaseRpc=<T>(name:string,body:unknown,token?:string)=>req<T>('POST',`rpc/${name}`,token,body);
+export async function hasAdminSeriesPassword(id:string,token:string){const r=await supabaseGet<any[]>(`series_passwords?select=series_id&series_id=eq.${encodeURIComponent(id)}&limit=1`,token);return !!r[0];}
 
 export async function getSeriesList(){return supabaseGet<Series[]>('series?select=*&is_published=eq.true&order=updated_at.desc')}
 export async function getAdminSeriesList(token:string){return supabaseGet<Series[]>('series?select=*&order=updated_at.desc',token)}

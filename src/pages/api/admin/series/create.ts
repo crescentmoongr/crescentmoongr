@@ -1,91 +1,24 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { getAdminFromToken } from '../../../../lib/auth';
-import { supabasePost, type Series } from '../../../../lib/supabase';
-
-export const prerender = false;
-
-const validStatus = new Set(['ongoing', 'completed', 'hiatus', 'dropped']);
-const validMime: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/gif': 'gif',
-};
-
-function clean(value: FormDataEntryValue | null) {
-  return String(value || '').trim();
-}
-
-function safeSlug(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9-]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
-export const POST: APIRoute = async ({ request, cookies, redirect }) => {
-  const token = cookies.get('cm_access_token')?.value || '';
-  const admin = await getAdminFromToken(token);
-  if (!admin) return redirect('/login');
-
-  try {
-    const form = await request.formData();
-
-    const title = clean(form.get('title'));
-    const slug = safeSlug(clean(form.get('slug')));
-    const description = clean(form.get('description')) || null;
-    const author = clean(form.get('author')) || null;
-    const artist = clean(form.get('artist')) || null;
-    const type = clean(form.get('type')) || null;
-    const status = clean(form.get('status'));
-    const is_published = form.get('is_published') === 'true';
-    const cover = form.get('cover');
-
-    if (!title || !slug) throw new Error('Tên truyện và slug là bắt buộc.');
-    if (!validStatus.has(status)) throw new Error('Trạng thái không hợp lệ.');
-    if (!(cover instanceof File) || cover.size === 0) throw new Error('Vui lòng chọn ảnh bìa.');
-    if (cover.size > 8 * 1024 * 1024) throw new Error('Ảnh bìa vượt quá 8 MB.');
-
-    const extension = validMime[cover.type];
-    if (!extension) throw new Error('Ảnh bìa chỉ hỗ trợ JPG, PNG, WebP hoặc GIF.');
-
-    const objectKey = `covers/${crypto.randomUUID()}.${extension}`;
-
-    await env.MANGA_STORAGE.put(objectKey, await cover.arrayBuffer(), {
-      httpMetadata: {
-        contentType: cover.type,
-        cacheControl: 'public, max-age=86400',
-      },
-      customMetadata: {
-        originalName: cover.name.slice(0, 180),
-      },
-    });
-
-    try {
-      const inserted = await supabasePost<Series[]>('series', token, {
-        title,
-        slug,
-        description,
-        author,
-        artist,
-        cover_key: objectKey,
-        type,
-        status,
-        is_published,
-      });
-
-      if (!inserted[0]) throw new Error('Supabase không trả về truyện vừa tạo.');
-    } catch (error) {
-      await env.MANGA_STORAGE.delete(objectKey);
-      throw error;
-    }
-
-    return redirect('/admin?success=' + encodeURIComponent(`Đã thêm truyện "${title}".`));
-  } catch (error: any) {
-    const message = error?.message || 'Không thể thêm truyện.';
-    return redirect('/admin?error=' + encodeURIComponent(message));
-  }
+import { supabasePost, supabaseDelete, supabaseRpc, type Series } from '../../../../lib/supabase';
+export const prerender=false;
+const validStatus=new Set(['ongoing','completed','hiatus','dropped']);
+const validAccess=new Set(['public','password','member']);
+const validMime:Record<string,string>={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
+const clean=(v:FormDataEntryValue|null)=>String(v||'').trim();
+const safeSlug=(v:string)=>v.toLowerCase().trim().replace(/[^a-z0-9-]+/g,'-').replace(/-+/g,'-').replace(/^-+|-+$/g,'');
+export const POST:APIRoute=async({request,cookies,redirect})=>{
+  const token=cookies.get('cm_access_token')?.value||''; if(!await getAdminFromToken(token)) return redirect('/login');
+  let coverKey=''; let seriesId='';
+  try{
+    const f=await request.formData(); const title=clean(f.get('title')); const slug=safeSlug(clean(f.get('slug'))); const status=clean(f.get('status')); const access=clean(f.get('access_type'))||'public'; const password=clean(f.get('series_password'));
+    if(!title||!slug) throw new Error('Tên truyện và slug là bắt buộc.'); if(!validStatus.has(status)) throw new Error('Trạng thái không hợp lệ.'); if(!validAccess.has(access)) throw new Error('Quyền đọc không hợp lệ.'); if(access==='password'&&password.length<4) throw new Error('Mật khẩu truyện cần ít nhất 4 ký tự.');
+    const cover=f.get('cover'); if(!(cover instanceof File)||!cover.size) throw new Error('Vui lòng chọn ảnh bìa.'); if(cover.size>8*1024*1024||!validMime[cover.type]) throw new Error('Ảnh bìa không hợp lệ hoặc vượt 8 MB.');
+    coverKey=`covers/${crypto.randomUUID()}.${validMime[cover.type]}`; await env.MANGA_STORAGE.put(coverKey,await cover.arrayBuffer(),{httpMetadata:{contentType:cover.type,cacheControl:'public, max-age=86400'},customMetadata:{originalName:cover.name.slice(0,180)}});
+    const rows=await supabasePost<Series[]>('series',token,{title,slug,description:clean(f.get('description'))||null,author:clean(f.get('author'))||null,artist:clean(f.get('artist'))||null,cover_key:coverKey,type:clean(f.get('type'))||null,status,is_published:f.get('is_published')==='true',access_type:access});
+    const s=rows[0]; if(!s) throw new Error('Không tạo được truyện.'); seriesId=s.id;
+    if(access==='password') await supabaseRpc('admin_set_series_password',{p_series_id:s.id,p_password:password},token);
+    return redirect('/admin?success='+encodeURIComponent(`Đã thêm truyện "${title}".`));
+  }catch(e:any){ if(seriesId) try{await supabaseDelete(`series?id=eq.${encodeURIComponent(seriesId)}`,token)}catch{} if(coverKey) try{await env.MANGA_STORAGE.delete(coverKey)}catch{} return redirect('/admin?error='+encodeURIComponent(e?.message||'Không thể thêm truyện.')); }
 };
