@@ -73,3 +73,21 @@ Chạy `supabase-v9-discovery-scheduling-admin.sql` trong Supabase SQL Editor tr
 ### Lưu ý
 - V9 tiếp tục dùng upload nhiều file ảnh cho chapter như v8; không dùng bản ZIP-upload v5.1.
 - V9 giả định SQL v6/v7/v8 trước đó đã được chạy.
+
+
+## UI card refresh
+- Ảnh bìa ở card trang chủ/tìm kiếm tràn sát viền, không còn khoảng đệm màu hồng.
+- Card giữ bo tròn toàn bộ khung.
+- Truyện có status `completed` tự hiện nhãn `FULL` trên góc trái ảnh bìa.
+
+
+## v9 Card UI - status badges
+
+Card truyện trên trang chủ và trang tìm kiếm tự hiện nhãn theo trạng thái:
+- FULL: xanh lá — Hoàn thành
+- ONGOING: cam — Đang tiến hành
+- HIATUS: xanh dương — Tạm ngưng
+- DROP: đỏ — Đã drop
+
+Ảnh bìa vẫn tràn sát card và toàn bộ card giữ bo góc.
+Không cần chạy SQL mới cho thay đổi giao diện này.

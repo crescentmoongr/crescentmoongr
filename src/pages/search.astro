@@ -19,6 +19,9 @@ const rows=all.filter(x=>{
   const okGenre=!genre||(x.genres||[]).some(g=>g.toLowerCase()===genre);
   return okQ&&okType&&okStatus&&okGenre;
 });
+const statusBadgeLabel=(status:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[status]||'';
+const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'} as Record<string,string>)[status]||'';
+
 ---
 <BaseLayout title="Tìm truyện — Crescent Reader">
 <section class="hero compact-hero"><h1>Tìm truyện</h1><p>Tìm theo tên và lọc theo loại, trạng thái hoặc thể loại.</p></section>
@@ -29,5 +32,5 @@ const rows=all.filter(x=>{
   <label class="field"><span>Thể loại</span><select name="genre"><option value="">Tất cả</option>{genres.map(x=><option value={x} selected={genre===x.toLowerCase()}>{x}</option>)}</select></label>
   <div class="row-actions search-actions"><button class="button" type="submit">Tìm / Lọc</button><a class="button secondary" href="/search">Xóa lọc</a></div>
 </form>
-{error?<div class="notice error">{error}</div>:<><div class="section-title"><h2>Kết quả</h2><span class="meta">{rows.length} truyện</span></div>{rows.length?<section class="grid">{rows.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover">{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'—'} · {statusLabel(item.status)}</div>{item.genres?.length?<div class="mini-genres">{item.genres.slice(0,3).join(' · ')}</div>:null}</div></a>)}</section>:<div class="empty-state">Không tìm thấy truyện phù hợp.</div>}</>}
+{error?<div class="notice error">{error}</div>:<><div class="section-title"><h2>Kết quả</h2><span class="meta">{rows.length} truyện</span></div>{rows.length?<section class="grid">{rows.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'—'} · {statusLabel(item.status)}</div>{item.genres?.length?<div class="mini-genres">{item.genres.slice(0,3).join(' · ')}</div>:null}</div></a>)}</section>:<div class="empty-state">Không tìm thấy truyện phù hợp.</div>}</>}
 </BaseLayout>
