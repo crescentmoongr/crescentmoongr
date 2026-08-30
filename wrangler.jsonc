@@ -3,6 +3,7 @@
   "name": "read",
   "compatibility_date": "2026-08-30",
   "compatibility_flags": ["nodejs_compat"],
+  "keep_vars": true,
   "r2_buckets": [
     {
       "binding": "MANGA_STORAGE",
