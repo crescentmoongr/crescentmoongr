@@ -23,7 +23,7 @@ if (!series && !error) return new Response('Không tìm thấy truyện.', { sta
 ) : series ? (
   <>
     <section class="manga-head">
-      <div class="cover">{series.title}</div>
+      <div class="cover">{series.cover_key ? <img src={`/api/cover/${series.id}`} alt={`Bìa ${series.title}`} /> : <span>{series.title}</span>}</div>
       <div>
         <h1>{series.title}</h1>
         <div class="meta">{series.author ? `Tác giả: ${series.author} · ` : ''}{statusLabel(series.status)}</div>

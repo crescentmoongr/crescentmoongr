@@ -34,7 +34,7 @@ try {
       <section class="grid">
         {series.map((item) => (
           <a class="card" href={`/manga/${item.slug}`}>
-            <div class="cover">{item.title}</div>
+            <div class="cover">{item.cover_key ? <img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy" /> : <span>{item.title}</span>}</div>
             <div class="card-body">
               <h3>{item.title}</h3>
               <div class="meta">{latestChapter.has(item.id) ? `Chap ${latestChapter.get(item.id)} · ` : ''}{statusLabel(item.status)}</div>

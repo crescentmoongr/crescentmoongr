@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getSeriesList } from '../../lib/supabase';
+import { getAdminSeriesList, statusLabel } from '../../lib/supabase';
 import { getAdminFromToken } from '../../lib/auth';
 export const prerender = false;
 
@@ -8,16 +8,18 @@ const token = Astro.cookies.get('cm_access_token')?.value || '';
 const admin = await getAdminFromToken(token);
 if (!admin) return Astro.redirect('/login');
 
-let count = 0;
+let rows = [];
 let connected = false;
 try {
-  const rows = await getSeriesList();
-  count = rows.length;
+  rows = await getAdminSeriesList(token);
   connected = true;
 } catch {}
+
+const success = Astro.url.searchParams.get('success');
+const error = Astro.url.searchParams.get('error');
 ---
 <BaseLayout title="Admin — Crescent Reader">
-<section class="admin-card">
+<section class="admin-card admin-wide">
   <div class="admin-top">
     <div>
       <h1>Admin</h1>
@@ -29,14 +31,123 @@ try {
   </div>
 
   <div class={connected ? 'notice success' : 'notice error'}>
-    {connected ? `Supabase đã kết nối · ${count} truyện hiện có` : 'Chưa kết nối được Supabase'}
+    {connected ? `Supabase đã kết nối · ${rows.length} truyện hiện có` : 'Chưa kết nối được Supabase'}
   </div>
 
-  <p class="description">
-    Trang này đã được bảo vệ bằng Supabase Auth và role admin.
-    Bản tiếp theo sẽ thêm form tạo truyện và upload ảnh bìa vào R2.
-  </p>
+  {success && <div class="notice success top-gap">{success}</div>}
+  {error && <div class="notice error top-gap">{error}</div>}
 
-  <button class="button" disabled>Thêm truyện — bước tiếp theo</button>
+  <div class="section-title"><h2>Thêm truyện</h2></div>
+
+  <form method="POST" action="/api/admin/series/create" enctype="multipart/form-data" class="admin-form">
+    <div class="form-grid">
+      <label class="field">
+        <span>Tên truyện *</span>
+        <input id="title" name="title" required maxlength="200" />
+      </label>
+
+      <label class="field">
+        <span>Slug *</span>
+        <input id="slug" name="slug" required maxlength="200" placeholder="ten-truyen" />
+      </label>
+
+      <label class="field">
+        <span>Tác giả</span>
+        <input name="author" maxlength="200" />
+      </label>
+
+      <label class="field">
+        <span>Họa sĩ</span>
+        <input name="artist" maxlength="200" />
+      </label>
+
+      <label class="field">
+        <span>Loại truyện</span>
+        <select name="type">
+          <option value="">— Chưa chọn —</option>
+          <option value="Manga">Manga</option>
+          <option value="Manhwa">Manhwa</option>
+          <option value="Manhua">Manhua</option>
+          <option value="Novel">Novel</option>
+          <option value="Other">Khác</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Trạng thái *</span>
+        <select name="status" required>
+          <option value="ongoing">Đang tiến hành</option>
+          <option value="completed">Hoàn thành</option>
+          <option value="hiatus">Tạm ngưng</option>
+          <option value="dropped">Drop</option>
+        </select>
+      </label>
+    </div>
+
+    <label class="field">
+      <span>Mô tả</span>
+      <textarea name="description" rows="6" maxlength="5000"></textarea>
+    </label>
+
+    <label class="field">
+      <span>Ảnh bìa *</span>
+      <input name="cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required />
+      <small class="meta">JPG, PNG, WebP hoặc GIF. Tối đa 8 MB.</small>
+    </label>
+
+    <label class="check-row">
+      <input name="is_published" type="checkbox" value="true" checked />
+      <span>Đăng công khai ngay</span>
+    </label>
+
+    <button class="button" type="submit">Lưu truyện</button>
+  </form>
 </section>
+
+<section class="admin-card admin-wide">
+  <div class="section-title">
+    <h2>Truyện hiện có</h2>
+    <span class="meta">{rows.length} truyện</span>
+  </div>
+
+  {rows.length === 0 ? (
+    <div class="empty-state">Chưa có truyện nào.</div>
+  ) : (
+    <div class="admin-series-list">
+      {rows.map((item) => (
+        <div class="admin-series-row">
+          <div class="admin-thumb">
+            {item.cover_key ? <img src={`/api/cover/${item.id}`} alt="" loading="lazy" /> : <span>Không bìa</span>}
+          </div>
+          <div>
+            <strong>{item.title}</strong>
+            <div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.is_published ? 'Đang công khai' : 'Bản nháp'}</div>
+          </div>
+          {item.is_published && <a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}
+        </div>
+      ))}
+    </div>
+  )}
+</section>
+
+<script>
+  const title = document.querySelector('#title');
+  const slug = document.querySelector('#slug');
+  let slugTouched = false;
+
+  slug?.addEventListener('input', () => { slugTouched = true; });
+
+  title?.addEventListener('input', () => {
+    if (slugTouched || !(slug instanceof HTMLInputElement) || !(title instanceof HTMLInputElement)) return;
+    slug.value = title.value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  });
+</script>
 </BaseLayout>

@@ -34,14 +34,34 @@ function config() {
   return { url: String(url).replace(/\/$/, ''), key: String(key) };
 }
 
-async function supabaseGet<T>(path: string): Promise<T> {
+async function supabaseGet<T>(path: string, token?: string): Promise<T> {
   const { url, key } = config();
   const response = await fetch(`${url}/rest/v1/${path}`, {
     headers: {
       apikey: key,
-      Authorization: `Bearer ${key}`,
+      Authorization: `Bearer ${token || key}`,
       Accept: 'application/json',
     },
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Supabase ${response.status}: ${detail}`);
+  }
+  return response.json() as Promise<T>;
+}
+
+export async function supabasePost<T>(path: string, token: string, body: unknown): Promise<T> {
+  const { url, key } = config();
+  const response = await fetch(`${url}/rest/v1/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify(body),
   });
   if (!response.ok) {
     const detail = await response.text();
@@ -54,8 +74,17 @@ export async function getSeriesList(): Promise<Series[]> {
   return supabaseGet<Series[]>('series?select=*&is_published=eq.true&order=updated_at.desc');
 }
 
+export async function getAdminSeriesList(token: string): Promise<Series[]> {
+  return supabaseGet<Series[]>('series?select=*&order=updated_at.desc', token);
+}
+
 export async function getSeriesBySlug(slug: string): Promise<Series | null> {
   const rows = await supabaseGet<Series[]>(`series?select=*&slug=eq.${encodeURIComponent(slug)}&is_published=eq.true&limit=1`);
+  return rows[0] ?? null;
+}
+
+export async function getSeriesById(id: string): Promise<Series | null> {
+  const rows = await supabaseGet<Series[]>(`series?select=*&id=eq.${encodeURIComponent(id)}&is_published=eq.true&limit=1`);
   return rows[0] ?? null;
 }
 
