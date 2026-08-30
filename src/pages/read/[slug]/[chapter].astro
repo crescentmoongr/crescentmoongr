@@ -1,44 +1,9 @@
 ---
-import BaseLayout from '../../../layouts/BaseLayout.astro';
-import { getChapter, getSeriesBySlug } from '../../../lib/supabase';
-
-export const prerender = false;
-const { slug, chapter } = Astro.params;
-if (!slug || !chapter) return Astro.redirect('/');
-
-let series = null;
-let current = null;
-let error = '';
-try {
-  series = await getSeriesBySlug(slug);
-  if (series) current = await getChapter(series.id, chapter);
-} catch (e) {
-  error = e instanceof Error ? e.message : 'Không thể tải chapter.';
-}
-if ((!series || !current) && !error) return new Response('Không tìm thấy chapter.', { status: 404 });
+import BaseLayout from '../../../layouts/BaseLayout.astro'; import { getChapter,getSeriesBySlug,getPublicChapterPages } from '../../../lib/supabase'; export const prerender=false;
+const {slug,chapter}=Astro.params; if(!slug||!chapter) return Astro.redirect('/'); const series=await getSeriesBySlug(slug); const current=series?await getChapter(series.id,chapter):null; if(!series||!current) return new Response('Không tìm thấy chapter.',{status:404}); const pages=current.access_type==='public'?await getPublicChapterPages(current.id):[];
 ---
-<BaseLayout title={series && current ? `Chapter ${current.chapter_number} — ${series.title}` : 'Reader'}>
-{error ? (
-  <div class="notice error">{error}</div>
-) : series && current ? (
-  <>
-    <h1>{series.title} — Chapter {current.chapter_number}</h1>
-    {current.access_type === 'password' ? (
-      <section class="lock-panel">
-        <h2>🔒 Chapter cần mật khẩu</h2>
-        <p class="description">Database đã nhận trạng thái khóa. Bước tiếp theo sẽ thêm API xác thực mật khẩu phía server trước khi Worker trả ảnh từ R2.</p>
-      </section>
-    ) : current.access_type === 'member' ? (
-      <section class="lock-panel">
-        <h2>🔒 Chapter dành cho thành viên</h2>
-        <p class="description">Bước tiếp theo sẽ nối Supabase Auth và bảng quyền truy cập.</p>
-      </section>
-    ) : (
-      <>
-        <div class="reader-nav"><a class="button secondary" href={`/manga/${series.slug}`}>← Danh sách chap</a><span class="meta">Chapter public</span></div>
-        <div class="empty-state"><h3>Metadata chapter đã kết nối</h3><p>Ảnh chưa được trả ra ở bản này. Bước kế tiếp sẽ nối <code>chapter_pages</code> với bucket R2 private.</p></div>
-      </>
-    )}
-  </>
-) : null}
+<BaseLayout title={`Chapter ${current.chapter_number} — ${series.title}`}>
+<h1>{series.title} — Chapter {current.chapter_number}</h1>
+{current.access_type==='password'?<section class="lock-panel"><h2>🔒 Chapter cần mật khẩu</h2><p class="description">Chapter đã được khóa. Phần nhập mật khẩu và mở khóa ảnh sẽ được nối ở bước tiếp theo.</p></section>:current.access_type==='member'?<section class="lock-panel"><h2>🔒 Chapter dành cho thành viên</h2><p class="description">Chapter này yêu cầu quyền thành viên.</p></section>:<><div class="reader-nav"><a class="button secondary" href={`/manga/${series.slug}`}>← Danh sách chap</a><span class="meta">{pages.length} trang</span></div>{pages.length?<div class="reader-pages">{pages.map(pg=><img src={`/api/page/${pg.id}`} alt={`Trang ${pg.page_number}`} loading="lazy" draggable="false"/>)}</div>:<div class="empty-state">Chapter chưa có ảnh.</div>}</>}
 </BaseLayout>
+<script>document.addEventListener('contextmenu',e=>{if((e.target as HTMLElement)?.closest('.reader-pages'))e.preventDefault()});document.addEventListener('dragstart',e=>{if((e.target as HTMLElement)?.closest('.reader-pages'))e.preventDefault()});</script>

@@ -123,7 +123,7 @@ const error = Astro.url.searchParams.get('error');
             <strong>{item.title}</strong>
             <div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.is_published ? 'Đang công khai' : 'Bản nháp'}</div>
           </div>
-          {item.is_published && <a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}
+          <div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa / Chapters</a>{item.is_published && <a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div>
         </div>
       ))}
     </div>
