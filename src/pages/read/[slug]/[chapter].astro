@@ -21,7 +21,7 @@ const unlockError=Astro.url.searchParams.get('unlock_error');
 </BaseLayout>
 <script>
 const reader=document.querySelector('[data-protected-reader]');
-if(reader instanceof HTMLElement){fetch('/api/library/progress',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({series_id:reader.dataset.seriesId,chapter_id:reader.dataset.chapterId})}).catch(()=>{});}
+if(reader instanceof HTMLElement){fetch('/api/stats/view',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({chapter_id:reader.dataset.chapterId})}).catch(()=>{});fetch('/api/library/progress',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({series_id:reader.dataset.seriesId,chapter_id:reader.dataset.chapterId})}).catch(()=>{});}
 const wraps=[...document.querySelectorAll('.reader-canvas-wrap')];
 const loadPage=async(wrap)=>{
   if(!(wrap instanceof HTMLElement)||wrap.dataset.loaded==='1'||wrap.dataset.loading==='1')return;

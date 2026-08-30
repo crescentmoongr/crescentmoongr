@@ -1,48 +1,30 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getSeriesList, getChapters, statusLabel } from '../lib/supabase';
-
-export const prerender = false;
-let series = [];
-let error = '';
-let latestChapter = new Map<string, number>();
-try {
-  series = await getSeriesList();
-  const chapterGroups = await Promise.all(series.map((item) => getChapters(item.id)));
-  series.forEach((item, i) => {
-    const first = chapterGroups[i]?.[0];
-    if (first) latestChapter.set(item.id, first.chapter_number);
-  });
-} catch (e) {
-  error = e instanceof Error ? e.message : 'Không thể tải dữ liệu.';
-}
+import { getSeriesList, getNewestSeries, getAllPublicChapters, statusLabel } from '../lib/supabase';
+export const prerender=false;
+let updated=[]; let newest=[]; let error='';
+let latestChapter=new Map<string,number>();
+try{
+  const [seriesRows,newRows,allChapters]=await Promise.all([getSeriesList(),getNewestSeries(),getAllPublicChapters()]);
+  newest=newRows;
+  const lastPublished=new Map<string,number>();
+  for(const ch of allChapters){
+    const when=new Date(ch.published_at||ch.created_at).getTime();
+    if(!lastPublished.has(ch.series_id)||when>(lastPublished.get(ch.series_id)||0)) lastPublished.set(ch.series_id,when);
+    const n=Number(ch.chapter_number); if(!latestChapter.has(ch.series_id)||n>(latestChapter.get(ch.series_id)||-Infinity)) latestChapter.set(ch.series_id,n);
+  }
+  updated=[...seriesRows].sort((a,b)=>(lastPublished.get(b.id)||new Date(b.updated_at).getTime())-(lastPublished.get(a.id)||new Date(a.updated_at).getTime()));
+}catch(e){error=e instanceof Error?e.message:'Không thể tải dữ liệu.'}
+const manga=updated.filter(x=>String(x.type||'').toLowerCase()!=='novel').slice(0,8);
+const novels=updated.filter(x=>String(x.type||'').toLowerCase()==='novel').slice(0,8);
+const recent=updated.slice(0,8); const fresh=newest.slice(0,8);
 ---
 <BaseLayout title="Crescent Reader">
-<section class="hero">
-  <h1>Thư viện truyện</h1>
-  <p>Dữ liệu truyện và chapter được đọc trực tiếp từ Supabase. Ảnh truyện sẽ lưu riêng trong Cloudflare R2.</p>
-</section>
-
-{error ? (
-  <div class="notice error"><strong>Chưa kết nối được database.</strong><br />{error}</div>
-) : (
-  <>
-    <div class="section-title"><h2>Truyện mới cập nhật</h2><span class="meta">{series.length} truyện</span></div>
-    {series.length === 0 ? (
-      <div class="empty-state"><h3>Database đang trống</h3><p>Hệ thống đã kết nối. Khi thêm truyện đầu tiên vào bảng <code>series</code>, truyện sẽ xuất hiện tại đây.</p></div>
-    ) : (
-      <section class="grid">
-        {series.map((item) => (
-          <a class="card" href={`/manga/${item.slug}`}>
-            <div class="cover">{item.cover_key ? <img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy" /> : <span>{item.title}</span>}</div>
-            <div class="card-body">
-              <h3>{item.title}</h3>
-              <div class="meta">{latestChapter.has(item.id) ? `Chap ${latestChapter.get(item.id)} · ` : ''}{statusLabel(item.status)}</div>
-            </div>
-          </a>
-        ))}
-      </section>
-    )}
-  </>
-)}
+<section class="hero"><h1>Thư viện truyện</h1><p>Manga, manhwa, manhua và novel được tách rõ để dễ tìm. Có thể tìm theo tên hoặc lọc theo thể loại/trạng thái.</p><form class="home-search" action="/search" method="GET"><input name="q" placeholder="Tìm tên truyện..."/><button class="button" type="submit">Tìm</button></form></section>
+{error?<div class="notice error">{error}</div>:<>
+<div class="section-title"><h2>Mới cập nhật</h2><a class="meta" href="/search">Xem tất cả →</a></div>{recent.length?<section class="grid">{recent.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover">{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{latestChapter.has(item.id)?`Chap ${latestChapter.get(item.id)} · `:''}{statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện.</div>}
+<div class="section-title"><h2>Mới đăng</h2><a class="meta" href="/search">Xem tất cả →</a></div>{fresh.length?<section class="grid">{fresh.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover">{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'—'} · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện.</div>}
+<div class="section-title"><h2>Manga / Manhwa / Manhua</h2><a class="meta" href="/search">Tìm & lọc →</a></div>{manga.length?<section class="grid">{manga.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover">{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'Manga'} · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện nhóm Manga.</div>}
+<div class="section-title"><h2>Novel</h2><a class="meta" href="/search?type=Novel">Xem Novel →</a></div>{novels.length?<section class="grid">{novels.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover">{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">Novel · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có Novel.</div>}
+</>}
 </BaseLayout>

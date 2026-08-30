@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { requireAdminSession } from '../../../lib/auth';
+import { getAdminChapter, getAdminChapterPages, getAdminSeriesById, chapterAdminStatus } from '../../../lib/supabase';
+export const prerender=false;
+const session=await requireAdminSession(Astro.cookies); if(!session)return Astro.redirect('/login?next=/admin');
+const ch=await getAdminChapter(Astro.params.id||'',session.token); if(!ch)return new Response('Không tìm thấy chapter.',{status:404});
+const series=await getAdminSeriesById(ch.series_id,session.token); if(!series)return new Response('Không tìm thấy truyện.',{status:404});
+const pages=await getAdminChapterPages(ch.id,session.token);
+---
+<BaseLayout title={`Preview Chapter ${ch.chapter_number} — ${series.title}`}>
+<div class="preview-banner"><strong>Admin Preview</strong><span>{chapterAdminStatus(ch)} · người đọc chưa thấy chapter nếu đang Draft/đã lên lịch.</span><a class="button secondary small-button" href={`/admin/series/${series.id}`}>← Quay lại Admin</a></div>
+<h1>{series.title} — Chapter {ch.chapter_number}</h1>
+<div class="reader-pages">{pages.map(pg=><div class="reader-canvas-wrap"><canvas class="reader-canvas" data-admin-src={`/api/admin/page/${pg.id}`}></canvas><div class="reader-loading">Đang tải trang {pg.page_number}…</div></div>)}</div>
+<script>
+for(const canvas of document.querySelectorAll('canvas[data-admin-src]')){if(!(canvas instanceof HTMLCanvasElement))continue; const wrap=canvas.parentElement; fetch(canvas.dataset.adminSrc||'',{credentials:'same-origin'}).then(r=>{if(!r.ok)throw 0;return r.blob()}).then(createImageBitmap).then(img=>{canvas.width=img.width;canvas.height=img.height;canvas.getContext('2d')?.drawImage(img,0,0);img.close();wrap?.querySelector('.reader-loading')?.remove()}).catch(()=>{const x=wrap?.querySelector('.reader-loading');if(x)x.textContent='Không tải được ảnh.'})}
+</script>
+</BaseLayout>

@@ -46,3 +46,30 @@ V6 dùng KV binding `SESSION` đã có sẵn để lưu khóa ký HMAC và trạ
 - Trang truyện bổ sung thể loại, tác giả, họa sĩ, trạng thái, mô tả, số chapter, chapter mới nhất, ngày cập nhật và nút bookmark.
 - Admin thêm/sửa thể loại bằng danh sách ngăn cách bởi dấu phẩy.
 - Chạy `supabase-v8-library.sql` một lần trước khi deploy source v8.
+
+## v9 — Trang chủ, tìm kiếm, lịch đăng & quản lý Admin
+
+Chạy `supabase-v9-discovery-scheduling-admin.sql` trong Supabase SQL Editor trước khi deploy source v9.
+
+### Trang chủ / tìm kiếm
+- Trang chủ có Mới cập nhật, Mới đăng, nhóm Manga/Manhwa/Manhua và Novel riêng.
+- `/search` tìm theo tên/tác giả và lọc theo loại, trạng thái, thể loại.
+- Mới cập nhật dựa trên chapter public thực tế, nên chapter hẹn giờ chỉ được tính khi đã tới giờ.
+
+### Lịch đăng chapter
+- Khi upload có 3 chế độ: Publish ngay / Lên lịch / Draft.
+- Lên lịch dùng giờ trên trình duyệt admin và chuyển sang ISO trước khi gửi server.
+- Chapter hẹn giờ không xuất hiện trong reader/danh sách public trước giờ.
+- Đúng giờ, query public tự cho chapter xuất hiện; không cần cron.
+
+### Admin
+- Chọn nhiều chapter để Publish / Draft / Xóa hàng loạt.
+- Kéo thả chapter và bấm “Lưu thứ tự kéo thả”.
+- Duplicate chapter: copy metadata + toàn bộ ảnh R2, chapter copy mặc định là Draft.
+- Preview được Draft và chapter đã lên lịch bằng route admin riêng.
+- Thống kê số chapter và lượt đọc theo truyện/chapter.
+- Lượt đọc được chống đếm refresh liên tục bằng KV: cùng reader + chapter chỉ tính lại sau khoảng 3 phút.
+
+### Lưu ý
+- V9 tiếp tục dùng upload nhiều file ảnh cho chapter như v8; không dùng bản ZIP-upload v5.1.
+- V9 giả định SQL v6/v7/v8 trước đó đã được chạy.

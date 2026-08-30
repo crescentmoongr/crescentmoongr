@@ -9,7 +9,7 @@ export type Series = {
 export type Chapter = {
   id: string; series_id: string; chapter_number: number; title: string | null;
   access_type: 'public'|'password'|'member'; password_hash?: string | null;
-  is_published: boolean; published_at: string | null; created_at: string; updated_at: string;
+  is_published: boolean; published_at: string | null; sort_order?: number | null; created_at: string; updated_at: string;
 };
 export type ChapterPage = { id: number; chapter_id: string; page_number: number; object_key: string; created_at: string };
 
@@ -37,13 +37,15 @@ export const supabaseRpc=<T>(name:string,body:unknown,token?:string)=>req<T>('PO
 export async function hasAdminSeriesPassword(id:string,token:string){const r=await supabaseGet<any[]>(`series_passwords?select=series_id&series_id=eq.${encodeURIComponent(id)}&limit=1`,token);return !!r[0];}
 
 export async function getSeriesList(){return supabaseGet<Series[]>('series?select=*&is_published=eq.true&order=updated_at.desc')}
+export async function getNewestSeries(){return supabaseGet<Series[]>('series?select=*&is_published=eq.true&order=created_at.desc')}
 export async function getAdminSeriesList(token:string){return supabaseGet<Series[]>('series?select=*&order=updated_at.desc',token)}
 export async function getSeriesBySlug(slug:string){const r=await supabaseGet<Series[]>(`series?select=*&slug=eq.${encodeURIComponent(slug)}&is_published=eq.true&limit=1`); return r[0]??null}
 export async function getSeriesById(id:string){const r=await supabaseGet<Series[]>(`series?select=*&id=eq.${encodeURIComponent(id)}&is_published=eq.true&limit=1`); return r[0]??null}
 export async function getAdminSeriesById(id:string,token:string){const r=await supabaseGet<Series[]>(`series?select=*&id=eq.${encodeURIComponent(id)}&limit=1`,token); return r[0]??null}
-export async function getChapters(seriesId:string){return supabaseGet<Chapter[]>(`chapters?select=id,series_id,chapter_number,title,access_type,is_published,published_at,created_at,updated_at&series_id=eq.${encodeURIComponent(seriesId)}&is_published=eq.true&order=chapter_number.desc`)}
-export async function getAdminChapters(seriesId:string,token:string){return supabaseGet<Chapter[]>(`chapters?select=*&series_id=eq.${encodeURIComponent(seriesId)}&order=chapter_number.desc`,token)}
-export async function getChapter(seriesId:string,n:string){const r=await supabaseGet<Chapter[]>(`chapters?select=id,series_id,chapter_number,title,access_type,is_published,published_at,created_at,updated_at&series_id=eq.${encodeURIComponent(seriesId)}&chapter_number=eq.${encodeURIComponent(n)}&is_published=eq.true&limit=1`);return r[0]??null}
+export async function getChapters(seriesId:string){return supabaseGet<Chapter[]>(`chapters?select=id,series_id,chapter_number,title,access_type,is_published,published_at,sort_order,created_at,updated_at&series_id=eq.${encodeURIComponent(seriesId)}&is_published=eq.true&or=(published_at.is.null,published_at.lte.${encodeURIComponent(new Date().toISOString())})&order=sort_order.desc.nullslast,chapter_number.desc`)}
+export async function getAllPublicChapters(){const now=encodeURIComponent(new Date().toISOString());return supabaseGet<Chapter[]>(`chapters?select=id,series_id,chapter_number,title,access_type,is_published,published_at,sort_order,created_at,updated_at&is_published=eq.true&or=(published_at.is.null,published_at.lte.${now})&order=published_at.desc.nullslast,created_at.desc`)}
+export async function getAdminChapters(seriesId:string,token:string){return supabaseGet<Chapter[]>(`chapters?select=*&series_id=eq.${encodeURIComponent(seriesId)}&order=sort_order.desc.nullslast,chapter_number.desc`,token)}
+export async function getChapter(seriesId:string,n:string){const now=encodeURIComponent(new Date().toISOString()); const r=await supabaseGet<Chapter[]>(`chapters?select=id,series_id,chapter_number,title,access_type,is_published,published_at,sort_order,created_at,updated_at&series_id=eq.${encodeURIComponent(seriesId)}&chapter_number=eq.${encodeURIComponent(n)}&is_published=eq.true&or=(published_at.is.null,published_at.lte.${now})&limit=1`);return r[0]??null}
 export async function getAdminChapter(id:string,token:string){const r=await supabaseGet<Chapter[]>(`chapters?select=*&id=eq.${encodeURIComponent(id)}&limit=1`,token);return r[0]??null}
 export async function getPublicChapterPages(chapterId:string){return supabaseGet<ChapterPage[]>(`chapter_pages?select=id,chapter_id,page_number,object_key,created_at&chapter_id=eq.${encodeURIComponent(chapterId)}&order=page_number.asc`)}
 export async function getAdminChapterPages(chapterId:string,token:string){return supabaseGet<ChapterPage[]>(`chapter_pages?select=*&chapter_id=eq.${encodeURIComponent(chapterId)}&order=page_number.asc`,token)}
@@ -69,4 +71,17 @@ export async function getMyBookmarks(userId:string,token:string){
 }
 export async function getMyHistory(userId:string,token:string){
   return supabaseGet<ReadingHistory[]>(`reading_history?select=*&user_id=eq.${encodeURIComponent(userId)}&order=updated_at.desc&limit=30`,token);
+}
+
+
+export type ChapterStat = { chapter_id:string; view_count:number; updated_at:string };
+export async function getChapterStats(chapterIds:string[], token?:string){
+  if(!chapterIds.length) return [] as ChapterStat[];
+  const ids=chapterIds.map(encodeURIComponent).join(',');
+  return supabaseGet<ChapterStat[]>(`chapter_stats?select=*&chapter_id=in.(${ids})`,token);
+}
+export function chapterAdminStatus(ch:Chapter){
+  if(!ch.is_published) return 'Draft';
+  if(ch.published_at && new Date(ch.published_at).getTime()>Date.now()) return 'Đã lên lịch';
+  return 'Published';
 }

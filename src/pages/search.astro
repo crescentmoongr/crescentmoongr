@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getSeriesList, statusLabel } from '../lib/supabase';
+export const prerender=false;
+const q=(Astro.url.searchParams.get('q')||'').trim().toLowerCase();
+const type=(Astro.url.searchParams.get('type')||'').trim();
+const status=(Astro.url.searchParams.get('status')||'').trim();
+const genre=(Astro.url.searchParams.get('genre')||'').trim().toLowerCase();
+let all=[]; let error='';
+try{all=await getSeriesList()}catch(e){error=e instanceof Error?e.message:'Không thể tải dữ liệu.'}
+const genres=[...new Set(all.flatMap(x=>x.genres||[]))].sort((a,b)=>a.localeCompare(b));
+const types=[...new Set(all.map(x=>x.type).filter(Boolean))] as string[];
+const rows=all.filter(x=>{
+  const title=x.title.toLowerCase();
+  const author=(x.author||'').toLowerCase();
+  const okQ=!q||title.includes(q)||author.includes(q);
+  const okType=!type||x.type===type;
+  const okStatus=!status||x.status===status;
+  const okGenre=!genre||(x.genres||[]).some(g=>g.toLowerCase()===genre);
+  return okQ&&okType&&okStatus&&okGenre;
+});
+---
+<BaseLayout title="Tìm truyện — Crescent Reader">
+<section class="hero compact-hero"><h1>Tìm truyện</h1><p>Tìm theo tên và lọc theo loại, trạng thái hoặc thể loại.</p></section>
+<form class="search-panel" method="GET" action="/search">
+  <label class="field"><span>Tên truyện / tác giả</span><input name="q" value={Astro.url.searchParams.get('q')||''} placeholder="Nhập tên truyện..."/></label>
+  <label class="field"><span>Loại</span><select name="type"><option value="">Tất cả</option>{types.map(x=><option value={x} selected={type===x}>{x}</option>)}</select></label>
+  <label class="field"><span>Trạng thái</span><select name="status"><option value="">Tất cả</option><option value="ongoing" selected={status==='ongoing'}>Đang tiến hành</option><option value="completed" selected={status==='completed'}>Hoàn thành</option><option value="hiatus" selected={status==='hiatus'}>Tạm ngưng</option><option value="dropped" selected={status==='dropped'}>Drop</option></select></label>
+  <label class="field"><span>Thể loại</span><select name="genre"><option value="">Tất cả</option>{genres.map(x=><option value={x} selected={genre===x.toLowerCase()}>{x}</option>)}</select></label>
+  <div class="row-actions search-actions"><button class="button" type="submit">Tìm / Lọc</button><a class="button secondary" href="/search">Xóa lọc</a></div>
+</form>
+{error?<div class="notice error">{error}</div>:<><div class="section-title"><h2>Kết quả</h2><span class="meta">{rows.length} truyện</span></div>{rows.length?<section class="grid">{rows.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover">{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'—'} · {statusLabel(item.status)}</div>{item.genres?.length?<div class="mini-genres">{item.genres.slice(0,3).join(' · ')}</div>:null}</div></a>)}</section>:<div class="empty-state">Không tìm thấy truyện phù hợp.</div>}</>}
+</BaseLayout>
