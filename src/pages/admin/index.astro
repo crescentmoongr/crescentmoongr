@@ -63,6 +63,12 @@ const error = Astro.url.searchParams.get('error');
       </label>
 
       <label class="field">
+        <span>Thể loại</span>
+        <input name="genres" maxlength="400" placeholder="Romance, Comedy, Drama..." />
+        <small class="meta">Ngăn cách bằng dấu phẩy.</small>
+      </label>
+
+      <label class="field">
         <span>Loại truyện</span>
         <select name="type">
           <option value="">— Chưa chọn —</option>

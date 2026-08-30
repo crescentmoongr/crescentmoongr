@@ -37,3 +37,12 @@ V6 dùng KV binding `SESSION` đã có sẵn để lưu khóa ký HMAC và trạ
 - Truyện `member` đọc được sau khi đăng nhập.
 - Chạy `supabase-v7-accounts.sql` một lần trước khi deploy v7.
 - Sau khi deploy v7, phiên admin v6 cũ không có refresh token nên có thể phải đăng nhập lại đúng 1 lần.
+
+## v8
+- Bookmark truyện cho tài khoản đăng nhập.
+- Reading history: nhớ chapter gần nhất của từng bộ và nút “Đọc tiếp”.
+- Đánh dấu chapter đã đọc/chưa đọc.
+- Trang tài khoản có danh sách bookmark và lịch sử đọc gần đây.
+- Trang truyện bổ sung thể loại, tác giả, họa sĩ, trạng thái, mô tả, số chapter, chapter mới nhất, ngày cập nhật và nút bookmark.
+- Admin thêm/sửa thể loại bằng danh sách ngăn cách bởi dấu phẩy.
+- Chạy `supabase-v8-library.sql` một lần trước khi deploy source v8.

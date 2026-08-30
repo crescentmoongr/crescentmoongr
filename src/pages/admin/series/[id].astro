@@ -20,6 +20,7 @@ const success=Astro.url.searchParams.get('success'); const error=Astro.url.searc
       <label class="field"><span>Slug *</span><input name="slug" value={series.slug} required maxlength="200"/></label>
       <label class="field"><span>Tác giả</span><input name="author" value={series.author||''}/></label>
       <label class="field"><span>Họa sĩ</span><input name="artist" value={series.artist||''}/></label>
+      <label class="field"><span>Thể loại</span><input name="genres" value={(series.genres||[]).join(', ')} placeholder="Romance, Comedy, Drama..."/><small class="meta">Ngăn cách bằng dấu phẩy.</small></label>
       <label class="field"><span>Loại truyện</span><input name="type" value={series.type||''} placeholder="Manga / Manhwa / Novel..."/></label>
       <label class="field"><span>Trạng thái</span><select name="status"><option value="ongoing" selected={series.status==='ongoing'}>Đang tiến hành</option><option value="completed" selected={series.status==='completed'}>Hoàn thành</option><option value="hiatus" selected={series.status==='hiatus'}>Tạm ngưng</option><option value="dropped" selected={series.status==='dropped'}>Drop</option></select></label>
       <label class="field"><span>Quyền đọc *</span><select name="access_type" id="series_access_type"><option value="public" selected={series.access_type==='public'}>Public</option><option value="password" selected={series.access_type==='password'}>Khóa mật khẩu cả bộ</option><option value="member" selected={series.access_type==='member'}>Thành viên</option></select></label>

@@ -4,7 +4,7 @@ export type Series = {
   id: string; title: string; slug: string; description: string | null;
   author: string | null; artist: string | null; cover_key: string | null;
   type: string | null; status: 'ongoing'|'completed'|'hiatus'|'dropped';
-  is_published: boolean; access_type: 'public'|'password'|'member'; created_at: string; updated_at: string;
+  is_published: boolean; access_type: 'public'|'password'|'member'; genres?: string[]; created_at: string; updated_at: string;
 };
 export type Chapter = {
   id: string; series_id: string; chapter_number: number; title: string | null;
@@ -49,3 +49,24 @@ export async function getPublicChapterPages(chapterId:string){return supabaseGet
 export async function getAdminChapterPages(chapterId:string,token:string){return supabaseGet<ChapterPage[]>(`chapter_pages?select=*&chapter_id=eq.${encodeURIComponent(chapterId)}&order=page_number.asc`,token)}
 export const statusLabel=(s:Series['status'])=>({ongoing:'Đang tiến hành',completed:'Hoàn thành',hiatus:'Tạm ngưng',dropped:'Drop'} as any)[s]??s;
 export const accessLabel=(a:Chapter['access_type'])=>({public:'Public',password:'🔒 Mật khẩu',member:'🔒 Thành viên'} as any)[a]??a;
+
+
+export type Bookmark = { user_id:string; series_id:string; created_at:string };
+export type ReadingHistory = { user_id:string; series_id:string; chapter_id:string; updated_at:string };
+export type ChapterRead = { user_id:string; series_id:string; chapter_id:string; read_at:string };
+
+export async function getBookmark(seriesId:string, userId:string, token:string){
+  const r=await supabaseGet<Bookmark[]>(`bookmarks?select=*&user_id=eq.${encodeURIComponent(userId)}&series_id=eq.${encodeURIComponent(seriesId)}&limit=1`,token); return r[0]??null;
+}
+export async function getReadingHistory(seriesId:string,userId:string,token:string){
+  const r=await supabaseGet<ReadingHistory[]>(`reading_history?select=*&user_id=eq.${encodeURIComponent(userId)}&series_id=eq.${encodeURIComponent(seriesId)}&limit=1`,token); return r[0]??null;
+}
+export async function getChapterReads(seriesId:string,userId:string,token:string){
+  return supabaseGet<ChapterRead[]>(`chapter_reads?select=*&user_id=eq.${encodeURIComponent(userId)}&series_id=eq.${encodeURIComponent(seriesId)}`,token);
+}
+export async function getMyBookmarks(userId:string,token:string){
+  return supabaseGet<Bookmark[]>(`bookmarks?select=*&user_id=eq.${encodeURIComponent(userId)}&order=created_at.desc`,token);
+}
+export async function getMyHistory(userId:string,token:string){
+  return supabaseGet<ReadingHistory[]>(`reading_history?select=*&user_id=eq.${encodeURIComponent(userId)}&order=updated_at.desc&limit=30`,token);
+}
