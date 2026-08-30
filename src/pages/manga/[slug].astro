@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getChapters,getSeriesBySlug,statusLabel,getBookmark,getReadingHistory,getChapterReads } from '../../lib/supabase';
 import { getSession } from '../../lib/auth';
+import { richTextToHtml } from '../../lib/richText';
 export const prerender=false;
 const {slug}=Astro.params; if(!slug) return Astro.redirect('/');
 let series=null; let chapters=[]; let error='';
@@ -18,18 +19,26 @@ const latest=chapters[0]||null;
 const updated=latest?.published_at||series?.updated_at;
 const accessText=series?.access_type==='password'?'🔒 Khóa mật khẩu cả bộ':series?.access_type==='member'?'🔒 Dành cho thành viên':'Public';
 const fmt=(v?:string|null)=>v?new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(v)):'—';
+const introHtml=series?richTextToHtml(series.description):'';
 ---
-<BaseLayout title={series?`${series.title} — Crescent Reader`:'Lỗi — Crescent Reader'}>
+<BaseLayout title={series?`${series.title} — Crescent Moon Translation`:'Lỗi — Crescent Moon Translation'}>
 {error?<div class="notice error">{error}</div>:series?<>
 <section class="manga-head"><div class="cover">{series.cover_key?<img src={`/api/cover/${series.id}`} alt={`Bìa ${series.title}`}/>:<span>{series.title}</span>}</div><div class="manga-info"><h1>{series.title}</h1>
 <div class="series-stats"><span><b>Loại:</b> {series.type||'—'}</span><span><b>Trạng thái:</b> {statusLabel(series.status)}</span><span><b>Số chapter:</b> {chapters.length}</span><span><b>Chapter mới:</b> {latest?`Chapter ${latest.chapter_number}`:'—'}</span><span><b>Cập nhật:</b> {fmt(updated)}</span><span><b>Quyền đọc:</b> {accessText}</span></div>
 <div class="meta-block"><div><b>Tác giả:</b> {series.author||'Chưa cập nhật'}</div><div><b>Họa sĩ:</b> {series.artist||'Chưa cập nhật'}</div></div>
 {series.genres?.length?<div class="pills">{series.genres.map(g=><span class="pill">{g}</span>)}</div>:null}
-<p class="description">{series.description||'Chưa có mô tả.'}</p>
 <div class="row-actions">
 <form method="POST" action="/api/library/bookmark"><input type="hidden" name="series_id" value={series.id}/><input type="hidden" name="return_to" value={`/manga/${series.slug}`}/><button class="button secondary" type="submit">{bookmarked?'★ Đã bookmark':'☆ Bookmark'}</button></form>
 {continueChapter?<a class="button" href={`/read/${series.slug}/${continueChapter.chapter_number}`}>Đọc tiếp Chapter {continueChapter.chapter_number}</a>:latest?<a class="button" href={`/read/${series.slug}/${chapters[chapters.length-1].chapter_number}`}>Bắt đầu đọc</a>:null}
 </div></div></section>
+
+<section class="intro-section">
+  <div class="section-title intro-title"><h2>Giới thiệu</h2></div>
+  {introHtml
+    ? <div class="rich-content" set:html={introHtml}></div>
+    : <div class="empty-intro">Chưa có giới thiệu.</div>}
+</section>
+
 <div class="section-title"><h2>Danh sách chương</h2><span class="meta">{chapters.length} chap</span></div>
 {chapters.length===0?<div class="empty-state">Chưa có chapter được đăng.</div>:<div class="chapter-list">{chapters.map(ch=><a class={`chapter ${readIds.has(ch.id)?'chapter-read':''}`} href={`/read/${series.slug}/${ch.chapter_number}`}><span>Chapter {ch.chapter_number}{ch.title?` — ${ch.title}`:''}</span><span class="chapter-right">{session&&<span class={readIds.has(ch.id)?'read-state read':'read-state'}>{readIds.has(ch.id)?'✓ Đã đọc':'Chưa đọc'}</span>}<span class={series.access_type==='public'?'meta':'lock'}>{series.access_type==='password'?'🔒':series.access_type==='member'?'🔒':'Đọc'}</span></span></a>)}</div>}
 </>:null}

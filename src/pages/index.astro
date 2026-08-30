@@ -17,12 +17,11 @@ try{
 }catch(e){error=e instanceof Error?e.message:'Không thể tải dữ liệu.'}
 const manga=updated.filter(x=>String(x.type||'').toLowerCase()!=='novel').slice(0,8);
 const novels=updated.filter(x=>String(x.type||'').toLowerCase()==='novel').slice(0,8);
-const recent=updated.slice(0,8); const fresh=newest.slice(0,8);
-const statusBadgeLabel=(status:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[status]||'';
+const recent=updated.slice(0,8); const statusBadgeLabel=(status:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[status]||'';
 const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'} as Record<string,string>)[status]||'';
 
 ---
-<BaseLayout title="Crescent Moon Translation">
+<BaseLayout title="Crescent Reader">
 
 {error?<div class="notice error">{error}</div>:<>
 <div class="section-title"><h2>Mới cập nhật</h2><a class="meta" href="/search">Xem tất cả →</a></div>{recent.length?<section class="grid">{recent.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{latestChapter.has(item.id)?`Chap ${latestChapter.get(item.id)} · `:''}{statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện.</div>}

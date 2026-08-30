@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { requireAdminSession } from '../../../../lib/auth';
+import { sanitizeRichText } from '../../../../lib/richText';
 import { getAdminSeriesById, hasAdminSeriesPassword, supabasePatch, supabaseRpc } from '../../../../lib/supabase';
 export const prerender=false;
 const mime:Record<string,string>={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
@@ -13,7 +14,7 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
     let coverKey=old.cover_key; const cover=f.get('cover'); if(cover instanceof File&&cover.size){if(cover.size>8*1024*1024||!mime[cover.type]) throw new Error('Ảnh bìa không hợp lệ hoặc vượt 8 MB.'); newCover=`covers/${crypto.randomUUID()}.${mime[cover.type]}`; await env.MANGA_STORAGE.put(newCover,await cover.arrayBuffer(),{httpMetadata:{contentType:cover.type,cacheControl:'public, max-age=86400'}}); coverKey=newCover;}
     const title=clean(f.get('title')), slug=safeSlug(clean(f.get('slug'))); if(!title||!slug) throw new Error('Tên và slug là bắt buộc.');
     if(access==='password'&&password) await supabaseRpc('admin_set_series_password',{p_series_id:id,p_password:password},token);
-    await supabasePatch(`series?id=eq.${encodeURIComponent(id)}`,token,{title,slug,description:clean(f.get('description'))||null,author:clean(f.get('author'))||null,artist:clean(f.get('artist'))||null,genres:clean(f.get('genres')).split(',').map(x=>x.trim()).filter(Boolean),type:clean(f.get('type'))||null,status:clean(f.get('status')),is_published:f.get('is_published')==='true',cover_key:coverKey,access_type:access});
+    await supabasePatch(`series?id=eq.${encodeURIComponent(id)}`,token,{title,slug,description:sanitizeRichText(clean(f.get('description')))||null,author:clean(f.get('author'))||null,artist:clean(f.get('artist'))||null,genres:clean(f.get('genres')).split(',').map(x=>x.trim()).filter(Boolean),type:clean(f.get('type'))||null,status:clean(f.get('status')),is_published:f.get('is_published')==='true',cover_key:coverKey,access_type:access});
     if(access!=='password') await supabaseRpc('admin_clear_series_password',{p_series_id:id},token);
     if(newCover&&old.cover_key) await env.MANGA_STORAGE.delete(old.cover_key);
     return redirect(`/admin/series/${id}?success=`+encodeURIComponent('Đã lưu thay đổi.'));

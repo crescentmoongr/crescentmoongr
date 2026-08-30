@@ -107,3 +107,27 @@ Trang chi tiết truyện:
 ## Homepage cleanup
 - Đã bỏ khối “Thư viện truyện” + ô tìm kiếm khỏi trang chủ.
 - Menu “Tìm kiếm” và trang `/search` vẫn giữ nguyên.
+
+
+## v10 — Giới thiệu + trình soạn thảo
+
+- Chuyển mô tả truyện khỏi khu vực cạnh ảnh bìa.
+- Tạo section riêng **Giới thiệu** phía dưới thông tin truyện và trước danh sách chapter.
+- Admin có trình soạn thảo cho Giới thiệu:
+  - In đậm
+  - In nghiêng
+  - Gạch chân
+  - Tiêu đề
+  - Đoạn văn
+  - Danh sách
+  - Xuống dòng
+  - Đường ngăn cách
+  - Xóa định dạng
+- Nội dung được sanitize ở server; không cho chèn script/iframe/HTML tùy ý.
+- Mô tả cũ dạng text vẫn hiển thị đúng xuống dòng.
+- Không cần chạy SQL mới: tiếp tục dùng cột `series.description`.
+- Giới hạn phần Giới thiệu: 20.000 ký tự.
+- Giữ các chỉnh sửa v9 trước: logo, footer, card/status label, detail cover full-bleed, bỏ khối Thư viện truyện.
+- Bỏ mục **Mới đăng** khỏi trang chủ.
+- Tên tab mặc định: Crescent Moon Translation.
+- Favicon: `/honeymoon_4213586.png`.
