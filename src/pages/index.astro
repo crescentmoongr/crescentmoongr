@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getSeriesList, getNewestSeries, getAllPublicChapters, statusLabel } from '../lib/supabase';
+import { getSeriesList, getNewestSeries, getAllPublicChapters, statusLabel, getMyHistory } from '../lib/supabase';
+import { getSession } from '../lib/auth';
 export const prerender=false;
 let updated=[]; let newest=[]; let error='';
 let latestChapter=new Map<string,number>();
@@ -17,13 +18,47 @@ try{
 }catch(e){error=e instanceof Error?e.message:'Không thể tải dữ liệu.'}
 const manga=updated.filter(x=>String(x.type||'').toLowerCase()!=='novel').slice(0,8);
 const novels=updated.filter(x=>String(x.type||'').toLowerCase()==='novel').slice(0,8);
-const recent=updated.slice(0,8); const statusBadgeLabel=(status:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[status]||'';
+const recent=updated.slice(0,8);
+const session=await getSession(Astro.cookies);
+let recentHistory:any[]=[];
+if(session){
+  try{
+    const history=await getMyHistory(session.user.id,session.token);
+    const seriesMap=new Map(updated.map(x=>[x.id,x]));
+    const chapterMap=new Map(allChapters.map(ch=>[ch.id,ch]));
+    recentHistory=history.slice(0,8).map(h=>{
+      const item=seriesMap.get(h.series_id);
+      const chapter=chapterMap.get(h.chapter_id);
+      return item?{item,chapter,updated_at:h.updated_at}:null;
+    }).filter(Boolean);
+  }catch{}
+}
+const statusBadgeLabel=(status:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[status]||'';
 const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'} as Record<string,string>)[status]||'';
 
 ---
-<BaseLayout title="Crescent Reader">
+<BaseLayout title="Crescent Moon Translation">
 
 {error?<div class="notice error">{error}</div>:<>
+
+{recentHistory.length>0&&<>
+<div class="section-title"><h2>Lịch sử đọc gần đây</h2></div>
+<section class="history-grid">
+  {recentHistory.map(({item,chapter})=>
+    <a class="history-card" href={chapter?`/read/${item.slug}/${chapter.chapter_number}`:`/manga/${item.slug}`}>
+      <div class="history-cover">
+        {item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}
+      </div>
+      <div class="history-body">
+        <h3>{item.title}</h3>
+        <div class="meta">{chapter?`Đang đọc Chapter ${chapter.chapter_number}`:'Đọc tiếp'}</div>
+        <span class="history-continue">Đọc tiếp →</span>
+      </div>
+    </a>
+  )}
+</section>
+</>}
+
 <div class="section-title"><h2>Mới cập nhật</h2><a class="meta" href="/search">Xem tất cả →</a></div>{recent.length?<section class="grid">{recent.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{latestChapter.has(item.id)?`Chap ${latestChapter.get(item.id)} · `:''}{statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện.</div>}
 <div class="section-title"><h2>Manga / Manhwa / Manhua</h2><a class="meta" href="/search">Tìm & lọc →</a></div>{manga.length?<section class="grid">{manga.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'Manga'} · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện nhóm Manga.</div>}
 <div class="section-title"><h2>Novel</h2><a class="meta" href="/search?type=Novel">Xem Novel →</a></div>{novels.length?<section class="grid">{novels.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">Novel · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có Novel.</div>}

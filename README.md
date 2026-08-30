@@ -131,3 +131,35 @@ Trang chi tiết truyện:
 - Bỏ mục **Mới đăng** khỏi trang chủ.
 - Tên tab mặc định: Crescent Moon Translation.
 - Favicon: `/honeymoon_4213586.png`.
+
+
+## v11
+
+### Trang chi tiết truyện
+- Mobile: ảnh bìa nằm trên, căn giữa, rộng tối đa khoảng 220–230px.
+- Giữ nguyên tỷ lệ bìa 3:4.
+- Thông tin truyện chuyển xuống dưới ảnh trên mobile.
+- Desktop vẫn là bìa trái + thông tin phải.
+- Phần thông tin dùng cùng một thiết kế trên desktop/mobile:
+  icon hồng + từng dòng riêng + đường phân cách.
+- Nút Bookmark và Bắt đầu đọc/Đọc tiếp cân đều 2 cột.
+
+### Trang chủ
+- Thêm **Lịch sử đọc gần đây** cho tài khoản đã đăng nhập.
+- Chỉ hiện khi có lịch sử.
+- Nhấn card sẽ đi thẳng tới chapter đang đọc.
+
+### Quảng cáo
+- Admin có mục **Quảng cáo**.
+- Chỉ có một ô **HTML / Script quảng cáo** + nút lưu.
+- Mã được chèn ở trang đọc chapter.
+- Để trống và lưu để tắt.
+- Cần chạy file `supabase-v11-site-settings.sql` một lần.
+
+### Giữ nguyên từ v10
+- Section Giới thiệu riêng.
+- Rich text editor.
+- Mới cập nhật / Manga / Novel.
+- Bỏ Mới đăng.
+- Logo, favicon, footer, status badge.
+- View cooldown 3 phút.

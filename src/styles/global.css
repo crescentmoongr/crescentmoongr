@@ -170,3 +170,204 @@ textarea{width:100%;padding:11px 12px;border:1px solid #dec5d3;border-radius:10p
   .rich-tool{height:32px;padding:0 7px}
   .rich-content{padding:16px;border-radius:15px}
 }
+
+
+/* =========================================================
+   v11 — series detail layout + recent history + ad admin
+   ========================================================= */
+
+/* Detail page */
+.manga-head{
+  display:grid;
+  grid-template-columns:270px minmax(0,1fr);
+  gap:36px;
+  align-items:start;
+}
+.manga-cover-wrap{
+  display:flex;
+  justify-content:center;
+  width:100%;
+}
+.manga-head .manga-detail-cover{
+  width:100%;
+  max-width:270px;
+  aspect-ratio:3/4;
+  padding:0;
+  overflow:hidden;
+  border-radius:22px;
+  background:linear-gradient(145deg,#f4c6dd,#f8e5ef 55%,#e8cde4);
+  box-shadow:0 10px 28px rgba(97,54,78,.10);
+}
+.manga-head .manga-detail-cover img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+.manga-info h1{
+  margin:4px 0 18px;
+  font-size:clamp(1.8rem,3vw,2.55rem);
+  line-height:1.16;
+}
+.series-info-list{
+  display:grid;
+  border-top:1px dashed #edd0df;
+}
+.series-info-row{
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr);
+  gap:8px;
+  align-items:center;
+  min-height:46px;
+  padding:8px 0;
+  border-bottom:1px dashed #edd0df;
+  line-height:1.45;
+}
+.series-info-icon{
+  width:26px;
+  text-align:center;
+  color:var(--pink);
+  font-size:1.08rem;
+  font-weight:800;
+}
+.series-info-row b{font-weight:800}
+.manga-actions{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:12px!important;
+  margin-top:20px!important;
+}
+.manga-actions form{display:block}
+.manga-actions .button{
+  width:100%;
+  min-height:48px;
+}
+.manga-info .pills{margin-top:16px}
+
+/* Mobile: cover first, centered and a little larger */
+@media(max-width:700px){
+  .manga-head{
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+  }
+  .manga-cover-wrap{
+    justify-content:center;
+  }
+  .manga-head .manga-detail-cover{
+    width:min(60vw,230px);
+    max-width:230px;
+    border-radius:20px;
+  }
+  .manga-info{
+    width:100%;
+  }
+  .manga-info h1{
+    text-align:center;
+    margin:0 0 18px;
+    font-size:clamp(1.65rem,7vw,2rem);
+  }
+  .series-info-row{
+    grid-template-columns:30px minmax(0,1fr);
+    min-height:45px;
+    padding:7px 0;
+  }
+  .manga-actions{
+    grid-template-columns:1fr 1fr;
+  }
+}
+@media(max-width:420px){
+  .manga-head .manga-detail-cover{
+    width:min(64vw,220px);
+  }
+  .manga-actions{
+    gap:9px!important;
+  }
+  .manga-actions .button{
+    padding:10px 8px;
+    font-size:.92rem;
+  }
+}
+
+/* Recent reading history */
+.history-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+}
+.history-card{
+  display:grid;
+  grid-template-columns:82px minmax(0,1fr);
+  min-height:112px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#fff;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.history-card:hover{
+  transform:translateY(-2px);
+  border-color:#df9fc1;
+  box-shadow:0 9px 24px rgba(128,72,102,.08);
+}
+.history-cover{
+  aspect-ratio:3/4;
+  height:100%;
+  min-height:112px;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  background:var(--pink-soft);
+  color:#8b4b70;
+  font-size:.72rem;
+  text-align:center;
+}
+.history-cover img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.history-body{
+  min-width:0;
+  padding:12px 11px;
+}
+.history-body h3{
+  margin:0 0 8px;
+  font-size:.95rem;
+  line-height:1.35;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.history-continue{
+  display:inline-block;
+  margin-top:8px;
+  color:var(--pink);
+  font-size:.82rem;
+  font-weight:800;
+}
+@media(max-width:900px){
+  .history-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .history-grid{grid-template-columns:1fr;gap:10px}
+  .history-card{grid-template-columns:76px minmax(0,1fr);min-height:104px}
+  .history-cover{min-height:104px}
+}
+
+/* Ad settings */
+.admin-ad-section textarea{
+  min-height:190px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:.88rem;
+  line-height:1.5;
+}
+.reader-ad-slot{
+  width:0;
+  height:0;
+  overflow:hidden;
+  position:absolute;
+  left:-99999px;
+}

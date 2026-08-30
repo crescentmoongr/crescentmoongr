@@ -85,3 +85,11 @@ export function chapterAdminStatus(ch:Chapter){
   if(ch.published_at && new Date(ch.published_at).getTime()>Date.now()) return 'Đã lên lịch';
   return 'Published';
 }
+
+
+export type SiteSetting = { key:string; value:string | null; updated_at?:string };
+
+export async function getSiteSetting(key:string, token?:string){
+  const r=await supabaseGet<SiteSetting[]>(`site_settings?select=key,value,updated_at&key=eq.${encodeURIComponent(key)}&limit=1`,token);
+  return r[0]??null;
+}
