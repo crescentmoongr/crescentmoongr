@@ -86,3 +86,59 @@ textarea{width:100%;padding:11px 12px;border:1px solid #dec5d3;border-radius:10p
 @media(max-width:560px){
   .cover-badge{top:7px;left:7px;min-width:46px;padding:5px 8px;font-size:.69rem;border-radius:9px}
 }
+
+
+/* v9 detail page cover refresh: larger + full-bleed rounded cover */
+.manga-head{
+  grid-template-columns:260px minmax(0,1fr);
+  gap:28px;
+}
+.manga-head .cover{
+  padding:0;
+  overflow:hidden;
+  border-radius:22px;
+  aspect-ratio:3/4;
+  background:linear-gradient(145deg,#f4c6dd,#f8e5ef 55%,#e8cde4);
+  box-shadow:0 8px 28px rgba(93,53,78,.08);
+}
+.manga-head .cover img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  border-radius:inherit;
+}
+@media(max-width:850px){
+  .manga-head{
+    grid-template-columns:170px minmax(0,1fr);
+    gap:22px;
+  }
+}
+@media(max-width:560px){
+  .manga-head{
+    grid-template-columns:125px minmax(0,1fr);
+    gap:16px;
+  }
+  .manga-head .cover{
+    border-radius:17px;
+  }
+}
+
+/* Crescent Moon header logo */
+.site-logo{
+  display:block;
+  width:auto;
+  height:44px;
+  max-width:230px;
+  object-fit:contain;
+}
+.brand:has(.site-logo){
+  display:flex;
+  align-items:center;
+}
+@media(max-width:600px){
+  .site-logo{
+    height:34px;
+    max-width:170px;
+  }
+}

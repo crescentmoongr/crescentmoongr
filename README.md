@@ -91,3 +91,19 @@ Card truyện trên trang chủ và trang tìm kiếm tự hiện nhãn theo tr�
 
 Ảnh bìa vẫn tràn sát card và toàn bộ card giữ bo góc.
 Không cần chạy SQL mới cho thay đổi giao diện này.
+
+
+## Detail cover update
+
+Trang chi tiết truyện:
+- Ảnh bìa desktop tăng lên 260px.
+- Bỏ padding màu hồng quanh ảnh.
+- Ảnh tràn sát toàn bộ khung.
+- Bo góc trực tiếp trên ảnh bìa.
+- Tablet/mobile tự thu nhỏ tương ứng.
+- Không thay đổi card truyện ở trang chủ/tìm kiếm.
+
+
+## Homepage cleanup
+- Đã bỏ khối “Thư viện truyện” + ô tìm kiếm khỏi trang chủ.
+- Menu “Tìm kiếm” và trang `/search` vẫn giữ nguyên.

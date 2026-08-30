@@ -6,5 +6,5 @@ const { title = 'Crescent Reader' } = Astro.props;
 const user = await getSessionUser(Astro.cookies);
 ---
 <!doctype html><html lang="vi"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width"/><meta name="description" content="Crescent Reader"/><title>{title}</title></head><body>
-<header class="site-header"><a class="brand" href="/">☾ Crescent Reader</a><nav><a href="/">Trang chủ</a><a href="/search">Tìm kiếm</a>{user?.role==='admin'&&<a href="/admin">Admin</a>}{user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}</nav></header>
-<main class="shell"><slot /></main><footer class="footer">Crescent Reader</footer></body></html>
+<header class="site-header"><a class="brand" href="/"><img src="/crescent-moon-logo.png" alt="Crescent Moon" class="site-logo" /></a><nav><a href="/">Trang chủ</a><a href="/search">Tìm kiếm</a>{user?.role==='admin'&&<a href="/admin">Admin</a>}{user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}</nav></header>
+<main class="shell"><slot /></main><footer class="footer">2024 Crescent Moon Translation</footer></body></html>
