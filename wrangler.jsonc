@@ -1,6 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "reader",
+  "name": "read",
   "compatibility_date": "2026-08-30",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  "r2_buckets": [
+    {
+      "binding": "MANGA_STORAGE",
+      "bucket_name": "manga-storage"
+    }
+  ]
 }

@@ -1,31 +1,16 @@
-# Crescent Reader Starter
+# Crescent Reader v2
 
-Starter web truyện Astro + Cloudflare Workers.
+Astro + Cloudflare Workers + Supabase + private Cloudflare R2.
 
-## Có sẵn
-- Trang chủ responsive
-- Trang chi tiết truyện
-- Danh sách chapter
-- Reader demo
-- Giao diện chapter khóa
-- Admin demo
+## v2 đã nối
+- `series` từ Supabase
+- `chapters` từ Supabase
+- trạng thái khóa `public/password/member`
+- R2 binding `MANGA_STORAGE` → `manga-storage`
+- `/api/health` để kiểm tra kết nối
 
-## Chạy local
-```bash
-npm install
-npm run dev
-```
+## Cloudflare runtime variables
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
 
-## GitHub → Cloudflare
-1. Upload toàn bộ source lên một repository GitHub.
-2. Cloudflare Dashboard → Workers & Pages → Create application → Import a repository.
-3. Kết nối GitHub và chọn repository.
-4. Build command: `npm run build`
-5. Deploy command: `npx wrangler deploy`
-6. Production branch: `main`
-7. Save and Deploy.
-
-Mỗi lần push commit mới lên `main`, Cloudflare sẽ tự build/deploy.
-
-## Tiếp theo
-Supabase Auth/DB, RLS, R2 private bucket, API kiểm tra quyền chapter, admin upload hàng loạt, bookmark và lịch sử đọc.
+Không commit secret/service-role key vào GitHub.

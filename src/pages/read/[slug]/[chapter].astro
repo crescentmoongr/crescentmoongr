@@ -1,16 +1,44 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
-import { findManga } from '../../../data/manga';
+import { getChapter, getSeriesBySlug } from '../../../lib/supabase';
+
+export const prerender = false;
 const { slug, chapter } = Astro.params;
-const manga = slug ? findManga(slug) : undefined;
-const current = manga?.chapters.find((c)=>String(c.number)===chapter);
-if (!manga || !current) return Astro.redirect('/');
+if (!slug || !chapter) return Astro.redirect('/');
+
+let series = null;
+let current = null;
+let error = '';
+try {
+  series = await getSeriesBySlug(slug);
+  if (series) current = await getChapter(series.id, chapter);
+} catch (e) {
+  error = e instanceof Error ? e.message : 'Không thể tải chapter.';
+}
+if ((!series || !current) && !error) return new Response('Không tìm thấy chapter.', { status: 404 });
 ---
-<BaseLayout title={`Chapter ${current.number} — ${manga.title}`}>
-<h1>{manga.title} — Chapter {current.number}</h1>
-{current.locked ? (
-<section class="lock-panel"><h2>🔒 Chapter này đang khóa</h2><p class="description">Giao diện demo. Khi nối Supabase/Worker, mật khẩu sẽ được kiểm tra phía server trước khi trả URL ảnh.</p><form onsubmit="event.preventDefault(); alert('Demo: chưa nối backend.');"><label class="field">Mật khẩu chapter<input type="password" placeholder="Nhập mật khẩu" /></label><button class="button" type="submit">Mở khóa</button></form></section>
-) : (
-<><div class="reader-nav"><a class="button secondary" href={`/manga/${manga.slug}`}>← Danh sách chap</a><span class="meta">Reader demo</span></div>{[1,2,3,4].map((page)=><div class="page-image">Trang ảnh {page}<br/>R2 sẽ được nối ở bước sau</div>)}<div class="reader-nav"><a class="button secondary" href={`/manga/${manga.slug}`}>← Mục lục</a><a class="button" href="#">Lên đầu trang ↑</a></div></>
-)}
+<BaseLayout title={series && current ? `Chapter ${current.chapter_number} — ${series.title}` : 'Reader'}>
+{error ? (
+  <div class="notice error">{error}</div>
+) : series && current ? (
+  <>
+    <h1>{series.title} — Chapter {current.chapter_number}</h1>
+    {current.access_type === 'password' ? (
+      <section class="lock-panel">
+        <h2>🔒 Chapter cần mật khẩu</h2>
+        <p class="description">Database đã nhận trạng thái khóa. Bước tiếp theo sẽ thêm API xác thực mật khẩu phía server trước khi Worker trả ảnh từ R2.</p>
+      </section>
+    ) : current.access_type === 'member' ? (
+      <section class="lock-panel">
+        <h2>🔒 Chapter dành cho thành viên</h2>
+        <p class="description">Bước tiếp theo sẽ nối Supabase Auth và bảng quyền truy cập.</p>
+      </section>
+    ) : (
+      <>
+        <div class="reader-nav"><a class="button secondary" href={`/manga/${series.slug}`}>← Danh sách chap</a><span class="meta">Chapter public</span></div>
+        <div class="empty-state"><h3>Metadata chapter đã kết nối</h3><p>Ảnh chưa được trả ra ở bản này. Bước kế tiếp sẽ nối <code>chapter_pages</code> với bucket R2 private.</p></div>
+      </>
+    )}
+  </>
+) : null}
 </BaseLayout>
