@@ -1,1 +1,1 @@
-# crescentmoongr.github.io
+# Crescent Moon Translation
