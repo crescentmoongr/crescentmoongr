@@ -399,6 +399,7 @@ textarea{width:100%;padding:11px 12px;border:1px solid #dec5d3;border-radius:10p
   .series-info-row:nth-child(6){grid-column:2;grid-row:3}
   .series-info-row:nth-child(7){grid-column:1;grid-row:4}
   .series-info-row:nth-child(8){grid-column:1;grid-row:5}
+  .series-info-row:nth-child(9){grid-column:2;grid-row:4}
 }
 
 /* Compact Bookmark / Read buttons on all screen sizes. */
@@ -1084,3 +1085,12 @@ body:has(.reader-bottom-nav) .site-notification-toast{bottom:104px}
   .comment-toolbar button{min-width:30px;padding:0 6px;font-size:.8rem}
   .comment-editor{min-height:115px}
 }
+
+
+/* v11.17 — Official raw purchase link */
+.series-raw-link{
+  color:var(--pink);
+  font-weight:700;
+  text-decoration:none;
+}
+.series-raw-link:hover{text-decoration:underline}

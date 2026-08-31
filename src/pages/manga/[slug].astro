@@ -46,6 +46,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
       <div class="series-info-row"><span class="series-info-icon">♙</span><span><b>Quyền đọc:</b> {accessText}</span></div>
       <div class="series-info-row"><span class="series-info-icon">✎</span><span><b>Tác giả:</b> {series.author||'Chưa cập nhật'}</span></div>
       <div class="series-info-row"><span class="series-info-icon">✎</span><span><b>Họa sĩ:</b> {series.artist||'Chưa cập nhật'}</span></div>
+      {series.raw_url&&<div class="series-info-row series-raw-row"><span class="series-info-icon">🛒</span><span><b>Mua raw:</b> <a class="series-raw-link" href={series.raw_url} target="_blank" rel="noopener noreferrer nofollow sponsored">Ủng hộ tác giả ↗</a></span></div>}
     </div>
 
     {series.genres?.length?<div class="pills">{series.genres.map(g=><span class="pill">{g}</span>)}</div>:null}
@@ -108,7 +109,6 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
           <ul>
             <li>Không dùng từ ngữ thô tục, xúc phạm cá nhân, tổ chức hoặc nhân vật trong truyện.</li>
             <li>Không spam link, quảng cáo hoặc chia sẻ nội dung độc hại.</li>
-            <li>Mỗi bình luận tối đa 2.000 ký tự và cần cách nhau ít nhất 15 giây.</li>
             <li>Vui lòng giữ cuộc trò chuyện lịch sự và tôn trọng người khác.</li>
           </ul>
         </div>

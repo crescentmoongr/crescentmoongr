@@ -337,3 +337,13 @@ Trang chi tiết truyện:
 - Existing plain-text comments still render correctly.
 - Adds a visible “Lưu ý khi bình luận” panel below the editor.
 - No new SQL in this version; the ZIP contains no SQL files.
+
+
+## v11.17 — Mua raw ủng hộ tác giả
+- Adds `Link mua raw` to Add Story and Edit Story in Admin.
+- Only `http://` and `https://` links are accepted.
+- Series detail page shows `🛒 Mua raw: Ủng hộ tác giả ↗` when a raw link is present.
+- The purchase link opens in a new tab and is marked `nofollow sponsored`.
+- Removes the visible “2.000 ký tự / 15 giây” line from the comment rules; technical anti-spam limits remain unchanged.
+- Run `supabase-v11-17-raw-link.sql` once.
+- The ZIP contains only this new SQL migration.
