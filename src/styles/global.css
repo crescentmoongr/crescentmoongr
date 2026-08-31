@@ -711,3 +711,167 @@ html{scroll-behavior:smooth}
   .admin-dashboard-content > #admin-ads,
   .admin-dashboard-content > #admin-add-series{padding:20px 16px}
 }
+
+
+/* v11.10 — Floating chapter navigation */
+.reader-bottom-nav{
+  position:fixed;
+  left:50%;
+  bottom:max(14px,env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  z-index:80;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  width:min(680px,calc(100% - 28px));
+  padding:8px;
+  border:1px solid rgba(220,175,199,.92);
+  border-radius:999px;
+  background:rgba(255,247,251,.94);
+  box-shadow:0 10px 32px rgba(93,53,78,.16);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+.reader-bottom-nav a{
+  text-decoration:none;
+}
+.reader-bottom-home,
+.reader-bottom-step,
+.reader-bottom-current{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #efd4e2;
+  background:#fff;
+  color:#79566a;
+  font-weight:700;
+}
+.reader-bottom-home{
+  flex:0 0 42px;
+  width:42px;
+  border-radius:50%;
+  font-size:1.3rem;
+}
+.reader-bottom-step{
+  flex:0 0 auto;
+  padding:0 14px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+.reader-bottom-step.is-disabled{
+  opacity:.38;
+  cursor:not-allowed;
+}
+.reader-bottom-current{
+  position:relative;
+  flex:1 1 auto;
+  min-width:0;
+  padding:0 14px;
+  border-radius:999px;
+  overflow:hidden;
+}
+.reader-bottom-current-label{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  pointer-events:none;
+}
+.reader-bottom-select{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  opacity:0;
+  cursor:pointer;
+}
+body:has(.reader-bottom-nav){
+  padding-bottom:92px;
+}
+@media(max-width:620px){
+  .reader-bottom-nav{
+    width:calc(100% - 20px);
+    bottom:max(10px,env(safe-area-inset-bottom));
+    gap:4px;
+    padding:6px;
+  }
+  .reader-bottom-home{
+    flex-basis:40px;
+    width:40px;
+    min-height:40px;
+  }
+  .reader-bottom-step{
+    min-height:40px;
+    padding:0 9px;
+    font-size:.86rem;
+  }
+  .reader-bottom-current{
+    min-height:40px;
+    padding:0 10px;
+    font-size:.86rem;
+  }
+}
+@media(max-width:390px){
+  .reader-bottom-step{
+    padding:0 7px;
+    font-size:.8rem;
+  }
+  .reader-bottom-current{
+    padding:0 8px;
+    font-size:.8rem;
+  }
+}
+
+
+/* v11.11 — Novel editor & reader */
+.novel-editor-shell .rich-toolbar{
+  position:sticky;
+  top:0;
+  z-index:4;
+}
+.novel-rich-editor{
+  min-height:520px;
+  max-height:72vh;
+  overflow:auto;
+  line-height:1.85;
+}
+.novel-reader-content{
+  width:min(820px,100%);
+  margin:24px auto 42px;
+  padding:34px 42px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:#fff;
+  font-size:1.08rem;
+  line-height:1.95;
+  overflow-wrap:anywhere;
+}
+.novel-reader-content p{
+  margin:0 0 1.35em;
+}
+.novel-reader-content h3,
+.novel-reader-content h4{
+  line-height:1.45;
+  margin:1.6em 0 .8em;
+}
+.novel-reader-content blockquote{
+  margin:1.4em 0;
+  padding:10px 16px;
+  border-left:3px solid #e2a8c5;
+  background:var(--pink-soft);
+}
+.novel-reader-content hr{
+  border:0;
+  border-top:1px solid var(--line);
+  margin:28px 0;
+}
+@media(max-width:620px){
+  .novel-rich-editor{min-height:420px}
+  .novel-reader-content{
+    margin-top:16px;
+    padding:24px 18px;
+    border-radius:14px;
+    font-size:1rem;
+    line-height:1.9;
+  }
+}

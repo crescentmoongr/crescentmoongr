@@ -272,3 +272,26 @@ Trang chi tiết truyện:
 - Separates the Admin login/status card from the sidebar dashboard.
 - Ads and Add Story sections retain card styling.
 - No SQL required.
+
+
+## v11.10 — Thanh điều hướng chapter khi đọc
+- Thêm thanh điều hướng cố định ở đáy màn hình khi đang đọc chapter.
+- Gồm: nút về trang truyện, Chapter trước, chapter hiện tại, Chapter sau.
+- Bấm vào chapter hiện tại để mở danh sách và nhảy nhanh sang chapter khác.
+- Tự vô hiệu hóa nút Trước/Sau khi không còn chapter tương ứng.
+- Responsive cho điện thoại, có hỗ trợ safe-area trên iPhone.
+- Không thêm nút được khoanh đỏ trong ảnh tham khảo.
+- Không cần SQL mới.
+
+
+## v11.11 — Novel chapter editor
+- Series with type `Novel` now use a rich-text chapter editor instead of image upload.
+- Editor supports bold, italic, underline, heading, paragraph, list, left/center/right alignment, line breaks, separators and remove formatting.
+- Paste from Word/Google Docs is supported; content is sanitized server-side.
+- Novel chapter text is stored in `chapters.content_html` (max 500,000 chars per chapter).
+- Manga/Manhwa/Manhua/Other keep the existing multi-image R2 upload flow.
+- Existing Novel chapters can be edited in-place from Admin.
+- Admin Preview and public reader render Novel text.
+- Reader view statistics/history also work for Novel chapters.
+- Duplicate copies Novel text as a Draft.
+- Run `supabase-v11-11-novel-content.sql` once.

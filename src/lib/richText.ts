@@ -51,3 +51,43 @@ export function sanitizeRichText(input: string | null | undefined) {
 export function richTextToHtml(input: string | null | undefined) {
   return sanitizeRichText(input);
 }
+
+
+function sanitizeWithLimit(input: string | null | undefined, limit: number) {
+  let value = String(input || '').trim().slice(0, limit);
+  if (!value) return '';
+
+  if (!/<[a-z][\s\S]*>/i.test(value)) return plainTextToHtml(value);
+
+  value = value
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<(script|style|iframe|object|embed|svg|math|form)[^>]*>[\s\S]*?<\/\1\s*>/gi, '')
+    .replace(/<(script|style|iframe|object|embed|svg|math|form|input|button|textarea|select|option|link|meta|base|img|video|audio|source|canvas)[^>]*\/?>/gi, '');
+
+  value = value.replace(/<\/?([a-z0-9]+)(?:\s[^>]*)?>/gi, (whole, rawTag) => {
+    const tag = String(rawTag).toLowerCase();
+    if (!ALLOWED_TAGS.has(tag)) return '';
+    const closing = /^<\//.test(whole);
+    if (tag === 'br' || tag === 'hr') return closing ? '' : `<${tag}>`;
+
+    // Novel editor may create text-align styles. Preserve only that one safe property.
+    if (!closing && ['p','h3','h4','blockquote'].includes(tag)) {
+      const m = whole.match(/text-align\s*:\s*(left|center|right|justify)/i);
+      if (m) return `<${tag} style="text-align:${m[1].toLowerCase()}">`;
+    }
+    return closing ? `</${tag}>` : `<${tag}>`;
+  });
+
+  return value
+    .replace(/<b>/gi, '<strong>').replace(/<\/b>/gi, '</strong>')
+    .replace(/<i>/gi, '<em>').replace(/<\/i>/gi, '</em>')
+    .trim();
+}
+
+export function sanitizeNovelRichText(input: string | null | undefined) {
+  return sanitizeWithLimit(input, 500000);
+}
+
+export function novelRichTextToHtml(input: string | null | undefined) {
+  return sanitizeNovelRichText(input);
+}
