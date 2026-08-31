@@ -315,3 +315,17 @@ Trang chi tiết truyện:
 - Adds show/hide eye buttons to all password inputs across the site.
 - Passwords stay hidden by default.
 - No SQL required.
+
+
+## v11.15 — Members, comments & chapter notifications
+- Admin sidebar adds **Thành viên**.
+- Admin can set Member/Admin role, enable/disable accounts, and enable/disable comment permission.
+- Disabled accounts are rejected by the website session layer.
+- Adds comments to each series page.
+- Anyone can read comments; only logged-in active members/admins with comment permission can post.
+- Comment owners and admins can delete comments.
+- Comments are plain text, max 2,000 characters, with a 15-second posting cooldown.
+- Adds a bottom-right/corner toast for newly published chapters (last 7 days).
+- Notification is shown once per chapter per browser and links directly to the new chapter.
+- Notification checks are throttled to once per 5 minutes per browser.
+- Run `supabase-v11-15-members-comments.sql` once before deployment.

@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getAdminSeriesList, getAdminChapters, getChapterStats, statusLabel, getSiteSetting } from '../../lib/supabase';
+import { getAdminSeriesList, getAdminChapters, getChapterStats, statusLabel, getSiteSetting, getAdminMembers } from '../../lib/supabase';
 import { requireAdminSession } from '../../lib/auth';
 export const prerender=false;
 const adminSession=await requireAdminSession(Astro.cookies);if(!adminSession)return Astro.redirect('/login?next=/admin');const token=adminSession.token;const admin=adminSession.user;
@@ -9,6 +9,8 @@ try{rows=await getAdminSeriesList(token);connected=true;await Promise.all(rows.m
 const success=Astro.url.searchParams.get('success');const error=Astro.url.searchParams.get('error');
 let adHtml='';
 try{adHtml=(await getSiteSetting('reader_ad_html',token))?.value||''}catch{}
+let members:any[]=[];let membersError='';
+try{members=await getAdminMembers(token)}catch(e){membersError=e instanceof Error?e.message:'Không tải được thành viên.'}
 ---
 <BaseLayout title="Admin — Crescent Moon Translation">
 <section class="admin-card admin-wide"><div class="admin-top"><div><h1>Admin</h1><p class="meta">Đăng nhập: {admin.email}</p></div><form method="POST" action="/api/auth/logout"><button class="button secondary" type="submit">Đăng xuất</button></form></div>
@@ -22,6 +24,7 @@ try{adHtml=(await getSiteSetting('reader_ad_html',token))?.value||''}catch{}
   <a href="#admin-ads">📢 Quảng cáo</a>
   <a href="#admin-add-series">➕ Thêm truyện</a>
   <a href="#admin-manage-series">📚 Quản lý truyện</a>
+  <a href="#admin-members">👥 Thành viên</a>
 </nav>
   </aside>
   <div class="admin-dashboard-content">
@@ -66,6 +69,33 @@ try{adHtml=(await getSiteSetting('reader_ad_html',token))?.value||''}catch{}
 <label class="field"><span>Ảnh bìa *</span><input name="cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required/><small class="meta">JPG, PNG, WebP hoặc GIF. Tối đa 8 MB.</small></label><label class="check-row"><input name="is_published" type="checkbox" value="true" checked/><span>Đăng công khai ngay</span></label><button class="button" type="submit">Lưu truyện</button></form>
 </section>
 <section class="admin-card admin-wide admin-anchor-section" id="admin-manage-series"><div class="section-title"><h2>Quản lý truyện</h2><span class="meta">{rows.length} truyện</span></div>{rows.length===0?<div class="empty-state">Chưa có truyện nào.</div>:<div class="admin-series-list">{rows.map(item=>{const x=stats.get(item.id)||{chapters:0,views:0};return <div class="admin-series-row"><div class="admin-thumb">{item.cover_key?<img src={`/api/cover/${item.id}`} alt="" loading="lazy"/>:<span>Không bìa</span>}</div><div><strong>{item.title}</strong><div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.access_type==='password'?'🔒 Mật khẩu cả bộ':item.access_type==='member'?'🔒 Thành viên':'Public'} · {item.is_published?'Công khai':'Bản nháp'}</div><div class="admin-statline"><span>{x.chapters} chapter</span><span>{x.views.toLocaleString('vi-VN')} lượt đọc</span></div></div><div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa / Chapters</a>{item.is_published&&<a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div></div>})}</div>}</section>
+
+<section class="admin-card admin-wide admin-anchor-section" id="admin-members">
+  <div class="section-title">
+    <div><h2>Quản lý thành viên</h2><p class="meta">Khóa tài khoản, bật/tắt quyền bình luận hoặc thay đổi vai trò.</p></div>
+    <span class="meta">{members.length} tài khoản</span>
+  </div>
+  {membersError
+    ? <div class="notice error">{membersError}</div>
+    : members.length===0
+      ? <div class="empty-state">Chưa có thành viên.</div>
+      : <div class="admin-member-list">
+          {members.map(member=>
+            <form method="POST" action="/api/admin/member/update" class="admin-member-row">
+              <input type="hidden" name="user_id" value={member.user_id}/>
+              <div class="admin-member-main">
+                <strong>{member.display_name||member.username||member.email||'Thành viên'}</strong>
+                <span class="meta">{member.email||member.user_id}</span>
+                <span class="meta">Tham gia: {member.created_at?new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(member.created_at)):'—'}</span>
+              </div>
+              <label class="member-control"><span>Vai trò</span><select name="role"><option value="member" selected={member.role==='member'}>Member</option><option value="admin" selected={member.role==='admin'}>Admin</option></select></label>
+              <label class="member-check"><input type="checkbox" name="is_active" value="true" checked={member.is_active}/><span>Hoạt động</span></label>
+              <label class="member-check"><input type="checkbox" name="can_comment" value="true" checked={member.can_comment}/><span>Được bình luận</span></label>
+              <button class="button secondary small-button" type="submit">Lưu</button>
+            </form>
+          )}
+        </div>}
+</section>
 
   </div>
 </div>

@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getChapters,getSeriesBySlug,statusLabel,getBookmark,getReadingHistory,getChapterReads } from '../../lib/supabase';
+import { getChapters,getSeriesBySlug,statusLabel,getBookmark,getReadingHistory,getChapterReads,getSeriesComments } from '../../lib/supabase';
 import { getSession } from '../../lib/auth';
 import { richTextToHtml } from '../../lib/richText';
 export const prerender=false;
@@ -20,6 +20,10 @@ const updated=latest?.published_at||series?.updated_at;
 const accessText=series?.access_type==='password'?'🔒 Khóa mật khẩu cả bộ':series?.access_type==='member'?'🔒 Dành cho thành viên':'Public';
 const fmt=(v?:string|null)=>v?new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(v)):'—';
 const introHtml=series?richTextToHtml(series.description):'';
+let comments:any[]=[];
+if(series){try{comments=await getSeriesComments(series.id)}catch{}}
+const commentError=Astro.url.searchParams.get('comment_error');
+const commentSuccess=Astro.url.searchParams.get('comment')==='success';
 ---
 <BaseLayout title={series?`${series.title} | Crescent Moon Translation`:'Lỗi | Crescent Moon Translation'} description={series?.description?String(series.description).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,180):'Đọc truyện tại Crescent Moon Translation.'} image={series?.cover_key?`/api/og-cover/${series.id}`:"/social-preview.png"} imageAlt={series?`Bìa truyện ${series.title}`:"Crescent Moon Translation"} ogType="article">
 {error?<div class="notice error">{error}</div>:series?<>
@@ -70,5 +74,37 @@ const introHtml=series?richTextToHtml(series.description):'';
 
 <div class="section-title"><h2>Danh sách chương</h2><span class="meta">{chapters.length} chap</span></div>
 {chapters.length===0?<div class="empty-state">Chưa có chapter được đăng.</div>:<div class="chapter-list">{chapters.map(ch=><a class={`chapter ${readIds.has(ch.id)?'chapter-read':''}`} href={`/read/${series.slug}/${ch.chapter_number}`}><span>Chapter {ch.chapter_number}{ch.title?` — ${ch.title}`:''}</span><span class="chapter-right">{session&&<span class={readIds.has(ch.id)?'read-state read':'read-state'}>{readIds.has(ch.id)?'✓ Đã đọc':'Chưa đọc'}</span>}<span class={series.access_type==='public'?'meta':'lock'}>{series.access_type==='password'?'🔒':series.access_type==='member'?'🔒':'Đọc'}</span></span></a>)}</div>}
+
+<section class="comments-section" id="comments">
+  <div class="section-title"><h2>Bình luận</h2><span class="meta">{comments.length} bình luận</span></div>
+  {commentSuccess&&<div class="notice success">Đã gửi bình luận.</div>}
+  {commentError&&<div class="notice error">{commentError}</div>}
+
+  {session
+    ? <form method="POST" action="/api/comments/create" class="comment-form">
+        <input type="hidden" name="series_id" value={series.id}/>
+        <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
+        <label class="field"><span>Bình luận với tư cách <strong>{session.user.display_name||session.user.username||'Thành viên'}</strong></span><textarea name="body" rows="4" maxlength="2000" required placeholder="Viết bình luận..."></textarea></label>
+        <div class="comment-form-footer"><span class="meta">Chỉ thành viên đã đăng nhập mới có thể bình luận.</span><button class="button" type="submit">Gửi bình luận</button></div>
+      </form>
+    : <div class="comment-login-note">💬 <a href={`/login?next=${encodeURIComponent(`/manga/${series.slug}#comments`)}`}>Đăng nhập</a> để tham gia bình luận.</div>}
+
+  {comments.length===0
+    ? <div class="empty-state comments-empty">Chưa có bình luận nào.</div>
+    : <div class="comment-list">
+        {comments.map(c=><article class="comment-item">
+          <div class="comment-head">
+            <div><strong>{c.display_name||c.username||'Thành viên'}</strong><span class="meta"> · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(c.created_at))}</span></div>
+            {session&&(session.user.id===c.user_id||session.user.role==='admin')&&
+              <form method="POST" action="/api/comments/delete" onsubmit="return confirm('Xóa bình luận này?');">
+                <input type="hidden" name="id" value={c.id}/>
+                <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
+                <button class="comment-delete" type="submit">Xóa</button>
+              </form>}
+          </div>
+          <p>{c.body}</p>
+        </article>)}
+      </div>}
+</section>
 </>:null}
 </BaseLayout>

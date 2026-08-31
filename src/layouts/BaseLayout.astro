@@ -131,4 +131,77 @@ const user = await getSessionUser(Astro.cookies);
 })();
 </script>
 
+<script is:inline data-chapter-notifications>
+(() => {
+  if (location.pathname.startsWith('/admin')) return;
+
+  const CHECK_KEY='crescent_notif_check_at_v1';
+  const SEEN_KEY='crescent_seen_chapters_v1';
+  const now=Date.now();
+  const last=Number(localStorage.getItem(CHECK_KEY)||0);
+  if(now-last<5*60*1000) return;
+  localStorage.setItem(CHECK_KEY,String(now));
+
+  fetch('/api/notifications/latest',{credentials:'same-origin'})
+    .then(r=>r.ok?r.json():null)
+    .then(data=>{
+      const items=Array.isArray(data?.items)?data.items:[];
+      let seen=[];
+      try{seen=JSON.parse(localStorage.getItem(SEEN_KEY)||'[]')}catch{}
+      if(!Array.isArray(seen))seen=[];
+      const item=items.find(x=>x&&x.id&&!seen.includes(x.id));
+      if(!item)return;
+
+      // Mark as seen as soon as it is shown, so it does not pop up on every page.
+      seen.unshift(item.id);
+      localStorage.setItem(SEEN_KEY,JSON.stringify(seen.slice(0,100)));
+
+      const toast=document.createElement('aside');
+      toast.className='site-notification-toast';
+      toast.setAttribute('role','status');
+
+      const close=document.createElement('button');
+      close.type='button';
+      close.className='site-notification-close';
+      close.setAttribute('aria-label','Đóng thông báo');
+      close.textContent='×';
+
+      const icon=document.createElement('div');
+      icon.className='site-notification-icon';
+      icon.textContent='✨';
+
+      const content=document.createElement('div');
+      content.className='site-notification-content';
+
+      const eyebrow=document.createElement('div');
+      eyebrow.className='site-notification-eyebrow';
+      eyebrow.textContent='Có chapter mới';
+
+      const title=document.createElement('strong');
+      title.textContent=String(item.title||'Truyện mới cập nhật');
+
+      const chapter=document.createElement('span');
+      chapter.textContent=`Chapter ${item.chapter_number}${item.chapter_title?' — '+item.chapter_title:''}`;
+
+      const link=document.createElement('a');
+      link.className='site-notification-link';
+      link.href=String(item.href||'/');
+      link.textContent='Đọc ngay →';
+
+      content.append(eyebrow,title,chapter,link);
+      toast.append(icon,content,close);
+      document.body.appendChild(toast);
+
+      requestAnimationFrame(()=>toast.classList.add('is-visible'));
+      const dismiss=()=>{
+        toast.classList.remove('is-visible');
+        setTimeout(()=>toast.remove(),220);
+      };
+      close.addEventListener('click',dismiss);
+      setTimeout(dismiss,12000);
+    })
+    .catch(()=>{});
+})();
+</script>
+
 </body></html>

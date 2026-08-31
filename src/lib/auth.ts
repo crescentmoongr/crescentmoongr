@@ -133,7 +133,7 @@ async function readUser(accessToken: string): Promise<SessionUser | null> {
   const user: any = await userRes.json();
 
   const profileRes = await fetch(
-    `${url}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=username,display_name,role,avatar_key&limit=1`,
+    `${url}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=username,display_name,role,avatar_key,is_active,can_comment&limit=1`,
     { headers: { apikey: key, Authorization: `Bearer ${accessToken}`, Accept: 'application/json' } }
   );
   let profile: any = null;
@@ -144,10 +144,12 @@ async function readUser(accessToken: string): Promise<SessionUser | null> {
   if (!profile) {
     try {
       await fetch(`${url}/rest/v1/rpc/ensure_my_profile`, { method:'POST', headers:{ apikey:key, Authorization:`Bearer ${accessToken}`, 'Content-Type':'application/json' }, body:'{}' });
-      const retry = await fetch(`${url}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=username,display_name,role,avatar_key&limit=1`, { headers:{ apikey:key, Authorization:`Bearer ${accessToken}`, Accept:'application/json' } });
+      const retry = await fetch(`${url}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=username,display_name,role,avatar_key,is_active,can_comment&limit=1`, { headers:{ apikey:key, Authorization:`Bearer ${accessToken}`, Accept:'application/json' } });
       if (retry.ok) { const rows:any[] = await retry.json(); profile = rows[0] || null; }
     } catch {}
   }
+  if (profile?.is_active === false) return null;
+
   return {
     id: user.id,
     email: user.email ?? null,
