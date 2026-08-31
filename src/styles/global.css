@@ -1575,3 +1575,34 @@ body:has(.reader-bottom-nav) .site-notification-toast{bottom:104px}
     font-size:.92rem;
   }
 }
+
+
+/* =========================================================
+   v11.23 — Search panel pink-purple ombré
+   ========================================================= */
+.advanced-search-form{
+  background:
+    radial-gradient(circle at 10% 15%, rgba(255,226,241,.92), transparent 38%),
+    radial-gradient(circle at 90% 12%, rgba(235,225,255,.92), transparent 40%),
+    linear-gradient(135deg, #fff5fa 0%, #f8efff 52%, #fff3f8 100%);
+  border-color:#ead3e4;
+  box-shadow:0 10px 30px rgba(122,80,113,.06);
+}
+.advanced-search-top{
+  padding-bottom:4px;
+}
+.advanced-search-top input,
+.advanced-filter-grid select{
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+.advanced-reset{
+  background:rgba(255,255,255,.82);
+}
+
+
+/* v11.24 — WordPress-like author entry */
+input[list="author-suggestions"]{
+  background:#fff;
+}

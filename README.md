@@ -388,3 +388,21 @@ Trang chi tiết truyện:
 - Adds a simple X icon on the left.
 - Button text is now `Theo dõi tác giả trên X`.
 - No SQL changes; ZIP contains no SQL files.
+
+
+## v11.23 — Fix search taxonomy permissions + ombré search panel
+- Fixes Supabase `permission denied for table genres` on the advanced search page.
+- Grants public read access to both `authors` and `genres` while keeping RLS enabled.
+- Recreates the public SELECT policies for both taxonomy tables.
+- Changes the advanced-search panel background to a soft pink-purple ombré.
+- Run `supabase-v11-23-fix-taxonomy-permissions.sql` once.
+- ZIP contains only this new SQL migration.
+
+
+## v11.24 — WordPress-like author workflow
+- Add/Edit Story author field is free text again, with datalist suggestions from existing authors.
+- Typing a new author automatically creates an Author taxonomy record through the existing `admin_save_author` RPC.
+- The new author automatically gets a slug and a dedicated `/author/<slug>` page.
+- Existing authors can still be chosen from browser suggestions while typing.
+- Author management in Admin remains available for adding/editing the X profile link.
+- No SQL changes; ZIP contains no SQL files.
