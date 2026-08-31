@@ -264,3 +264,11 @@ Trang chi tiết truyện:
 - On mobile, the menu automatically returns to a compact horizontal 3-button layout.
 - Future admin sections can be added as new sidebar items.
 - No SQL required.
+
+
+## v11.9-fixed
+- Fixes Astro build error on `/admin`: mismatched closing `section` / `div`.
+- Keeps the left admin sidebar from v11.9.
+- Separates the Admin login/status card from the sidebar dashboard.
+- Ads and Add Story sections retain card styling.
+- No SQL required.

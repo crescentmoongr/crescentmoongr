@@ -697,3 +697,17 @@ html{scroll-behavior:smooth}
     font-size:.82rem;
   }
 }
+
+.admin-dashboard-content > #admin-ads,
+.admin-dashboard-content > #admin-add-series{
+  padding:24px 26px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:#fff;
+}
+.admin-dashboard-content > #admin-add-series{margin-top:22px}
+.admin-dashboard-content > .soft-rule{display:none}
+@media(max-width:760px){
+  .admin-dashboard-content > #admin-ads,
+  .admin-dashboard-content > #admin-add-series{padding:20px 16px}
+}

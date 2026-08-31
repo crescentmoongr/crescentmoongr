@@ -13,7 +13,7 @@ try{adHtml=(await getSiteSetting('reader_ad_html',token))?.value||''}catch{}
 <BaseLayout title="Admin — Crescent Moon Translation">
 <section class="admin-card admin-wide"><div class="admin-top"><div><h1>Admin</h1><p class="meta">Đăng nhập: {admin.email}</p></div><form method="POST" action="/api/auth/logout"><button class="button secondary" type="submit">Đăng xuất</button></form></div>
 <div class={connected?'notice success':'notice error'}>{connected?`Supabase đã kết nối · ${rows.length} truyện hiện có`:'Chưa kết nối được Supabase'}</div>{success&&<div class="notice success top-gap">{success}</div>}{error&&<div class="notice error top-gap">{error}</div>}
-
+</section>
 
 <div class="admin-dashboard-layout">
   <aside class="admin-sidebar">
@@ -64,7 +64,6 @@ try{adHtml=(await getSiteSetting('reader_ad_html',token))?.value||''}catch{}
   <small class="meta">Có thể in đậm, in nghiêng, gạch chân, tạo tiêu đề, danh sách, xuống dòng và đường ngăn cách.</small>
 </label>
 <label class="field"><span>Ảnh bìa *</span><input name="cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required/><small class="meta">JPG, PNG, WebP hoặc GIF. Tối đa 8 MB.</small></label><label class="check-row"><input name="is_published" type="checkbox" value="true" checked/><span>Đăng công khai ngay</span></label><button class="button" type="submit">Lưu truyện</button></form>
-</section>
 </section>
 <section class="admin-card admin-wide admin-anchor-section" id="admin-manage-series"><div class="section-title"><h2>Quản lý truyện</h2><span class="meta">{rows.length} truyện</span></div>{rows.length===0?<div class="empty-state">Chưa có truyện nào.</div>:<div class="admin-series-list">{rows.map(item=>{const x=stats.get(item.id)||{chapters:0,views:0};return <div class="admin-series-row"><div class="admin-thumb">{item.cover_key?<img src={`/api/cover/${item.id}`} alt="" loading="lazy"/>:<span>Không bìa</span>}</div><div><strong>{item.title}</strong><div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.access_type==='password'?'🔒 Mật khẩu cả bộ':item.access_type==='member'?'🔒 Thành viên':'Public'} · {item.is_published?'Công khai':'Bản nháp'}</div><div class="admin-statline"><span>{x.chapters} chapter</span><span>{x.views.toLocaleString('vi-VN')} lượt đọc</span></div></div><div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa / Chapters</a>{item.is_published&&<a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div></div>})}</div>}</section>
 
