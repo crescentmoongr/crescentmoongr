@@ -5,14 +5,14 @@ export const prerender=false;
 const {
   title = 'Crescent Moon Translation',
   description = 'Crescent Moon Translation',
-  image = '/crescent-moon-logo.png',
+  image = '/social-preview.png',
   imageAlt,
   canonical,
   ogType = 'website'
 } = Astro.props;
 
 const pageUrl = new URL(canonical || Astro.url.pathname, Astro.url.origin).href;
-const absoluteImage = new URL(image || '/crescent-moon-logo.png', Astro.url.origin).href;
+const absoluteImage = new URL(image || '/social-preview.png', Astro.url.origin).href;
 const user = await getSessionUser(Astro.cookies);
 ---
 <!doctype html>
@@ -23,6 +23,7 @@ const user = await getSessionUser(Astro.cookies);
 
   <title>{title}</title>
   <meta name="description" content={description} />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
   <link rel="canonical" href={pageUrl} />
 
   <!-- Social preview: keep these server-rendered and near the top of HEAD -->
@@ -35,11 +36,15 @@ const user = await getSessionUser(Astro.cookies);
   <meta property="og:image" content={absoluteImage} />
   <meta property="og:image:secure_url" content={absoluteImage} />
   <meta property="og:image:alt" content={imageAlt || title} />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
   <meta name="twitter:image" content={absoluteImage} />
+  <meta name="twitter:image:alt" content={imageAlt || title} />
 
   <meta itemprop="name" content={title} />
   <meta itemprop="description" content={description} />

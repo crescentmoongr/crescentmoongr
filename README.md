@@ -221,3 +221,25 @@ Trang chi tiết truyện:
 - Keeps `.series-info-row b` at font-weight 700.
 - Adds `public/robots.txt` with `Allow: /`.
 - No SQL required.
+
+
+## v11.6 — Social preview compatibility
+- Adds `public/social-preview.png` at the standard 1200×630 Open Graph size.
+- Uses this static public image for home, story and chapter previews for maximum crawler compatibility.
+- Adds explicit `og:image:type`, `og:image:width`, `og:image:height`, `twitter:image:alt`.
+- Adds `robots: index,follow,max-image-preview:large`.
+- `robots.txt` explicitly allows common social preview crawlers.
+- Dynamic titles remain:
+  - Story: `Tên truyện | Crescent Moon Translation`
+  - Chapter: `Tên truyện - Chapter X | Crescent Moon Translation`
+- Keeps the series info bold text at font-weight 700.
+- No SQL required.
+
+
+## v11.7 — Preview bằng ảnh bìa truyện
+- Trang truyện và chapter dùng chính ảnh bìa của bộ truyện làm `og:image`.
+- Thêm endpoint công khai `/api/og-cover/[id]` chỉ để social crawler đọc cover từ R2.
+- Endpoint có cache dài, CORS public và không làm lộ ảnh chapter.
+- Nếu truyện chưa có cover, tự fallback về `social-preview.png`.
+- Trang chủ vẫn dùng ảnh social 1200×630.
+- Không cần SQL mới.
