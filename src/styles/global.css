@@ -1347,3 +1347,65 @@ body:has(.reader-bottom-nav) .site-notification-toast{bottom:104px}
     max-height:calc(100vh - 175px);
   }
 }
+
+
+/* v11.19 — Mobile header fix */
+.notification-panel[hidden],
+.mobile-menu-panel[hidden]{
+  display:none!important;
+}
+
+.mobile-search-button{
+  display:none;
+}
+
+.mobile-menu-panel{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:2px;
+}
+
+.mobile-menu-panel a{
+  width:100%;
+}
+
+@media(max-width:700px){
+  .mobile-search-button{
+    display:grid;
+  }
+
+  .header-actions{
+    margin-left:auto;
+    flex-wrap:nowrap;
+  }
+
+  .mobile-menu-panel{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+
+  .mobile-menu-panel[hidden],
+  .notification-panel[hidden]{
+    display:none!important;
+  }
+}
+
+@media(max-width:430px){
+  .site-header{
+    padding-left:10px;
+    padding-right:10px;
+  }
+
+  .site-logo{
+    max-width:104px;
+  }
+
+  .header-actions{
+    gap:5px;
+  }
+
+  .header-icon-button{
+    width:38px;
+    height:38px;
+  }
+}

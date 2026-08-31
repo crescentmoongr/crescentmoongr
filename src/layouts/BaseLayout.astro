@@ -66,6 +66,10 @@ const user = await getSessionUser(Astro.cookies);
       {user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
     </nav>
 
+    <a class="header-icon-button mobile-search-button" href="/search" aria-label="Tìm kiếm" title="Tìm kiếm">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
+    </a>
+
     <div class="notification-wrap">
       <button class="header-icon-button notification-button" type="button" aria-label="Thông báo chapter mới" aria-expanded="false" data-notification-toggle>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
@@ -90,7 +94,6 @@ const user = await getSessionUser(Astro.cookies);
 
   <nav class="mobile-menu-panel" data-mobile-menu hidden aria-label="Menu trên điện thoại">
     <a href="/">🏠 Trang chủ</a>
-    <a href="/search">⌕ Tìm kiếm</a>
     <a href="/password">🔐 Mật khẩu</a>
     {user?.role==='admin'&&<a href="/admin">⚙ Admin</a>}
     {user?<a href="/account">👤 {user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">👤 Đăng nhập</a>}

@@ -359,3 +359,12 @@ Trang chi tiết truyện:
 - Mobile header keeps only logo + bell + menu button for a cleaner layout.
 - Notification API now returns up to 20 recent chapters and their cover images.
 - No SQL changes; ZIP contains no SQL files.
+
+
+## v11.19
+- Mobile header remains the original single header bar.
+- Order on mobile: Logo | Search | Bell | Hamburger.
+- Search removed from hamburger dropdown.
+- Fixes hidden dropdown CSS conflict caused by global nav styles.
+- Hamburger menu is vertical and only appears after tapping the menu button.
+- No SQL changes.
