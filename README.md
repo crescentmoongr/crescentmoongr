@@ -255,3 +255,12 @@ Trang chi tiết truyện:
 - Renames “Truyện hiện có” to “Quản lý truyện”.
 - Responsive 3-button layout on mobile.
 - No SQL required.
+
+
+## v11.9 — Admin sidebar
+- Moves the admin section menu into a vertical left sidebar on desktop.
+- Sidebar stays visible while scrolling.
+- Main admin tools remain in the right content column.
+- On mobile, the menu automatically returns to a compact horizontal 3-button layout.
+- Future admin sections can be added as new sidebar items.
+- No SQL required.
