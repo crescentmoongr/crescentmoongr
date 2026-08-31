@@ -368,3 +368,23 @@ Trang chi tiết truyện:
 - Fixes hidden dropdown CSS conflict caused by global nav styles.
 - Hamburger menu is vertical and only appears after tapping the menu button.
 - No SQL changes.
+
+
+## v11.21 — Author & genre management + advanced search
+- Admin sidebar adds **Tác giả** and **Thể loại** management.
+- Each author has a dedicated `/author/<slug>` page listing that author's series.
+- Author records can store an official X/Twitter profile link; author page shows “Theo dõi trên X”.
+- Each genre has a dedicated `/genre/<slug>` page listing series containing that genre.
+- Series detail author name and genre pills are now clickable taxonomy links.
+- Add/Edit Story uses managed author and genre lists instead of free-text taxonomy fields.
+- Existing authors/genres are automatically seeded from current series when the SQL migration runs.
+- Search page redesigned to match the requested advanced-search layout (without the “Nhà gõ chữ” section): full-width query box + Author / Status / Sort / Genre filters + reset button.
+- Run `supabase-v11-21-authors-genres.sql` once before deploy.
+- ZIP contains only this new SQL migration.
+
+
+## v11.22 — X follow button
+- Restyles the author X button as a black rounded pill like the provided reference.
+- Adds a simple X icon on the left.
+- Button text is now `Theo dõi tác giả trên X`.
+- No SQL changes; ZIP contains no SQL files.

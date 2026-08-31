@@ -94,9 +94,9 @@ const user = await getSessionUser(Astro.cookies);
 
   <nav class="mobile-menu-panel" data-mobile-menu hidden aria-label="Menu trên điện thoại">
     <a href="/">🏠 Trang chủ</a>
-    <a href="/password">🔐 Mật khẩu</a>
-    {user?.role==='admin'&&<a href="/admin">⚙ Admin</a>}
-    {user?<a href="/account">👤 {user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">👤 Đăng nhập</a>}
+    <a href="/password">Mật khẩu</a>
+    {user?.role==='admin'&&<a href="/admin">Admin</a>}
+    {user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
   </nav>
 </header>
 <main class="shell"><slot /></main><footer class="footer">2024 Crescent Moon Translation</footer><script is:inline data-copy-protection>

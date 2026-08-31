@@ -125,3 +125,39 @@ export type SeriesComment = {
 export async function getSeriesComments(seriesId:string){
   return supabaseRpc<SeriesComment[]>('get_series_comments',{p_series_id:seriesId});
 }
+
+
+export type AuthorProfile = {
+  id:string;
+  name:string;
+  slug:string;
+  x_url:string | null;
+  created_at:string;
+  updated_at:string;
+};
+
+export type GenreProfile = {
+  id:string;
+  name:string;
+  slug:string;
+  created_at:string;
+  updated_at:string;
+};
+
+export async function getAuthors(){
+  return supabaseGet<AuthorProfile[]>('authors?select=*&order=name.asc');
+}
+
+export async function getAuthorBySlug(slug:string){
+  const r=await supabaseGet<AuthorProfile[]>(`authors?select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`);
+  return r[0]??null;
+}
+
+export async function getGenres(){
+  return supabaseGet<GenreProfile[]>('genres?select=*&order=name.asc');
+}
+
+export async function getGenreBySlug(slug:string){
+  const r=await supabaseGet<GenreProfile[]>(`genres?select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`);
+  return r[0]??null;
+}

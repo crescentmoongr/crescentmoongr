@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAuthorBySlug,getSeriesList,statusLabel } from '../../lib/supabase';
+export const prerender=false;
+const slug=Astro.params.slug||'';
+const author=await getAuthorBySlug(slug);
+if(!author)return new Response('Không tìm thấy tác giả.',{status:404});
+const all=await getSeriesList();
+const rows=all.filter(x=>(x.author||'').trim().toLowerCase()===author.name.trim().toLowerCase());
+const badge=(s:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[s]||'';
+const badgeClass=(s:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'} as Record<string,string>)[s]||'';
+---
+<BaseLayout title={`${author.name} — Tác giả | Crescent Moon Translation`} description={`Các truyện của ${author.name} tại Crescent Moon Translation.`}>
+<section class="taxonomy-page-head">
+  <div><div class="taxonomy-kicker">Tác giả</div><h1>{author.name}</h1><p class="meta">{rows.length} truyện</p></div>
+  {author.x_url&&<a class="taxonomy-x-button" href={author.x_url} target="_blank" rel="noopener noreferrer nofollow" aria-label={`Theo dõi ${author.name} trên X`}>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4l14 16M19 4 5 20"/></svg>
+    <span>Theo dõi tác giả trên X</span>
+  </a>}
+</section>
+{rows.length?<section class="grid">{rows.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{badge(item.status)&&<span class={`cover-badge ${badgeClass(item.status)}`}>{badge(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'—'} · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện nào của tác giả này.</div>}
+</BaseLayout>

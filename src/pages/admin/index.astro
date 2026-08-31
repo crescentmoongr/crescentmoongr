@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getAdminSeriesList, getAdminChapters, getChapterStats, statusLabel, getSiteSetting, getAdminMembers } from '../../lib/supabase';
+import { getAdminSeriesList, getAdminChapters, getChapterStats, statusLabel, getSiteSetting, getAdminMembers, getAuthors, getGenres } from '../../lib/supabase';
 import { requireAdminSession } from '../../lib/auth';
 export const prerender=false;
 const adminSession=await requireAdminSession(Astro.cookies);if(!adminSession)return Astro.redirect('/login?next=/admin');const token=adminSession.token;const admin=adminSession.user;
@@ -11,6 +11,8 @@ let adHtml='';
 try{adHtml=(await getSiteSetting('reader_ad_html',token))?.value||''}catch{}
 let members:any[]=[];let membersError='';
 try{members=await getAdminMembers(token)}catch(e){membersError=e instanceof Error?e.message:'Không tải được thành viên.'}
+let authors:any[]=[];let genresManaged:any[]=[];
+try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{}
 ---
 <BaseLayout title="Admin — Crescent Moon Translation">
 <section class="admin-card admin-wide"><div class="admin-top"><div><h1>Admin</h1><p class="meta">Đăng nhập: {admin.email}</p></div><form method="POST" action="/api/auth/logout"><button class="button secondary" type="submit">Đăng xuất</button></form></div>
@@ -25,6 +27,8 @@ try{members=await getAdminMembers(token)}catch(e){membersError=e instanceof Erro
   <a href="#admin-add-series">➕ Thêm truyện</a>
   <a href="#admin-manage-series">📚 Quản lý truyện</a>
   <a href="#admin-members">👥 Thành viên</a>
+  <a href="#admin-authors">✍️ Tác giả</a>
+  <a href="#admin-genres">🏷️ Thể loại</a>
 </nav>
   </aside>
   <div class="admin-dashboard-content">
@@ -45,7 +49,7 @@ try{members=await getAdminMembers(token)}catch(e){membersError=e instanceof Erro
 <section class="admin-anchor-section" id="admin-add-series">
 <div class="section-title"><h2>Thêm truyện</h2></div>
 <form method="POST" action="/api/admin/series/create" enctype="multipart/form-data" class="admin-form"><div class="form-grid">
-<label class="field"><span>Tên truyện *</span><input id="title" name="title" required maxlength="200"/></label><label class="field"><span>Slug *</span><input id="slug" name="slug" required maxlength="200" placeholder="ten-truyen"/></label><label class="field"><span>Tác giả</span><input name="author" maxlength="200"/></label><label class="field"><span>Họa sĩ</span><input name="artist" maxlength="200"/></label><label class="field"><span>Thể loại</span><input name="genres" maxlength="400" placeholder="Romance, Comedy, Drama..."/><small class="meta">Ngăn cách bằng dấu phẩy.</small></label><label class="field"><span>Link mua raw</span><input name="raw_url" type="url" maxlength="1000" placeholder="https://..."/><small class="meta">Link trang chính thức để người đọc mua raw và ủng hộ tác giả.</small></label><label class="field"><span>Loại truyện</span><select name="type"><option value="">— Chưa chọn —</option><option value="Manga">Manga</option><option value="Manhwa">Manhwa</option><option value="Manhua">Manhua</option><option value="Novel">Novel</option><option value="Other">Khác</option></select></label><label class="field"><span>Trạng thái *</span><select name="status" required><option value="ongoing">Đang tiến hành</option><option value="completed">Hoàn thành</option><option value="hiatus">Tạm ngưng</option><option value="dropped">Drop</option></select></label><label class="field"><span>Quyền đọc *</span><select name="access_type" id="new_access_type" required><option value="public">Public</option><option value="password">Khóa mật khẩu cả bộ</option><option value="member">Thành viên</option></select></label><label class="field" id="new_series_password_field" hidden><span>Mật khẩu truyện *</span><input name="series_password" type="password" minlength="4" autocomplete="new-password"/></label></div>
+<label class="field"><span>Tên truyện *</span><input id="title" name="title" required maxlength="200"/></label><label class="field"><span>Slug *</span><input id="slug" name="slug" required maxlength="200" placeholder="ten-truyen"/></label><label class="field"><span>Tác giả</span><select name="author"><option value="">— Chưa chọn —</option>{authors.map(a=><option value={a.name}>{a.name}</option>)}</select><small class="meta">Quản lý danh sách tác giả ở mục “Tác giả”.</small></label><label class="field"><span>Họa sĩ</span><input name="artist" maxlength="200"/></label><label class="field"><span>Thể loại</span><select name="genres" multiple size="5">{genresManaged.map(g=><option value={g.name}>{g.name}</option>)}</select><small class="meta">Giữ Ctrl/Cmd để chọn nhiều thể loại.</small></label><label class="field"><span>Link mua raw</span><input name="raw_url" type="url" maxlength="1000" placeholder="https://..."/><small class="meta">Link trang chính thức để người đọc mua raw và ủng hộ tác giả.</small></label><label class="field"><span>Loại truyện</span><select name="type"><option value="">— Chưa chọn —</option><option value="Manga">Manga</option><option value="Manhwa">Manhwa</option><option value="Manhua">Manhua</option><option value="Novel">Novel</option><option value="Other">Khác</option></select></label><label class="field"><span>Trạng thái *</span><select name="status" required><option value="ongoing">Đang tiến hành</option><option value="completed">Hoàn thành</option><option value="hiatus">Tạm ngưng</option><option value="dropped">Drop</option></select></label><label class="field"><span>Quyền đọc *</span><select name="access_type" id="new_access_type" required><option value="public">Public</option><option value="password">Khóa mật khẩu cả bộ</option><option value="member">Thành viên</option></select></label><label class="field" id="new_series_password_field" hidden><span>Mật khẩu truyện *</span><input name="series_password" type="password" minlength="4" autocomplete="new-password"/></label></div>
 
 <label class="field rich-field">
   <span>Giới thiệu</span>
@@ -69,6 +73,43 @@ try{members=await getAdminMembers(token)}catch(e){membersError=e instanceof Erro
 <label class="field"><span>Ảnh bìa *</span><input name="cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required/><small class="meta">JPG, PNG, WebP hoặc GIF. Tối đa 8 MB.</small></label><label class="check-row"><input name="is_published" type="checkbox" value="true" checked/><span>Đăng công khai ngay</span></label><button class="button" type="submit">Lưu truyện</button></form>
 </section>
 <section class="admin-card admin-wide admin-anchor-section" id="admin-manage-series"><div class="section-title"><h2>Quản lý truyện</h2><span class="meta">{rows.length} truyện</span></div>{rows.length===0?<div class="empty-state">Chưa có truyện nào.</div>:<div class="admin-series-list">{rows.map(item=>{const x=stats.get(item.id)||{chapters:0,views:0};return <div class="admin-series-row"><div class="admin-thumb">{item.cover_key?<img src={`/api/cover/${item.id}`} alt="" loading="lazy"/>:<span>Không bìa</span>}</div><div><strong>{item.title}</strong><div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.access_type==='password'?'🔒 Mật khẩu cả bộ':item.access_type==='member'?'🔒 Thành viên':'Public'} · {item.is_published?'Công khai':'Bản nháp'}</div><div class="admin-statline"><span>{x.chapters} chapter</span><span>{x.views.toLocaleString('vi-VN')} lượt đọc</span></div></div><div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa / Chapters</a>{item.is_published&&<a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div></div>})}</div>}</section>
+
+
+<section class="admin-card admin-wide admin-anchor-section" id="admin-authors">
+  <div class="section-title"><div><h2>Quản lý tác giả</h2><p class="meta">Mỗi tác giả có trang riêng và có thể gắn tài khoản X.</p></div><span class="meta">{authors.length} tác giả</span></div>
+  <form method="POST" action="/api/admin/author/save" class="admin-form taxonomy-create-form">
+    <div class="form-grid">
+      <label class="field"><span>Tên tác giả *</span><input name="name" required maxlength="200" placeholder="Tên tác giả"/></label>
+      <label class="field"><span>Link tài khoản X</span><input name="x_url" type="url" maxlength="1000" placeholder="https://x.com/..."/></label>
+    </div>
+    <button class="button" type="submit">Thêm tác giả</button>
+  </form>
+  {authors.length?<div class="taxonomy-admin-list">{authors.map(a=>
+    <form method="POST" action="/api/admin/author/save" class="taxonomy-admin-row">
+      <input type="hidden" name="id" value={a.id}/>
+      <label><span>Tên</span><input name="name" value={a.name} required maxlength="200"/></label>
+      <label><span>X</span><input name="x_url" type="url" value={a.x_url||''} maxlength="1000" placeholder="https://x.com/..."/></label>
+      <a class="button secondary small-button" href={`/author/${a.slug}`}>Xem trang</a>
+      <button class="button secondary small-button" type="submit">Lưu</button>
+      <button class="danger-button small-danger" type="submit" formaction="/api/admin/author/delete" onclick="return confirm('Xóa tác giả này khỏi danh mục? Truyện hiện có vẫn giữ tên tác giả.');">Xóa</button>
+    </form>)}</div>:<div class="empty-state">Chưa có tác giả.</div>}
+</section>
+
+<section class="admin-card admin-wide admin-anchor-section" id="admin-genres">
+  <div class="section-title"><div><h2>Quản lý thể loại</h2><p class="meta">Mỗi thể loại có trang riêng liệt kê các truyện tương ứng.</p></div><span class="meta">{genresManaged.length} thể loại</span></div>
+  <form method="POST" action="/api/admin/genre/save" class="admin-form taxonomy-create-form">
+    <div class="form-grid"><label class="field"><span>Tên thể loại *</span><input name="name" required maxlength="120" placeholder="Romance"/></label></div>
+    <button class="button" type="submit">Thêm thể loại</button>
+  </form>
+  {genresManaged.length?<div class="taxonomy-admin-list">{genresManaged.map(g=>
+    <form method="POST" action="/api/admin/genre/save" class="taxonomy-admin-row genre-admin-row">
+      <input type="hidden" name="id" value={g.id}/>
+      <label><span>Tên</span><input name="name" value={g.name} required maxlength="120"/></label>
+      <a class="button secondary small-button" href={`/genre/${g.slug}`}>Xem trang</a>
+      <button class="button secondary small-button" type="submit">Lưu</button>
+      <button class="danger-button small-danger" type="submit" formaction="/api/admin/genre/delete" onclick="return confirm('Xóa thể loại này khỏi danh mục?');">Xóa</button>
+    </form>)}</div>:<div class="empty-state">Chưa có thể loại.</div>}
+</section>
 
 <section class="admin-card admin-wide admin-anchor-section" id="admin-members">
   <div class="section-title">
