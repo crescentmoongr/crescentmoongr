@@ -208,3 +208,16 @@ Trang chi tiết truyện:
 - Trang truyện/chapter dùng og:type=article.
 - Đổi `.series-info-row b` từ font-weight 800 xuống 700.
 - Không cần SQL mới.
+
+
+## v11.5 — Social preview reliability fix
+- Rebuilt the `<head>` block so Open Graph tags are always server-rendered near the top of raw HTML.
+- Always outputs `og:title`, `og:description`, `og:url`, `og:type`, `og:site_name`, `og:locale`, and an absolute `og:image`.
+- Adds `itemprop` fallback metadata.
+- Uses the static Crescent Moon logo for social preview image to avoid crawler issues with the dynamic `/api/cover/...` endpoint.
+- Keeps dynamic story/chapter titles:
+  - Story: `Tên truyện | Crescent Moon Translation`
+  - Chapter: `Tên truyện - Chapter X | Crescent Moon Translation`
+- Keeps `.series-info-row b` at font-weight 700.
+- Adds `public/robots.txt` with `Allow: /`.
+- No SQL required.

@@ -6,30 +6,49 @@ const {
   title = 'Crescent Moon Translation',
   description = 'Crescent Moon Translation',
   image = '/crescent-moon-logo.png',
+  imageAlt,
   canonical,
   ogType = 'website'
 } = Astro.props;
 
-const pageUrl = canonical || Astro.url.href;
-const absoluteImage = image ? new URL(image, Astro.url.origin).href : null;
+const pageUrl = new URL(canonical || Astro.url.pathname, Astro.url.origin).href;
+const absoluteImage = new URL(image || '/crescent-moon-logo.png', Astro.url.origin).href;
 const user = await getSessionUser(Astro.cookies);
 ---
-<!doctype html><html lang="vi"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width"/><meta name="description" content={description}/>
-<link rel="canonical" href={pageUrl}/>
-<meta property="og:title" content={title}/>
-<meta property="og:description" content={description}/>
-<meta property="og:site_name" content="Crescent Moon Translation"/>
-<meta property="og:type" content={ogType}/>
-<meta property="og:url" content={pageUrl}/>
-{absoluteImage&&<meta property="og:image" content={absoluteImage}/>}
-{absoluteImage&&<meta property="og:image:secure_url" content={absoluteImage}/>}
-{absoluteImage&&<meta property="og:image:type" content="image/png"/>}
-{absoluteImage&&<meta property="og:image:width" content="1200"/>}
-{absoluteImage&&<meta property="og:image:height" content="630"/>}
-<meta name="twitter:card" content={absoluteImage?'summary_large_image':'summary'}/>
-<meta name="twitter:title" content={title}/>
-<meta name="twitter:description" content={description}/>
-{absoluteImage&&<meta name="twitter:image" content={absoluteImage}/>}<link rel="icon" type="image/png" href="/honeymoon_4213586.png"/><link rel="shortcut icon" href="/honeymoon_4213586.png"/><title>{title}</title></head><body>
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={pageUrl} />
+
+  <!-- Social preview: keep these server-rendered and near the top of HEAD -->
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={pageUrl} />
+  <meta property="og:type" content={ogType} />
+  <meta property="og:site_name" content="Crescent Moon Translation" />
+  <meta property="og:locale" content="vi_VN" />
+  <meta property="og:image" content={absoluteImage} />
+  <meta property="og:image:secure_url" content={absoluteImage} />
+  <meta property="og:image:alt" content={imageAlt || title} />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={absoluteImage} />
+
+  <meta itemprop="name" content={title} />
+  <meta itemprop="description" content={description} />
+  <meta itemprop="image" content={absoluteImage} />
+
+  <link rel="icon" type="image/png" href="/honeymoon_4213586.png" />
+  <link rel="shortcut icon" href="/honeymoon_4213586.png" />
+</head>
+<body>
 <header class="site-header"><a class="brand" href="/"><img src="/crescent-moon-logo.png" alt="Crescent Moon" class="site-logo" /></a><nav><a href="/">Trang chủ</a><a href="/search">Tìm kiếm</a><a href="/password">Mật khẩu</a>{user?.role==='admin'&&<a href="/admin">Admin</a>}{user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}</nav></header>
 <main class="shell"><slot /></main><footer class="footer">2024 Crescent Moon Translation</footer><script is:inline data-copy-protection>
 (() => {
