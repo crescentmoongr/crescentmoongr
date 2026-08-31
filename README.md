@@ -307,3 +307,11 @@ Trang chi tiết truyện:
 ## v11.13
 - Reader navigation order changed to: Home → Previous → Current chapter → Next → Info.
 - No SQL required.
+
+
+## v11.14
+- Reader navigation wording unified to `Chapter`.
+- `Danh sách chap` is now `Danh sách chapter`.
+- Adds show/hide eye buttons to all password inputs across the site.
+- Passwords stay hidden by default.
+- No SQL required.

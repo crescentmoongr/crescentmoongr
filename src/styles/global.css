@@ -871,3 +871,20 @@ body:has(.reader-bottom-nav){
     line-height:1.9;
   }
 }
+
+/* v11.14 — Show / hide password */
+.password-toggle-wrap{position:relative;width:100%}
+.password-toggle-wrap>input{padding-right:48px}
+.password-toggle-button{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  width:36px;height:36px;display:grid;place-items:center;padding:0;
+  border:0;border-radius:9px;background:transparent;color:#8b6378;cursor:pointer
+}
+.password-toggle-button:hover{background:var(--pink-soft)}
+.password-toggle-button svg{
+  width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round
+}
+.password-toggle-button .eye-closed{display:none}
+.password-toggle-wrap.is-visible .eye-open{display:none}
+.password-toggle-wrap.is-visible .eye-closed{display:block}
