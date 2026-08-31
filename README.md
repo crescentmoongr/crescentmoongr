@@ -295,3 +295,15 @@ Trang chi tiết truyện:
 - Reader view statistics/history also work for Novel chapters.
 - Duplicate copies Novel text as a Draft.
 - Run `supabase-v11-11-novel-content.sql` once.
+
+
+## v11.12
+- Reader: Home SVG icon + separate story Info button.
+- Home goes to `/`; Info goes to current series page.
+- Removes `trên trình duyệt hiện tại` from password hint.
+- No SQL required.
+
+
+## v11.13
+- Reader navigation order changed to: Home → Previous → Current chapter → Next → Info.
+- No SQL required.

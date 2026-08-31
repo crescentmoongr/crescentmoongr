@@ -736,6 +736,7 @@ html{scroll-behavior:smooth}
   text-decoration:none;
 }
 .reader-bottom-home,
+.reader-bottom-info,
 .reader-bottom-step,
 .reader-bottom-current{
   min-height:42px;
@@ -747,12 +748,9 @@ html{scroll-behavior:smooth}
   color:#79566a;
   font-weight:700;
 }
-.reader-bottom-home{
-  flex:0 0 42px;
-  width:42px;
-  border-radius:50%;
-  font-size:1.3rem;
-}
+.reader-bottom-home,.reader-bottom-info{flex:0 0 42px;width:42px;border-radius:50%;padding:0}
+.reader-bottom-home svg,.reader-bottom-info svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.reader-bottom-info svg circle:last-child{fill:currentColor;stroke:none}
 .reader-bottom-step{
   flex:0 0 auto;
   padding:0 14px;
@@ -795,10 +793,8 @@ body:has(.reader-bottom-nav){
     gap:4px;
     padding:6px;
   }
-  .reader-bottom-home{
-    flex-basis:40px;
-    width:40px;
-    min-height:40px;
+  .reader-bottom-home,.reader-bottom-info{
+    flex-basis:40px;width:40px;min-height:40px;
   }
   .reader-bottom-step{
     min-height:40px;
