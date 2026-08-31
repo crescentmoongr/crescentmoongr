@@ -199,3 +199,12 @@ Trang chi tiết truyện:
 - Trang truyện: Tên truyện | Crescent Moon Translation.
 - Preview dùng ảnh bìa nếu có.
 - Không cần SQL mới.
+
+
+## v11.4
+- Cải thiện social link preview cho trang chủ, trang truyện và chapter.
+- Trang chủ mặc định dùng logo Crescent Moon làm ảnh preview.
+- Bổ sung canonical, og:image:secure_url, og:image:type, og:image:width/height, Twitter Card.
+- Trang truyện/chapter dùng og:type=article.
+- Đổi `.series-info-row b` từ font-weight 800 xuống 700.
+- Không cần SQL mới.
