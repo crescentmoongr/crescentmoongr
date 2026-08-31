@@ -54,7 +54,48 @@ const user = await getSessionUser(Astro.cookies);
   <link rel="shortcut icon" href="/honeymoon_4213586.png" />
 </head>
 <body>
-<header class="site-header"><a class="brand" href="/"><img src="/crescent-moon-logo.png" alt="Crescent Moon" class="site-logo" /></a><nav><a href="/">Trang chủ</a><a href="/search">Tìm kiếm</a><a href="/password">Mật khẩu</a>{user?.role==='admin'&&<a href="/admin">Admin</a>}{user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}</nav></header>
+<header class="site-header">
+  <a class="brand" href="/"><img src="/crescent-moon-logo.png" alt="Crescent Moon" class="site-logo" /></a>
+
+  <div class="header-actions">
+    <nav class="desktop-nav" aria-label="Điều hướng chính">
+      <a href="/">Trang chủ</a>
+      <a href="/search">Tìm kiếm</a>
+      <a href="/password">Mật khẩu</a>
+      {user?.role==='admin'&&<a href="/admin">Admin</a>}
+      {user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
+    </nav>
+
+    <div class="notification-wrap">
+      <button class="header-icon-button notification-button" type="button" aria-label="Thông báo chapter mới" aria-expanded="false" data-notification-toggle>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+        <span class="notification-badge" data-notification-badge hidden>0</span>
+      </button>
+
+      <section class="notification-panel" data-notification-panel hidden aria-label="Thông báo">
+        <div class="notification-panel-head">
+          <div class="notification-panel-title"><span>🔔</span><strong>Thông báo</strong></div>
+          <button type="button" class="notification-mark-all" data-notification-mark-all>Đánh dấu tất cả đã đọc</button>
+        </div>
+        <div class="notification-list" data-notification-list>
+          <div class="notification-empty">Đang tải thông báo...</div>
+        </div>
+      </section>
+    </div>
+
+    <button class="header-icon-button mobile-menu-button" type="button" aria-label="Mở menu" aria-expanded="false" data-mobile-menu-toggle>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+
+  <nav class="mobile-menu-panel" data-mobile-menu hidden aria-label="Menu trên điện thoại">
+    <a href="/">🏠 Trang chủ</a>
+    <a href="/search">⌕ Tìm kiếm</a>
+    <a href="/password">🔐 Mật khẩu</a>
+    {user?.role==='admin'&&<a href="/admin">⚙ Admin</a>}
+    {user?<a href="/account">👤 {user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">👤 Đăng nhập</a>}
+  </nav>
+</header>
 <main class="shell"><slot /></main><footer class="footer">2024 Crescent Moon Translation</footer><script is:inline data-copy-protection>
 (() => {
   const canEdit = (target) => {
@@ -131,76 +172,171 @@ const user = await getSessionUser(Astro.cookies);
 })();
 </script>
 
-<script is:inline data-chapter-notifications>
+
+<script is:inline data-header-ui>
 (() => {
-  if (location.pathname.startsWith('/admin')) return;
+  const menuButton=document.querySelector('[data-mobile-menu-toggle]');
+  const mobileMenu=document.querySelector('[data-mobile-menu]');
+  const notifButton=document.querySelector('[data-notification-toggle]');
+  const notifPanel=document.querySelector('[data-notification-panel]');
+  const notifList=document.querySelector('[data-notification-list]');
+  const badge=document.querySelector('[data-notification-badge]');
+  const markAll=document.querySelector('[data-notification-mark-all]');
 
-  const CHECK_KEY='crescent_notif_check_at_v1';
-  const SEEN_KEY='crescent_seen_chapters_v1';
-  const now=Date.now();
-  const last=Number(localStorage.getItem(CHECK_KEY)||0);
-  if(now-last<5*60*1000) return;
-  localStorage.setItem(CHECK_KEY,String(now));
+  const SEEN_KEY='crescent_seen_chapters_v2';
+  let items=[];
 
-  fetch('/api/notifications/latest',{credentials:'same-origin'})
-    .then(r=>r.ok?r.json():null)
-    .then(data=>{
-      const items=Array.isArray(data?.items)?data.items:[];
-      let seen=[];
-      try{seen=JSON.parse(localStorage.getItem(SEEN_KEY)||'[]')}catch{}
-      if(!Array.isArray(seen))seen=[];
-      const item=items.find(x=>x&&x.id&&!seen.includes(x.id));
-      if(!item)return;
+  const getSeen=()=>{
+    try{
+      const value=JSON.parse(localStorage.getItem(SEEN_KEY)||'[]');
+      return Array.isArray(value)?value:[];
+    }catch{return []}
+  };
+  const saveSeen=(seen)=>localStorage.setItem(SEEN_KEY,JSON.stringify([...new Set(seen)].slice(0,300)));
 
-      // Mark as seen as soon as it is shown, so it does not pop up on every page.
-      seen.unshift(item.id);
-      localStorage.setItem(SEEN_KEY,JSON.stringify(seen.slice(0,100)));
+  const closeMobile=()=>{
+    if(!(mobileMenu instanceof HTMLElement)||!(menuButton instanceof HTMLButtonElement))return;
+    mobileMenu.hidden=true;
+    menuButton.setAttribute('aria-expanded','false');
+  };
+  const closeNotif=()=>{
+    if(!(notifPanel instanceof HTMLElement)||!(notifButton instanceof HTMLButtonElement))return;
+    notifPanel.hidden=true;
+    notifButton.setAttribute('aria-expanded','false');
+  };
 
-      const toast=document.createElement('aside');
-      toast.className='site-notification-toast';
-      toast.setAttribute('role','status');
+  if(menuButton instanceof HTMLButtonElement && mobileMenu instanceof HTMLElement){
+    menuButton.addEventListener('click',()=>{
+      const open=mobileMenu.hidden;
+      closeNotif();
+      mobileMenu.hidden=!open;
+      menuButton.setAttribute('aria-expanded',String(open));
+    });
+  }
 
-      const close=document.createElement('button');
-      close.type='button';
-      close.className='site-notification-close';
-      close.setAttribute('aria-label','Đóng thông báo');
-      close.textContent='×';
+  const relativeTime=(value)=>{
+    const time=new Date(value||0).getTime();
+    if(!Number.isFinite(time))return '';
+    const diff=Math.max(0,Date.now()-time);
+    const min=Math.floor(diff/60000);
+    if(min<1)return 'Vừa xong';
+    if(min<60)return `${min} phút trước`;
+    const hour=Math.floor(min/60);
+    if(hour<24)return `${hour} giờ trước`;
+    const day=Math.floor(hour/24);
+    return `${day} ngày trước`;
+  };
 
-      const icon=document.createElement('div');
-      icon.className='site-notification-icon';
-      icon.textContent='✨';
+  const markRead=(id)=>{
+    const seen=getSeen();
+    if(!seen.includes(id)){seen.unshift(id);saveSeen(seen)}
+    render();
+  };
 
-      const content=document.createElement('div');
-      content.className='site-notification-content';
+  const render=()=>{
+    if(!(notifList instanceof HTMLElement))return;
+    const seen=getSeen();
+    const unread=items.filter(x=>x?.id&&!seen.includes(x.id)).length;
 
-      const eyebrow=document.createElement('div');
-      eyebrow.className='site-notification-eyebrow';
-      eyebrow.textContent='Có chapter mới';
+    if(badge instanceof HTMLElement){
+      badge.textContent=unread>99?'99+':String(unread);
+      badge.hidden=unread===0;
+    }
 
-      const title=document.createElement('strong');
-      title.textContent=String(item.title||'Truyện mới cập nhật');
+    notifList.innerHTML='';
+    if(!items.length){
+      const empty=document.createElement('div');
+      empty.className='notification-empty';
+      empty.textContent='Chưa có chapter mới.';
+      notifList.appendChild(empty);
+      return;
+    }
 
-      const chapter=document.createElement('span');
+    for(const item of items){
+      const isUnread=!seen.includes(item.id);
+      const link=document.createElement('a');
+      link.className=`notification-item${isUnread?' is-unread':''}`;
+      link.href=String(item.href||'/');
+
+      const cover=document.createElement('div');
+      cover.className='notification-cover';
+      if(item.cover){
+        const img=document.createElement('img');
+        img.src=String(item.cover);
+        img.alt='';
+        img.loading='lazy';
+        cover.appendChild(img);
+      }else{
+        cover.textContent='☾';
+      }
+
+      const body=document.createElement('div');
+      body.className='notification-item-body';
+
+      const title=document.createElement('div');
+      title.className='notification-item-title';
+      title.innerHTML=`<strong></strong> đã cập nhật chapter mới`;
+      title.querySelector('strong').textContent=String(item.title||'Truyện');
+
+      const chapter=document.createElement('div');
+      chapter.className='notification-item-chapter';
       chapter.textContent=`Chapter ${item.chapter_number}${item.chapter_title?' — '+item.chapter_title:''}`;
 
-      const link=document.createElement('a');
-      link.className='site-notification-link';
-      link.href=String(item.href||'/');
-      link.textContent='Đọc ngay →';
+      const meta=document.createElement('div');
+      meta.className='notification-item-meta';
+      const dot=document.createElement('span');
+      dot.className='notification-unread-dot';
+      dot.textContent=isUnread?'• Chưa đọc':'✓ Đã đọc';
+      const time=document.createElement('span');
+      time.textContent=relativeTime(item.published_at);
+      meta.append(dot,time);
 
-      content.append(eyebrow,title,chapter,link);
-      toast.append(icon,content,close);
-      document.body.appendChild(toast);
+      body.append(title,chapter,meta);
+      link.append(cover,body);
+      link.addEventListener('click',()=>markRead(item.id));
+      notifList.appendChild(link);
+    }
+  };
 
-      requestAnimationFrame(()=>toast.classList.add('is-visible'));
-      const dismiss=()=>{
-        toast.classList.remove('is-visible');
-        setTimeout(()=>toast.remove(),220);
-      };
-      close.addEventListener('click',dismiss);
-      setTimeout(dismiss,12000);
-    })
-    .catch(()=>{});
+  const loadNotifications=()=>{
+    fetch('/api/notifications/latest',{credentials:'same-origin'})
+      .then(r=>r.ok?r.json():null)
+      .then(data=>{
+        items=Array.isArray(data?.items)?data.items:[];
+        render();
+      })
+      .catch(()=>{
+        if(notifList instanceof HTMLElement){
+          notifList.innerHTML='<div class="notification-empty">Không tải được thông báo.</div>';
+        }
+      });
+  };
+
+  if(notifButton instanceof HTMLButtonElement && notifPanel instanceof HTMLElement){
+    notifButton.addEventListener('click',()=>{
+      const open=notifPanel.hidden;
+      closeMobile();
+      notifPanel.hidden=!open;
+      notifButton.setAttribute('aria-expanded',String(open));
+      if(open && !items.length)loadNotifications();
+    });
+  }
+
+  if(markAll instanceof HTMLButtonElement){
+    markAll.addEventListener('click',()=>{
+      saveSeen(items.map(x=>x.id).filter(Boolean));
+      render();
+    });
+  }
+
+  document.addEventListener('click',event=>{
+    if(!(event.target instanceof Element))return;
+    if(!event.target.closest('.notification-wrap'))closeNotif();
+    if(!event.target.closest('.site-header'))closeMobile();
+  });
+
+  // Load once on page open so the bell badge can show unread updates immediately.
+  loadNotifications();
 })();
 </script>
 

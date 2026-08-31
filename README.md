@@ -347,3 +347,15 @@ Trang chi tiết truyện:
 - Removes the visible “2.000 ký tự / 15 giây” line from the comment rules; technical anti-spam limits remain unchanged.
 - Run `supabase-v11-17-raw-link.sql` once.
 - The ZIP contains only this new SQL migration.
+
+
+## v11.18 — Header notification center & mobile menu
+- Replaces the old corner chapter toast with a bell notification center in the website header.
+- Bell badge shows the number of unread chapter updates.
+- Clicking the bell opens a scrollable notification panel with cover, story name, chapter, relative time, read/unread state, and direct chapter link.
+- Includes “Đánh dấu tất cả đã đọc”; read state is stored per browser with localStorage.
+- No All/Chapter/System category tabs.
+- On mobile, the regular navigation links collapse into a compact hamburger menu.
+- Mobile header keeps only logo + bell + menu button for a cleaner layout.
+- Notification API now returns up to 20 recent chapters and their cover images.
+- No SQL changes; ZIP contains no SQL files.

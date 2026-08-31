@@ -13,7 +13,7 @@ export const GET:APIRoute=async()=>{
         const d=ch.published_at||ch.created_at;
         return d&&new Date(d).getTime()>=cutoff&&seriesMap.has(ch.series_id);
       })
-      .slice(0,5)
+      .slice(0,20)
       .map(ch=>{
         const s=seriesMap.get(ch.series_id)!;
         return {
@@ -22,6 +22,7 @@ export const GET:APIRoute=async()=>{
           chapter_number:ch.chapter_number,
           chapter_title:ch.title,
           href:`/read/${s.slug}/${ch.chapter_number}`,
+          cover:s.cover_key?`/api/cover/${s.id}`:null,
           published_at:ch.published_at||ch.created_at
         };
       });
