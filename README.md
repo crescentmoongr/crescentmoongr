@@ -243,3 +243,15 @@ Trang chi tiết truyện:
 - Nếu truyện chưa có cover, tự fallback về `social-preview.png`.
 - Trang chủ vẫn dùng ảnh social 1200×630.
 - Không cần SQL mới.
+
+
+## v11.8 — Admin section menu
+- Adds a sticky admin navigation menu for:
+  - Quảng cáo
+  - Thêm truyện
+  - Quản lý truyện
+- Clicking a menu item scrolls directly to that section.
+- Uses anchor IDs, so future admin tasks can be added as another menu item/section.
+- Renames “Truyện hiện có” to “Quản lý truyện”.
+- Responsive 3-button layout on mobile.
+- No SQL required.
