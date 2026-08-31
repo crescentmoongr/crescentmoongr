@@ -329,3 +329,11 @@ Trang chi tiết truyện:
 - Notification is shown once per chapter per browser and links directly to the new chapter.
 - Notification checks are throttled to once per 5 minutes per browser.
 - Run `supabase-v11-15-members-comments.sql` once before deployment.
+
+
+## v11.16 — Rich comments
+- Comment box now has basic formatting: bold, italic, underline, strikethrough, uppercase selected text, unordered/ordered lists, quote, code and clear formatting.
+- Server-side comment sanitizer strips unsafe HTML/scripts and links.
+- Existing plain-text comments still render correctly.
+- Adds a visible “Lưu ý khi bình luận” panel below the editor.
+- No new SQL in this version; the ZIP contains no SQL files.

@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getChapters,getSeriesBySlug,statusLabel,getBookmark,getReadingHistory,getChapterReads,getSeriesComments } from '../../lib/supabase';
 import { getSession } from '../../lib/auth';
-import { richTextToHtml } from '../../lib/richText';
+import { richTextToHtml,commentRichTextToHtml } from '../../lib/richText';
 export const prerender=false;
 const {slug}=Astro.params; if(!slug) return Astro.redirect('/');
 let series=null; let chapters=[]; let error='';
@@ -81,10 +81,38 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
   {commentError&&<div class="notice error">{commentError}</div>}
 
   {session
-    ? <form method="POST" action="/api/comments/create" class="comment-form">
+    ? <form method="POST" action="/api/comments/create" class="comment-form" data-comment-form>
         <input type="hidden" name="series_id" value={series.id}/>
         <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
-        <label class="field"><span>Bình luận với tư cách <strong>{session.user.display_name||session.user.username||'Thành viên'}</strong></span><textarea name="body" rows="4" maxlength="2000" required placeholder="Viết bình luận..."></textarea></label>
+        <div class="comment-author-line">Bình luận với tư cách <strong>{session.user.display_name||session.user.username||'Thành viên'}</strong></div>
+
+        <div class="comment-editor-shell">
+          <div class="comment-toolbar" role="toolbar" aria-label="Định dạng bình luận">
+            <button type="button" data-comment-cmd="bold" title="In đậm"><strong>B</strong></button>
+            <button type="button" data-comment-cmd="italic" title="In nghiêng"><em>I</em></button>
+            <button type="button" data-comment-cmd="underline" title="Gạch chân"><u>U</u></button>
+            <button type="button" data-comment-cmd="strikeThrough" title="Gạch ngang"><s>S</s></button>
+            <button type="button" data-comment-action="upper" title="IN HOA">AA</button>
+            <button type="button" data-comment-cmd="insertUnorderedList" title="Danh sách chấm">• List</button>
+            <button type="button" data-comment-cmd="insertOrderedList" title="Danh sách số">1. List</button>
+            <button type="button" data-comment-block="blockquote" title="Trích dẫn">❞</button>
+            <button type="button" data-comment-block="code" title="Code">&lt;/&gt;</button>
+            <button type="button" data-comment-action="clear" title="Xóa định dạng">Tx</button>
+          </div>
+          <div class="comment-editor" contenteditable="true" data-placeholder="Viết bình luận..." spellcheck="true"></div>
+          <textarea class="comment-source" name="body" maxlength="8000" hidden required></textarea>
+        </div>
+
+        <div class="comment-rules">
+          <strong>📌 Lưu ý khi bình luận:</strong>
+          <ul>
+            <li>Không dùng từ ngữ thô tục, xúc phạm cá nhân, tổ chức hoặc nhân vật trong truyện.</li>
+            <li>Không spam link, quảng cáo hoặc chia sẻ nội dung độc hại.</li>
+            <li>Mỗi bình luận tối đa 2.000 ký tự và cần cách nhau ít nhất 15 giây.</li>
+            <li>Vui lòng giữ cuộc trò chuyện lịch sự và tôn trọng người khác.</li>
+          </ul>
+        </div>
+
         <div class="comment-form-footer"><span class="meta">Chỉ thành viên đã đăng nhập mới có thể bình luận.</span><button class="button" type="submit">Gửi bình luận</button></div>
       </form>
     : <div class="comment-login-note">💬 <a href={`/login?next=${encodeURIComponent(`/manga/${series.slug}#comments`)}`}>Đăng nhập</a> để tham gia bình luận.</div>}
@@ -102,9 +130,80 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
                 <button class="comment-delete" type="submit">Xóa</button>
               </form>}
           </div>
-          <p>{c.body}</p>
+          <div class="comment-body" set:html={commentRichTextToHtml(c.body)}></div>
         </article>)}
       </div>}
 </section>
 </>:null}
+
+<script>
+const commentForm=document.querySelector('[data-comment-form]');
+if(commentForm instanceof HTMLFormElement){
+  const editor=commentForm.querySelector('.comment-editor');
+  const source=commentForm.querySelector('.comment-source');
+
+  if(editor instanceof HTMLElement && source instanceof HTMLTextAreaElement){
+    const sync=()=>{source.value=editor.innerHTML.trim()};
+    const focus=()=>editor.focus();
+
+    commentForm.querySelectorAll('[data-comment-cmd]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        focus();
+        document.execCommand(btn.getAttribute('data-comment-cmd')||'',false);
+        sync();
+      });
+    });
+
+    commentForm.querySelectorAll('[data-comment-block]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        focus();
+        const block=btn.getAttribute('data-comment-block')||'p';
+        document.execCommand('formatBlock',false,block);
+        sync();
+      });
+    });
+
+    commentForm.querySelectorAll('[data-comment-action]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const action=btn.getAttribute('data-comment-action');
+        focus();
+        if(action==='clear'){
+          document.execCommand('removeFormat',false);
+        }
+        if(action==='upper'){
+          const selection=window.getSelection();
+          if(selection && selection.rangeCount && !selection.isCollapsed){
+            const range=selection.getRangeAt(0);
+            const text=selection.toString();
+            if(text){
+              range.deleteContents();
+              range.insertNode(document.createTextNode(text.toUpperCase()));
+              selection.removeAllRanges();
+            }
+          }
+        }
+        sync();
+      });
+    });
+
+    editor.addEventListener('input',sync);
+    editor.addEventListener('blur',sync);
+    commentForm.addEventListener('submit',e=>{
+      sync();
+      const plain=(editor.innerText||'').trim();
+      if(!plain){
+        e.preventDefault();
+        alert('Bình luận không được để trống.');
+        return;
+      }
+      if(plain.length>2000){
+        e.preventDefault();
+        alert('Bình luận tối đa 2.000 ký tự.');
+      }
+    });
+    sync();
+  }
+}
+</script>
+
 </BaseLayout>

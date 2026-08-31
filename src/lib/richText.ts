@@ -91,3 +91,38 @@ export function sanitizeNovelRichText(input: string | null | undefined) {
 export function novelRichTextToHtml(input: string | null | undefined) {
   return sanitizeNovelRichText(input);
 }
+
+
+const COMMENT_ALLOWED_TAGS = new Set([
+  'p','br','strong','b','em','i','u','s','strike','ul','ol','li','blockquote','code'
+]);
+
+export function sanitizeCommentRichText(input: string | null | undefined) {
+  let value = String(input || '').trim().slice(0, 8000);
+  if (!value) return '';
+
+  if (!/<[a-z][\s\S]*>/i.test(value)) return plainTextToHtml(value);
+
+  value = value
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<(script|style|iframe|object|embed|svg|math|form)[^>]*>[\s\S]*?<\/\1\s*>/gi, '')
+    .replace(/<(script|style|iframe|object|embed|svg|math|form|input|button|textarea|select|option|link|meta|base|img|video|audio|source|canvas|a)[^>]*\/?>/gi, '');
+
+  value = value.replace(/<\/?([a-z0-9]+)(?:\s[^>]*)?>/gi, (whole, rawTag) => {
+    const tag = String(rawTag).toLowerCase();
+    if (!COMMENT_ALLOWED_TAGS.has(tag)) return '';
+    const closing = /^<\//.test(whole);
+    if (tag === 'br') return closing ? '' : '<br>';
+    if (tag === 'strike') return closing ? '</s>' : '<s>';
+    return closing ? `</${tag}>` : `<${tag}>`;
+  });
+
+  return value
+    .replace(/<b>/gi,'<strong>').replace(/<\/b>/gi,'</strong>')
+    .replace(/<i>/gi,'<em>').replace(/<\/i>/gi,'</em>')
+    .trim();
+}
+
+export function commentRichTextToHtml(input: string | null | undefined) {
+  return sanitizeCommentRichText(input);
+}
