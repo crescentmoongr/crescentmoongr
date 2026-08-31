@@ -2,10 +2,14 @@
 import '../styles/global.css';
 import { getSessionUser } from '../lib/auth';
 export const prerender=false;
-const { title = 'Crescent Moon Translation' } = Astro.props;
+const { title='Crescent Moon Translation', description='Crescent Moon Translation', image, canonical }=Astro.props;
+const pageUrl=canonical||Astro.url.href;
+const absoluteImage=image?new URL(image,Astro.url.origin).href:null;
 const user = await getSessionUser(Astro.cookies);
 ---
-<!doctype html><html lang="vi"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width"/><meta name="description" content="Crescent Moon Translation"/><link rel="icon" type="image/png" href="/honeymoon_4213586.png"/><link rel="shortcut icon" href="/honeymoon_4213586.png"/><title>{title}</title></head><body>
+<!doctype html><html lang="vi"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width"/><meta name="description" content={description}/>
+<meta property="og:title" content={title}/><meta property="og:description" content={description}/><meta property="og:site_name" content="Crescent Moon Translation"/><meta property="og:type" content="website"/><meta property="og:url" content={pageUrl}/>{absoluteImage&&<meta property="og:image" content={absoluteImage}/>}
+<meta name="twitter:card" content={absoluteImage?'summary_large_image':'summary'}/><meta name="twitter:title" content={title}/><meta name="twitter:description" content={description}/>{absoluteImage&&<meta name="twitter:image" content={absoluteImage}/>}<link rel="icon" type="image/png" href="/honeymoon_4213586.png"/><link rel="shortcut icon" href="/honeymoon_4213586.png"/><title>{title}</title></head><body>
 <header class="site-header"><a class="brand" href="/"><img src="/crescent-moon-logo.png" alt="Crescent Moon" class="site-logo" /></a><nav><a href="/">Trang chủ</a><a href="/search">Tìm kiếm</a><a href="/password">Mật khẩu</a>{user?.role==='admin'&&<a href="/admin">Admin</a>}{user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}</nav></header>
 <main class="shell"><slot /></main><footer class="footer">2024 Crescent Moon Translation</footer><script is:inline data-copy-protection>
 (() => {

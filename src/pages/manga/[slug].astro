@@ -21,7 +21,7 @@ const accessText=series?.access_type==='password'?'🔒 Khóa mật khẩu cả 
 const fmt=(v?:string|null)=>v?new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(v)):'—';
 const introHtml=series?richTextToHtml(series.description):'';
 ---
-<BaseLayout title={series?`${series.title} — Crescent Moon Translation`:'Lỗi — Crescent Moon Translation'}>
+<BaseLayout title={series?`${series.title} | Crescent Moon Translation`:'Lỗi | Crescent Moon Translation'} description={series?.description?String(series.description).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,180):'Đọc truyện tại Crescent Moon Translation.'} image={series?.cover_key?`/api/cover/${series.id}`:undefined}>
 {error?<div class="notice error">{error}</div>:series?<>
 <section class="manga-head">
   <div class="manga-cover-wrap">

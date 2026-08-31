@@ -191,3 +191,11 @@ Trang chi tiết truyện:
 ### SQL
 - Không có SQL mới cho v11.2.
 - Nếu đã chạy `supabase-v11-site-settings.sql` ở v11 thì không cần chạy lại.
+
+
+## v11.3 — Link preview
+- Open Graph + Twitter Card.
+- Chapter: Tên truyện - Chapter X | Crescent Moon Translation.
+- Trang truyện: Tên truyện | Crescent Moon Translation.
+- Preview dùng ảnh bìa nếu có.
+- Không cần SQL mới.
