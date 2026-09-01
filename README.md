@@ -610,3 +610,11 @@ Trang chi tiết truyện:
 - That ReferenceError was swallowed by the existing `catch {}`, so the homepage loaded normally but `Lịch sử đọc gần đây` stayed empty.
 - Homepage now correctly builds the 4 most recent reading-history cards for logged-in users.
 - No SQL changes.
+
+
+## v11.53 — Homepage history cover layout
+- `Lịch sử đọc gần đây` now uses vertical cover cards like the homepage/bookmark cards.
+- Card size is smaller, matching the compact Bookmark grid style.
+- Still shows only the 4 most recently read series.
+- Each card keeps the current `Đang đọc Chapter ...` line.
+- No SQL changes.

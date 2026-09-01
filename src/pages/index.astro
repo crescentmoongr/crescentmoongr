@@ -43,17 +43,16 @@ const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hia
 {error?<div class="notice error">{error}</div>:<>
 
 {recentHistory.length>0&&<>
-<div class="section-title"><h2>Lịch sử đọc gần đây</h2></div>
-<section class="history-grid">
+<div class="section-title"><h2 class="home-section-title">Lịch sử đọc gần đây</h2></div>
+<section class="history-cover-grid">
   {recentHistory.map(({item,chapter})=>
-    <a class="history-card" href={chapter?`/read/${item.slug}/${chapter.chapter_number}`:`/manga/${item.slug}`}>
-      <div class="history-cover">
+    <a class="history-cover-card" href={chapter?`/read/${item.slug}/${chapter.chapter_number}`:`/manga/${item.slug}`}>
+      <div class="history-cover-image">
         {item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}
       </div>
-      <div class="history-body">
+      <div class="history-cover-body">
         <h3>{item.title}</h3>
         <div class="meta">{chapter?`Đang đọc Chapter ${chapter.chapter_number}`:'Đọc tiếp'}</div>
-        <span class="history-continue">Đọc tiếp →</span>
       </div>
     </a>
   )}

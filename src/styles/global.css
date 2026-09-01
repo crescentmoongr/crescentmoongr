@@ -2139,3 +2139,84 @@ body{
   .account-bookmark-body{padding:8px 9px 10px}
   .account-bookmark-body h3{font-size:.82rem}
 }
+
+
+/* =========================================================
+   v11.53 — Homepage reading history as small cover cards
+   ========================================================= */
+.history-cover-grid{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:14px;
+  margin:0 0 30px;
+}
+
+.history-cover-card{
+  min-width:0;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:rgba(255,255,255,.82);
+  box-shadow:0 6px 20px rgba(93,53,78,.045);
+  transition:transform .15s ease,border-color .15s ease;
+}
+
+.history-cover-card:hover{
+  transform:translateY(-2px);
+  border-color:#d4acd0;
+}
+
+.history-cover-image{
+  aspect-ratio:3/4;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  padding:0;
+  background:linear-gradient(145deg,#f4c6dd,#f8e5ef 55%,#e8cde4);
+  color:#8b4b70;
+  text-align:center;
+  font-size:.8rem;
+}
+
+.history-cover-image img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+
+.history-cover-body{
+  padding:9px 10px 11px;
+}
+
+.history-cover-body h3{
+  margin:0 0 5px;
+  color:#AC87C5;
+  font-size:.86rem;
+  line-height:1.35;
+  font-weight:700;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.history-cover-body .meta{
+  font-size:.78rem;
+  line-height:1.35;
+}
+
+@media(max-width:1000px){
+  .history-cover-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .history-cover-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:520px){
+  .history-cover-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+  .history-cover-body{padding:8px 9px 10px}
+  .history-cover-body h3{font-size:.82rem}
+}
