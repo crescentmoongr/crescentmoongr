@@ -135,6 +135,18 @@ export async function getSeriesComments(seriesId:string){
 }
 
 
+export type AdminSeriesComment = SeriesComment & {
+  series_title:string | null;
+  series_slug:string | null;
+  moderation_status:'pending'|'approved';
+  moderated_at:string | null;
+};
+
+export async function getAdminSeriesComments(token:string){
+  return supabaseRpc<AdminSeriesComment[]>('admin_list_comments',{p_limit:200},token);
+}
+
+
 export type AuthorProfile = {
   id:string;
   name:string;

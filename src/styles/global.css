@@ -2220,3 +2220,105 @@ body{
   .history-cover-body{padding:8px 9px 10px}
   .history-cover-body h3{font-size:.82rem}
 }
+
+
+/* =========================================================
+   v11.54 — Comment moderation + Admin name glow
+   ========================================================= */
+.member-name{
+  font-weight:700;
+}
+.admin-name-glow{
+  color:#e5485f;
+  text-shadow:
+    0 0 4px rgba(229,72,95,.45),
+    0 0 9px rgba(229,72,95,.28);
+}
+
+.comment-pending-count{
+  display:inline-flex;
+  align-items:center;
+  min-height:30px;
+  padding:5px 10px;
+  border-radius:999px;
+  background:#fff1f6;
+  color:#a84f78;
+  font-size:.82rem;
+  font-weight:700;
+}
+
+.admin-comment-list{
+  display:grid;
+  gap:10px;
+}
+
+.admin-comment-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:16px;
+  align-items:start;
+  padding:15px 16px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:rgba(255,255,255,.82);
+}
+
+.admin-comment-row.is-pending{
+  border-left:4px solid #e6a23c;
+  background:linear-gradient(90deg,rgba(255,248,229,.82),rgba(255,255,255,.84));
+}
+
+.admin-comment-row.is-approved{
+  border-left:4px solid #64b77b;
+}
+
+.admin-comment-headline{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:4px;
+}
+
+.comment-status-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:3px 8px;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:700;
+}
+.comment-status-badge.pending{
+  background:#fff0cf;
+  color:#9a6410;
+}
+.comment-status-badge.approved{
+  background:#e9f8ee;
+  color:#39794c;
+}
+
+.admin-comment-preview{
+  margin-top:10px;
+  color:#5f4e58;
+  line-height:1.55;
+  overflow-wrap:anywhere;
+}
+.admin-comment-preview p:first-child{margin-top:0}
+.admin-comment-preview p:last-child{margin-bottom:0}
+
+.admin-comment-actions{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:7px;
+}
+.admin-comment-actions form{margin:0}
+
+@media(max-width:760px){
+  .admin-comment-row{
+    grid-template-columns:1fr;
+  }
+  .admin-comment-actions{
+    justify-content:flex-start;
+  }
+}

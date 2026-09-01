@@ -27,7 +27,8 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
     await supabasePost('series_comments',session.token,{
       series_id:seriesId,
       user_id:session.user.id,
-      body
+      body,
+      moderation_status:'pending'
     });
     return redirect(returnTo+'?comment=success#comments');
   }catch(e:any){

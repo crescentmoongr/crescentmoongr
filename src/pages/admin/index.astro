@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getAdminSeriesList, getAdminChapters, getChapterStats, statusLabel, getSiteSetting, getAdminMembers, getAuthors, getGenres } from '../../lib/supabase';
+import { getAdminSeriesList, getAdminChapters, getChapterStats, statusLabel, getSiteSetting, getAdminMembers, getAuthors, getGenres, getAdminSeriesComments } from '../../lib/supabase';
 import { requireAdminSession } from '../../lib/auth';
 export const prerender=false;
 const adminSession=await requireAdminSession(Astro.cookies);if(!adminSession)return Astro.redirect('/login?next=/admin');const token=adminSession.token;const admin=adminSession.user;
@@ -17,6 +17,9 @@ try{
 }catch{}
 let members:any[]=[];let membersError='';
 try{members=await getAdminMembers(token)}catch(e){membersError=e instanceof Error?e.message:'Không tải được thành viên.'}
+let adminComments:any[]=[];let commentsError='';
+try{adminComments=await getAdminSeriesComments(token)}catch(e){commentsError=e instanceof Error?e.message:'Không tải được bình luận.'}
+const pendingComments=adminComments.filter(c=>c.moderation_status==='pending');
 let authors:any[]=[];let genresManaged:any[]=[];
 try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{}
 ---
@@ -33,6 +36,7 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
   <a href="#admin-ads">📢 Quảng cáo</a>
   <a href="#admin-add-series">➕ Thêm truyện</a>
   <a href="#admin-manage-series">📚 Quản lý truyện</a>
+  <a href="#admin-comments">💬 Bình luận</a>
   <a href="#admin-members">👥 Thành viên</a>
   <a href="#admin-authors">✍️ Tác giả</a>
   <a href="#admin-genres">🏷️ Thể loại</a>
@@ -151,6 +155,54 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
     </form>)}</div>:<div class="empty-state">Chưa có thể loại.</div>}
 </section>
 
+
+<section class="admin-card admin-wide admin-anchor-section" id="admin-comments">
+  <div class="section-title">
+    <div>
+      <h2>Quản lý bình luận</h2>
+      <p class="meta">Bình luận mới phải được Admin duyệt trước khi hiển thị ngoài website.</p>
+    </div>
+    <span class="comment-pending-count">{pendingComments.length} chờ duyệt · {adminComments.length} tổng</span>
+  </div>
+
+  {commentsError
+    ? <div class="notice error">{commentsError}</div>
+    : adminComments.length===0
+      ? <div class="empty-state">Chưa có bình luận nào.</div>
+      : <div class="admin-comment-list">
+          {adminComments.map(comment=>
+            <article class={`admin-comment-row ${comment.moderation_status==='pending'?'is-pending':'is-approved'}`}>
+              <div class="admin-comment-main">
+                <div class="admin-comment-headline">
+                  <strong>{comment.display_name||comment.username||'Thành viên'}</strong>
+                  <span class={`comment-status-badge ${comment.moderation_status}`}>
+                    {comment.moderation_status==='pending'?'Chờ duyệt':'Đã duyệt'}
+                  </span>
+                </div>
+                <div class="meta">
+                  {comment.series_title||'Truyện'} · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(comment.created_at))}
+                </div>
+                <div class="admin-comment-preview" set:html={comment.body}></div>
+              </div>
+              <div class="admin-comment-actions">
+                {comment.series_slug&&<a class="button secondary small-button" href={`/manga/${comment.series_slug}#comments`} target="_blank">Xem truyện</a>}
+                {comment.moderation_status==='pending'&&
+                  <form method="POST" action="/api/admin/comment/moderate">
+                    <input type="hidden" name="id" value={comment.id}/>
+                    <input type="hidden" name="action" value="approve"/>
+                    <button class="button small-button" type="submit">Duyệt</button>
+                  </form>}
+                <form method="POST" action="/api/admin/comment/moderate" onsubmit="return confirm('Xóa bình luận này?');">
+                  <input type="hidden" name="id" value={comment.id}/>
+                  <input type="hidden" name="action" value="delete"/>
+                  <button class="danger-button small-danger" type="submit">Xóa</button>
+                </form>
+              </div>
+            </article>
+          )}
+        </div>}
+</section>
+
 <section class="admin-card admin-wide admin-anchor-section" id="admin-members">
   <div class="section-title">
     <div><h2>Quản lý thành viên</h2><p class="meta">Khóa tài khoản, bật/tắt quyền bình luận hoặc thay đổi vai trò.</p></div>
@@ -165,7 +217,9 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
             <form method="POST" action="/api/admin/member/update" class="admin-member-row">
               <input type="hidden" name="user_id" value={member.user_id}/>
               <div class="admin-member-main">
-                <strong>{member.display_name||member.username||member.email||'Thành viên'}</strong>
+                <strong class={member.role==='admin'?'member-name admin-name-glow':'member-name'}>
+                  {member.display_name||member.username||member.email||'Thành viên'}
+                </strong>
                 <span class="meta">{member.email||member.user_id}</span>
                 <span class="meta">Tham gia: {member.created_at?new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(member.created_at)):'—'}</span>
               </div>

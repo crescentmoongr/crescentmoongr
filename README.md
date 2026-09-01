@@ -618,3 +618,15 @@ Trang chi tiết truyện:
 - Still shows only the 4 most recently read series.
 - Each card keeps the current `Đang đọc Chapter ...` line.
 - No SQL changes.
+
+
+## v11.54 — Comment moderation
+- Adds Admin > Bình luận.
+- Every new comment is `pending` and is not public until an Admin approves it.
+- Admin can approve or delete comments from the Admin dashboard.
+- Pending comments are sorted first.
+- Public comment counts/lists contain approved comments only.
+- After posting, members see a notice that the comment is waiting for approval.
+- Also includes the saved UI change: Admin names in member management are red/pink with a subtle glow.
+- Run `supabase-v11-54-comment-moderation.sql` once before deploying v11.54.
+- ZIP contains only this new SQL migration.
