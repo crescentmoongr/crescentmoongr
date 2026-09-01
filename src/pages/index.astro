@@ -3,10 +3,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { getSeriesList, getNewestSeries, getAllPublicChapters, statusLabel, getMyHistory } from '../lib/supabase';
 import { getSession } from '../lib/auth';
 export const prerender=false;
-let updated=[]; let newest=[]; let error='';
+let updated=[]; let newest=[]; let allChapters:any[]=[]; let error='';
 let latestChapter=new Map<string,number>();
 try{
-  const [seriesRows,newRows,allChapters]=await Promise.all([getSeriesList(),getNewestSeries(),getAllPublicChapters()]);
+  const [seriesRows,newRows,chapterRows]=await Promise.all([getSeriesList(),getNewestSeries(),getAllPublicChapters()]);
+  allChapters=chapterRows;
   newest=newRows;
   const lastPublished=new Map<string,number>();
   for(const ch of allChapters){

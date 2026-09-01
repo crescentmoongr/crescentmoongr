@@ -603,3 +603,10 @@ Trang chi tiết truyện:
 - Removed the `Đọc tiếp` / reading-history section from the Account page.
 - Homepage reading history is kept for logged-in users and limited to the 4 most recently read series.
 - No SQL changes.
+
+
+## v11.52 — Fix homepage reading history
+- Fixes a scope bug where `allChapters` was created inside the initial data-loading `try` block but referenced later in the logged-in history block.
+- That ReferenceError was swallowed by the existing `catch {}`, so the homepage loaded normally but `Lịch sử đọc gần đây` stayed empty.
+- Homepage now correctly builds the 4 most recent reading-history cards for logged-in users.
+- No SQL changes.
