@@ -68,17 +68,17 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
 </section>
 
 <section class="intro-section">
-  <div class="section-title intro-title"><h2>Giới thiệu</h2></div>
+  <div class="section-title intro-title"><h2 class="major-section-title">Giới thiệu</h2></div>
   {introHtml
     ? <div class="rich-content" set:html={introHtml}></div>
     : <div class="empty-intro">Chưa có giới thiệu.</div>}
 </section>
 
-<div class="section-title"><h2>Danh sách chương</h2><span class="meta">{chapters.length} chap</span></div>
+<div class="section-title"><h2 class="major-section-title">Mục lục</h2><span class="meta">{chapters.length} chap</span></div>
 {chapters.length===0?<div class="empty-state">Chưa có chapter được đăng.</div>:<div class="chapter-list">{chapters.map(ch=><a class={`chapter ${readIds.has(ch.id)?'chapter-read':''}`} href={`/read/${series.slug}/${ch.chapter_number}`}><span>Chapter {ch.chapter_number}{ch.title?` — ${ch.title}`:''}</span><span class="chapter-right">{session&&<span class={readIds.has(ch.id)?'read-state read':'read-state'}>{readIds.has(ch.id)?'✓ Đã đọc':'Chưa đọc'}</span>}<span class={series.access_type==='public'?'meta':'lock'}>{series.access_type==='password'?'🔒':series.access_type==='member'?'🔒':'Đọc'}</span></span></a>)}</div>}
 
 <section class="comments-section" id="comments">
-  <div class="section-title"><h2>Bình luận</h2><span class="meta">{comments.length} bình luận</span></div>
+  <div class="section-title"><h2 class="major-section-title">Bình luận</h2><span class="meta">{comments.length} bình luận</span></div>
   {commentSuccess&&<div class="notice success">Đã gửi bình luận.</div>}
   {commentError&&<div class="notice error">{commentError}</div>}
 

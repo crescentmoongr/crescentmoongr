@@ -421,3 +421,11 @@ Trang chi tiết truyện:
 - Keeps the pink-purple ombré author header.
 - Uses font-weight 700 for smaller labels such as Author, Genre, Status, Sort by and series metadata labels.
 - No SQL changes; ZIP contains no SQL files.
+
+
+## v11.27 — Major heading color + Mục lục
+- Major display headings use `#AC87C5`.
+- Includes large author name and series title.
+- Includes Giới thiệu, Mục lục and Bình luận section headings.
+- Renames visible `Danh sách chương` heading to `Mục lục`.
+- No SQL changes; ZIP contains no SQL files.

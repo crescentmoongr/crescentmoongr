@@ -1653,3 +1653,20 @@ input[list="author-suggestions"]{
 .taxonomy-kicker{
   font-weight:700;
 }
+
+
+/* =========================================================
+   v11.27 — Major heading accent color
+   ========================================================= */
+.taxonomy-page-head h1,
+.manga-head h1,
+.intro-section > h2,
+.chapter-list-section > h2,
+.comments-section > h2,
+.comment-section > h2{
+  color:#AC87C5;
+}
+
+.major-section-title{
+  color:#AC87C5!important;
+}
