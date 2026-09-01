@@ -479,3 +479,11 @@ Trang chi tiết truyện:
 - Existing individual genre Edit/Save/Delete/View controls are preserved.
 - Add Story and Edit Story retain the v11.34 clickable multi-select genre bubbles.
 - No SQL changes.
+
+
+## v11.36 — Simplified series information
+- Removed `Chapter mới` from the public series information panel.
+- Removed `Họa sĩ` from the public series information panel.
+- Removed the `Họa sĩ` input from both Add Story and Edit Story in Admin.
+- Existing database/API columns are left intact for compatibility; no migration is required.
+- No SQL changes.

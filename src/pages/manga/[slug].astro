@@ -42,11 +42,9 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
       <div class="series-info-row"><span class="series-info-icon">▣</span><span><b>Loại:</b> {series.type||'—'}</span></div>
       <div class="series-info-row"><span class="series-info-icon">♡</span><span><b>Trạng thái:</b> {statusLabel(series.status)}</span></div>
       <div class="series-info-row"><span class="series-info-icon">▤</span><span><b>Số chapter:</b> {chapters.length}</span></div>
-      <div class="series-info-row"><span class="series-info-icon">☆</span><span><b>Chapter mới:</b> {latest?`Chapter ${latest.chapter_number}`:'—'}</span></div>
       <div class="series-info-row"><span class="series-info-icon">▦</span><span><b>Cập nhật:</b> {fmt(updated)}</span></div>
       <div class="series-info-row"><span class="series-info-icon">♙</span><span><b>Quyền đọc:</b> {accessText}</span></div>
       <div class="series-info-row"><span class="series-info-icon">✎</span><span><b>Tác giả:</b> {series.author?<a class="taxonomy-inline-link" href={`/author/${slugifyTaxonomy(series.author)}`}>{series.author}</a>:'Chưa cập nhật'}</span></div>
-      <div class="series-info-row"><span class="series-info-icon">✎</span><span><b>Họa sĩ:</b> {series.artist||'Chưa cập nhật'}</span></div>
       {series.raw_url&&<div class="series-info-row series-raw-row"><span class="series-info-icon">🛒</span><span><b>Mua raw:</b> <a class="series-raw-link" href={series.raw_url} target="_blank" rel="noopener noreferrer nofollow sponsored">Ủng hộ tác giả ↗</a></span></div>}
     </div>
 
