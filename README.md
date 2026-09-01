@@ -429,3 +429,11 @@ Trang chi tiết truyện:
 - Includes Giới thiệu, Mục lục and Bình luận section headings.
 - Renames visible `Danh sách chương` heading to `Mục lục`.
 - No SQL changes; ZIP contains no SQL files.
+
+
+## v11.28 — Homepage colors
+- Main site header uses the soft pink-purple ombré background.
+- Homepage section headings `Mới cập nhật`, `Manga / Manhwa / Manhua`, and `Novel` use `#AC87C5`.
+- Homepage story/card titles use `#AC87C5`.
+- Preserves the v11.27 major-heading color rules elsewhere.
+- No SQL changes; ZIP contains no SQL files.

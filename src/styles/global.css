@@ -1670,3 +1670,33 @@ input[list="author-suggestions"]{
 .major-section-title{
   color:#AC87C5!important;
 }
+
+
+/* =========================================================
+   v11.28 — Homepage ombré header + #AC87C5 headings/titles
+   ========================================================= */
+
+/* Main site header: soft pink-purple ombré */
+.site-header{
+  background:
+    radial-gradient(circle at 12% 20%, rgba(255,226,241,.96), transparent 38%),
+    radial-gradient(circle at 88% 12%, rgba(235,225,255,.94), transparent 42%),
+    linear-gradient(135deg, #fff5fa 0%, #f8efff 52%, #fff3f8 100%);
+}
+
+/* Homepage major section headings */
+.home-section h2,
+.home-section-title,
+.section-title{
+  color:#AC87C5;
+}
+
+/* Homepage story/card titles */
+.home-section .card-title,
+.home-section .card-title a,
+.home-section .manga-title,
+.home-section .manga-title a,
+.home-section .series-title,
+.home-section .series-title a{
+  color:#AC87C5;
+}
