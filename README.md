@@ -437,3 +437,12 @@ Trang chi tiết truyện:
 - Homepage story/card titles use `#AC87C5`.
 - Preserves the v11.27 major-heading color rules elsewhere.
 - No SQL changes; ZIP contains no SQL files.
+
+## v11.29
+- Fixes homepage story title color to #AC87C5 with direct card-title selectors.
+- No SQL changes.
+
+## v11.30 — Soft pastel background
+- Overall site background uses a very light blurred pink-purple-blue gradient, roughly 50% softer than the preview direction.
+- Header is lightly translucent with backdrop blur so the background glow shows through subtly.
+- No SQL changes.

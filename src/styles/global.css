@@ -1700,3 +1700,54 @@ input[list="author-suggestions"]{
 .home-section .series-title a{
   color:#AC87C5;
 }
+
+
+/* =========================================================
+   v11.29 — Fix homepage card title color
+   ========================================================= */
+.home-grid .card h3,
+.home-grid .card h3 a,
+.home-grid .card strong,
+.home-grid .card strong a,
+.home-grid .card-title,
+.home-grid .card-title a,
+.card-grid .card h3,
+.card-grid .card h3 a,
+.card-grid .card strong,
+.card-grid .card strong a,
+.manga-card h3,
+.manga-card h3 a,
+.series-card h3,
+.series-card h3 a,
+.card-body h3,
+.card-body h3 a,
+.card-body .title,
+.card-body .title a{
+  color:#AC87C5!important;
+}
+
+.home-story-title{color:#AC87C5!important;}
+
+/* =========================================================
+   v11.30 — Soft blurred pastel site background
+   ========================================================= */
+html{
+  background:#fcf8fb;
+}
+body{
+  background:
+    radial-gradient(ellipse at 12% 18%, rgba(150,155,231,.20) 0%, rgba(150,155,231,.09) 25%, transparent 52%),
+    radial-gradient(ellipse at 82% 15%, rgba(238,193,221,.22) 0%, rgba(238,193,221,.10) 28%, transparent 55%),
+    radial-gradient(ellipse at 48% 58%, rgba(209,208,239,.20) 0%, rgba(209,208,239,.08) 30%, transparent 58%),
+    radial-gradient(ellipse at 88% 82%, rgba(238,193,221,.17) 0%, rgba(238,193,221,.07) 28%, transparent 54%),
+    linear-gradient(135deg,#fcf8fb 0%,#fbf8fd 48%,#fffafd 100%);
+  background-attachment:fixed;
+}
+
+/* Let the pastel glow show through the header without hurting readability. */
+.site-header{
+  background:rgba(255,250,253,.68)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(115%);
+  backdrop-filter:blur(16px) saturate(115%);
+  border-bottom-color:rgba(239,216,230,.78);
+}
