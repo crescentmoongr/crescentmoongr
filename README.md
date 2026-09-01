@@ -501,3 +501,23 @@ Trang chi tiết truyện:
 - Removes visible pink/background padding caused by conflicting responsive cover rules.
 - Desktop layout is unchanged.
 - No SQL changes.
+
+
+## v11.39 — Mới cập nhật: 8 bộ
+- Xác nhận và giữ cố định phần `Mới cập nhật` trên trang chủ ở tối đa 8 bộ gần nhất.
+- Nút `Xem tất cả` vẫn giữ nguyên.
+- Không có SQL mới.
+
+
+## v11.40 — Homepage Manga/Novel limits
+- `Mới cập nhật` remains limited to 8 series.
+- `Manga / Manhwa / Manhua` now shows up to 12 series on the homepage.
+- `Novel` now shows up to 12 series on the homepage.
+- No SQL changes.
+
+
+## v11.41 — Đồng bộ nút trang chủ
+- Đổi `Tìm & lọc →` ở mục Manga và Novel thành `Xem tất cả →`.
+- Link/logic lọc theo loại truyện vẫn giữ nguyên.
+- Chức năng tìm kiếm và lọc vẫn nằm ở trang Tìm kiếm.
+- Không có SQL mới.
