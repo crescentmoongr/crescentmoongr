@@ -9,6 +9,12 @@ try{rows=await getAdminSeriesList(token);connected=true;await Promise.all(rows.m
 const success=Astro.url.searchParams.get('success');const error=Astro.url.searchParams.get('error');
 let adHtml='';
 try{adHtml=(await getSiteSetting('reader_ad_html',token))?.value||''}catch{}
+let socialLinks:{facebook?:string;telegram?:string;discord?:string}={};
+try{
+  const raw=(await getSiteSetting('social_links',token))?.value||'';
+  const parsed=raw?JSON.parse(raw):{};
+  if(parsed&&typeof parsed==='object')socialLinks=parsed;
+}catch{}
 let members:any[]=[];let membersError='';
 try{members=await getAdminMembers(token)}catch(e){membersError=e instanceof Error?e.message:'Không tải được thành viên.'}
 let authors:any[]=[];let genresManaged:any[]=[];
@@ -23,6 +29,7 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
   <aside class="admin-sidebar">
     <div class="admin-sidebar-title">Quản lý</div>
     <nav class="admin-section-menu" aria-label="Menu quản trị">
+  <a href="#admin-social">🌐 Mạng xã hội</a>
   <a href="#admin-ads">📢 Quảng cáo</a>
   <a href="#admin-add-series">➕ Thêm truyện</a>
   <a href="#admin-manage-series">📚 Quản lý truyện</a>
@@ -33,6 +40,22 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
   </aside>
   <div class="admin-dashboard-content">
 
+
+
+<section class="admin-card admin-wide admin-anchor-section" id="admin-social">
+  <div class="section-title">
+    <div><h2>Mạng xã hội</h2><p class="meta">Các link đã nhập sẽ hiển thị bằng icon ở chính giữa cuối website.</p></div>
+  </div>
+  <form method="POST" action="/api/admin/settings/social" class="admin-form">
+    <div class="form-grid">
+      <label class="field"><span>Facebook</span><input name="facebook" type="url" maxlength="1000" value={socialLinks.facebook||''} placeholder="https://facebook.com/..."/></label>
+      <label class="field"><span>Telegram</span><input name="telegram" type="url" maxlength="1000" value={socialLinks.telegram||''} placeholder="https://t.me/..."/></label>
+      <label class="field"><span>Discord</span><input name="discord" type="url" maxlength="1000" value={socialLinks.discord||''} placeholder="https://discord.gg/..."/></label>
+    </div>
+    <p class="meta">Để trống ứng dụng nào thì icon ứng dụng đó sẽ không hiển thị ngoài website.</p>
+    <button class="button" type="submit">Lưu mạng xã hội</button>
+  </form>
+</section>
 
 <section class="admin-ad-section admin-anchor-section" id="admin-ads">
   <div class="section-title"><h2>Quảng cáo</h2></div>

@@ -1966,3 +1966,55 @@ body{
     border-radius:inherit;
   }
 }
+
+
+/* =========================================================
+   v11.42 — Footer social links
+   ========================================================= */
+.footer{
+  display:grid;
+  justify-items:center;
+  gap:13px;
+}
+
+.footer-socials{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+}
+
+.footer-social-link{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(172,135,197,.35);
+  border-radius:50%;
+  background:rgba(255,255,255,.72);
+  color:#AC87C5;
+  box-shadow:0 6px 18px rgba(117,83,112,.07);
+  transition:transform .15s ease,background .15s ease,border-color .15s ease;
+}
+
+.footer-social-link:hover{
+  transform:translateY(-2px);
+  background:rgba(255,255,255,.95);
+  border-color:#AC87C5;
+}
+
+.footer-social-link svg{
+  width:21px;
+  height:21px;
+  fill:currentColor;
+}
+
+.footer-social-link.telegram svg{width:22px;height:22px}
+.footer-social-link.discord svg{width:23px;height:23px}
+
+@media(max-width:560px){
+  .footer-social-link{
+    width:40px;
+    height:40px;
+  }
+}

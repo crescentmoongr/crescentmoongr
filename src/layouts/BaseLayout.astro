@@ -25,6 +25,17 @@ if (!isAdminPage) {
     siteAdHtml = (await getSiteSetting('reader_ad_html'))?.value || '';
   } catch {}
 }
+
+let socialLinks:{facebook?:string;telegram?:string;discord?:string}={};
+if (!isAdminPage) {
+  try {
+    const raw=(await getSiteSetting('social_links'))?.value||'';
+    const parsed=raw?JSON.parse(raw):{};
+    if(parsed&&typeof parsed==='object') socialLinks=parsed;
+  } catch {}
+}
+const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.discord);
+
 ---
 <!doctype html>
 <html lang="vi">
@@ -115,7 +126,20 @@ if (!isAdminPage) {
 {siteAdHtml && (
   <div class="sitewide-ad-code" aria-label="Quảng cáo" set:html={siteAdHtml}></div>
 )}
-</main><footer class="footer">2024 Crescent Moon Translation</footer><script is:inline data-copy-protection>
+</main><footer class="footer">
+  {!isAdminPage&&hasSocialLinks&&<div class="footer-socials" aria-label="Theo dõi Crescent Moon">
+    {socialLinks.facebook&&<a class="footer-social-link facebook" href={socialLinks.facebook} target="_blank" rel="noopener noreferrer nofollow" aria-label="Facebook" title="Facebook">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.3 8H17V4.2c-.47-.06-2.08-.2-4-.2-3.95 0-6.65 2.4-6.65 6.83V14H2v4.25h4.35V24h5.34v-5.75h3.58L15.84 14h-4.15v-2.75c0-1.23.33-2.07 2.61-2.07Z"/></svg>
+    </a>}
+    {socialLinks.telegram&&<a class="footer-social-link telegram" href={socialLinks.telegram} target="_blank" rel="noopener noreferrer nofollow" aria-label="Telegram" title="Telegram">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.8 3.2 18.6 20c-.24 1.18-.88 1.47-1.78.92l-4.87-3.59-2.35 2.26c-.26.26-.48.48-.98.48l.35-4.96 9.03-8.16c.39-.35-.09-.55-.61-.2L6.23 13.78 1.42 12.28c-1.05-.33-1.07-1.05.22-1.55L20.45 3.48c.87-.32 1.63.2 1.35-.28Z"/></svg>
+    </a>}
+    {socialLinks.discord&&<a class="footer-social-link discord" href={socialLinks.discord} target="_blank" rel="noopener noreferrer nofollow" aria-label="Discord" title="Discord">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 5.34A16.2 16.2 0 0 0 15.45 4l-.5 1.04a15.1 15.1 0 0 0-5.9 0L8.55 4A16.3 16.3 0 0 0 4.5 5.35C1.94 9.14 1.25 12.84 1.6 16.5A16.5 16.5 0 0 0 6.57 19l1.2-1.64a10.7 10.7 0 0 1-1.88-.9l.46-.35c3.62 1.68 7.55 1.68 11.13 0l.46.35c-.6.36-1.23.66-1.88.9L17.26 19a16.5 16.5 0 0 0 4.96-2.5c.42-4.24-.72-7.9-2.72-11.16ZM8.15 14.28c-1.08 0-1.97-.99-1.97-2.2 0-1.22.87-2.2 1.97-2.2 1.1 0 1.99.99 1.97 2.2 0 1.21-.87 2.2-1.97 2.2Zm7.7 0c-1.08 0-1.97-.99-1.97-2.2 0-1.22.87-2.2 1.97-2.2 1.1 0 1.99.99 1.97 2.2 0 1.21-.87 2.2-1.97 2.2Z"/></svg>
+    </a>}
+  </div>}
+  <div>2024 Crescent Moon Translation</div>
+</footer><script is:inline data-copy-protection>
 (() => {
   const canEdit = (target) => {
     if (!(target instanceof Element)) return false;

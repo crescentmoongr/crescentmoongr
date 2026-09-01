@@ -521,3 +521,13 @@ Trang chi tiết truyện:
 - Link/logic lọc theo loại truyện vẫn giữ nguyên.
 - Chức năng tìm kiếm và lọc vẫn nằm ở trang Tìm kiếm.
 - Không có SQL mới.
+
+
+## v11.42 — Footer social links
+- Adds Admin > Mạng xã hội with Facebook, Telegram and Discord URL fields.
+- Footer shows only the distinctive app icons, centered above the copyright.
+- Empty social fields are hidden automatically.
+- Links open in a new tab.
+- Social icons are not shown on Admin pages.
+- Run `supabase-v11-42-social-links.sql` once to allow public pages to read the social link setting.
+- ZIP contains only this new SQL migration.
