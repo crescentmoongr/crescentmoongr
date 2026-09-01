@@ -539,3 +539,9 @@ Trang chi tiết truyện:
 - Public pages can read only `reader_ad_html` and `social_links`.
 - Run `supabase-v11-43-fix-site-settings-write.sql` once.
 - ZIP contains only this new SQL migration.
+
+
+## v11.44 — Social icon alignment
+- Centers Facebook / Telegram / Discord icons consistently inside their circular buttons.
+- Slightly reduces the Facebook icon and nudges it down 1px to correct its visual imbalance.
+- No SQL changes.

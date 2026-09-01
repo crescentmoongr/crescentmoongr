@@ -2018,3 +2018,36 @@ body{
     height:40px;
   }
 }
+
+
+/* =========================================================
+   v11.44 — Align social icons consistently
+   ========================================================= */
+.footer-social-link{
+  line-height:0;
+}
+
+.footer-social-link svg{
+  display:block;
+  width:21px;
+  height:21px;
+  margin:auto;
+  transform:none;
+  transform-origin:center;
+}
+
+.footer-social-link.facebook svg{
+  width:19px;
+  height:19px;
+  transform:translateY(1px);
+}
+
+.footer-social-link.telegram svg{
+  width:21px;
+  height:21px;
+}
+
+.footer-social-link.discord svg{
+  width:22px;
+  height:22px;
+}
