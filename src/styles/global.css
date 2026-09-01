@@ -1606,3 +1606,50 @@ body:has(.reader-bottom-nav) .site-notification-toast{bottom:104px}
 input[list="author-suggestions"]{
   background:#fff;
 }
+
+
+/* =========================================================
+   v11.25 — Author page ombré + softer 700 weight
+   ========================================================= */
+.taxonomy-page-head{
+  background:
+    radial-gradient(circle at 10% 18%, rgba(255,226,241,.95), transparent 38%),
+    radial-gradient(circle at 90% 12%, rgba(235,225,255,.92), transparent 42%),
+    linear-gradient(135deg, #fff5fa 0%, #f8efff 52%, #fff3f8 100%);
+  border-color:#ead3e4;
+  box-shadow:0 10px 30px rgba(122,80,113,.06);
+}
+
+.taxonomy-page-head h1{
+  font-weight:700;
+}
+
+.taxonomy-kicker{
+  font-weight:700;
+}
+
+.taxonomy-x-button{
+  font-weight:700;
+}
+
+
+/* =========================================================
+   v11.26 — Typography correction
+   Keep large author title at its original weight.
+   Use 700 for smaller taxonomy/filter/metadata labels.
+   ========================================================= */
+.taxonomy-page-head h1{
+  font-weight:800;
+}
+
+/* Smaller labels: author, genre, status, sorting, etc. */
+.advanced-filter-grid label > span,
+.advanced-filter-grid label > b,
+.advanced-filter-grid label > strong,
+.search-filter-label,
+.filter-label,
+.series-info-row b,
+.series-info-row strong,
+.taxonomy-kicker{
+  font-weight:700;
+}

@@ -406,3 +406,18 @@ Trang chi tiết truyện:
 - Existing authors can still be chosen from browser suggestions while typing.
 - Author management in Admin remains available for adding/editing the X profile link.
 - No SQL changes; ZIP contains no SQL files.
+
+
+## v11.25 — Author page ombré + 700 font weight
+- Author page header now uses the same soft pink-purple ombré direction as Advanced Search.
+- Author name heading weight is reduced to 700.
+- Author kicker and X follow button also use 700 to avoid overly heavy text.
+- This styling should be preserved in future builds.
+- No SQL changes; ZIP contains no SQL files.
+
+
+## v11.26 — Typography correction
+- Restores the large author-name heading to its original heavier weight.
+- Keeps the pink-purple ombré author header.
+- Uses font-weight 700 for smaller labels such as Author, Genre, Status, Sort by and series metadata labels.
+- No SQL changes; ZIP contains no SQL files.
