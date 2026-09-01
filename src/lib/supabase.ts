@@ -47,6 +47,14 @@ export async function getAllPublicChapters(){const now=encodeURIComponent(new Da
 export async function getAdminChapters(seriesId:string,token:string){return supabaseGet<Chapter[]>(`chapters?select=*&series_id=eq.${encodeURIComponent(seriesId)}&order=sort_order.desc.nullslast,chapter_number.desc`,token)}
 export async function getChapter(seriesId:string,n:string){const now=encodeURIComponent(new Date().toISOString()); const r=await supabaseGet<Chapter[]>(`chapters?select=id,series_id,chapter_number,title,access_type,is_published,published_at,sort_order,content_html,created_at,updated_at&series_id=eq.${encodeURIComponent(seriesId)}&chapter_number=eq.${encodeURIComponent(n)}&is_published=eq.true&or=(published_at.is.null,published_at.lte.${now})&limit=1`);return r[0]??null}
 export async function getAdminChapter(id:string,token:string){const r=await supabaseGet<Chapter[]>(`chapters?select=*&id=eq.${encodeURIComponent(id)}&limit=1`,token);return r[0]??null}
+export async function getPublicChapterById(id:string,token?:string){
+  const now=encodeURIComponent(new Date().toISOString());
+  const r=await supabaseGet<Chapter[]>(
+    `chapters?select=id,series_id,chapter_number,title,access_type,is_published,published_at,sort_order,content_html,created_at,updated_at&id=eq.${encodeURIComponent(id)}&is_published=eq.true&or=(published_at.is.null,published_at.lte.${now})&limit=1`,
+    token
+  );
+  return r[0]??null;
+}
 export async function getPublicChapterPages(chapterId:string){return supabaseGet<ChapterPage[]>(`chapter_pages?select=id,chapter_id,page_number,object_key,created_at&chapter_id=eq.${encodeURIComponent(chapterId)}&order=page_number.asc`)}
 export async function getAdminChapterPages(chapterId:string,token:string){return supabaseGet<ChapterPage[]>(`chapter_pages?select=*&chapter_id=eq.${encodeURIComponent(chapterId)}&order=page_number.asc`,token)}
 export const statusLabel=(s:Series['status'])=>({ongoing:'Đang tiến hành',completed:'Hoàn thành',hiatus:'Tạm ngưng',dropped:'Drop'} as any)[s]??s;

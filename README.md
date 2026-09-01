@@ -549,3 +549,57 @@ Trang chi tiết truyện:
 ## v11.45
 - Replaced Facebook SVG with a geometrically centered glyph.
 - No SQL changes.
+
+
+## v11.46 — Fix user registration
+- Fixes signup error `new row for relation "profiles" violates check constraint "profiles_role_check"`.
+- Normalizes profile roles to the website's current `admin` / `member` model.
+- New accounts are created as `member`.
+- Rebuilds the `on_auth_user_created` trigger and `ensure_my_profile()` fallback to use `member`.
+- Run `supabase-v11-46-fix-registration-role.sql` once.
+- No application-code change is required in this release.
+
+
+## v11.47 — Fix comment permissions
+- Fixes Supabase 403 `permission denied for table series_comments`.
+- Grants the table-level SELECT/INSERT/DELETE privileges required by PostgREST.
+- Keeps RLS enabled: only active members/admins with comment permission can post.
+- Comment owners and admins can delete; everyone can read.
+- Run `supabase-v11-47-fix-comments-permissions.sql` once.
+- No application-code changes are required.
+
+
+## v11.48 — Consolidated member permissions
+- Adds one consolidated Supabase migration for member features.
+- Covers profile/avatar metadata, bookmarks, reading history, chapter-read marks and comments.
+- Users may only read/write their own bookmark/history/read/profile rows.
+- Profile updates are restricted to safe columns (`display_name`, `username`, `avatar_key`, `updated_at`) so members cannot promote themselves or change admin-only flags.
+- Comment rules from v11.47 are included.
+- Avatar image bytes still stay in private R2; this SQL only fixes the `profiles.avatar_key` metadata permissions.
+- Run `supabase-v11-48-member-permissions.sql` once.
+- No application-code changes are required.
+
+
+## v11.49 — Fix /account HTTP 500
+- Fixes recursive RLS on `profiles` introduced by the consolidated member-permission migration.
+- The profile SELECT policy now allows an authenticated user to read only their own row.
+- Admin member management continues through the existing admin RPC, so no recursive admin check is needed in the `profiles` SELECT policy.
+- Keeps member profile updates limited to safe columns only.
+- Run `supabase-v11-49-fix-profile-rls-recursion.sql` once.
+- No application-code changes are required.
+
+
+## v11.50 — Restore Admin + fix /account
+- Restores the site owner profile to role `admin`.
+- `/account` no longer uses the Admin-only chapter helper for reading history.
+- Adds authenticated SELECT grants for public series/chapter data used by the account page.
+- Keeps member profile updates restricted to safe columns.
+- Run `supabase-v11-50-restore-admin-and-account.sql` once.
+
+
+## v11.51 — Bookmark covers + homepage reading history
+- Account bookmarks now display as smaller cover cards instead of text rows.
+- Desktop shows up to 6 bookmark cards per row; responsive layouts use fewer columns.
+- Removed the `Đọc tiếp` / reading-history section from the Account page.
+- Homepage reading history is kept for logged-in users and limited to the 4 most recently read series.
+- No SQL changes.

@@ -26,7 +26,7 @@ if(session){
     const history=await getMyHistory(session.user.id,session.token);
     const seriesMap=new Map(updated.map(x=>[x.id,x]));
     const chapterMap=new Map(allChapters.map(ch=>[ch.id,ch]));
-    recentHistory=history.slice(0,8).map(h=>{
+    recentHistory=history.slice(0,4).map(h=>{
       const item=seriesMap.get(h.series_id);
       const chapter=chapterMap.get(h.chapter_id);
       return item?{item,chapter,updated_at:h.updated_at}:null;
