@@ -545,3 +545,7 @@ Trang chi tiết truyện:
 - Centers Facebook / Telegram / Discord icons consistently inside their circular buttons.
 - Slightly reduces the Facebook icon and nudges it down 1px to correct its visual imbalance.
 - No SQL changes.
+
+## v11.45
+- Replaced Facebook SVG with a geometrically centered glyph.
+- No SQL changes.

@@ -2051,3 +2051,11 @@ body{
   width:22px;
   height:22px;
 }
+
+/* v11.45 Facebook icon optical centering */
+.footer-social-link.facebook svg{
+  width:21px;
+  height:21px;
+  margin:0;
+  transform:none;
+}
