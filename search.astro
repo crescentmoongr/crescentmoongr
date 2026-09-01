@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getSeriesList,statusLabel,getAuthors,getGenres } from '../lib/supabase';
+export const prerender=false;
+
+const q=(Astro.url.searchParams.get('q')||'').trim().toLowerCase();
+const author=(Astro.url.searchParams.get('author')||'').trim();
+const status=(Astro.url.searchParams.get('status')||'').trim();
+const genre=(Astro.url.searchParams.get('genre')||'').trim();
+const sort=(Astro.url.searchParams.get('sort')||'updated').trim();
+
+let all=[];let authors=[];let genres=[];let error='';
+try{[all,authors,genres]=await Promise.all([getSeriesList(),getAuthors(),getGenres()])}catch(e){error=e instanceof Error?e.message:'Không thể tải dữ liệu.'}
+
+let rows=all.filter(x=>{
+  const text=[x.title,x.author,...(x.genres||[])].filter(Boolean).join(' ').toLowerCase();
+  return (!q||text.includes(q))
+    &&(!author||x.author===author)
+    &&(!status||x.status===status)
+    &&(!genre||(x.genres||[]).includes(genre));
+});
+
+if(sort==='title')rows.sort((a,b)=>a.title.localeCompare(b.title,'vi'));
+else if(sort==='new')rows.sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
+else rows.sort((a,b)=>new Date(b.updated_at).getTime()-new Date(a.updated_at).getTime());
+
+const statusBadgeLabel=(s:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[s]||'';
+const statusBadgeClass=(s:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'} as Record<string,string>)[s]||'';
+---
+<BaseLayout title="Tìm kiếm nâng cao — Crescent Moon Translation">
+<section class="advanced-search-head">
+  <h1>Tìm kiếm nâng cao</h1>
+  <form class="advanced-search-form" method="GET" action="/search">
+    <div class="advanced-search-top">
+      <input name="q" value={Astro.url.searchParams.get('q')||''} placeholder="Nhập tên truyện, tác giả, thể loại..."/>
+      <a class="advanced-reset" href="/search">↻ Đặt lại bộ lọc</a>
+    </div>
+    <div class="advanced-filter-grid">
+      <label><span>TÁC GIẢ:</span><select name="author"><option value="">Tất cả tác giả</option>{authors.map(a=><option value={a.name} selected={author===a.name}>{a.name}</option>)}</select></label>
+      <label><span>TRẠNG THÁI:</span><select name="status"><option value="">Tất cả trạng thái</option><option value="ongoing" selected={status==='ongoing'}>Đang tiến hành</option><option value="completed" selected={status==='completed'}>Hoàn thành</option><option value="hiatus" selected={status==='hiatus'}>Tạm ngưng</option><option value="dropped" selected={status==='dropped'}>Drop</option></select></label>
+      <label><span>SẮP XẾP THEO:</span><select name="sort"><option value="updated" selected={sort==='updated'}>Mới cập nhật</option><option value="new" selected={sort==='new'}>Mới đăng</option><option value="title" selected={sort==='title'}>Tên A → Z</option></select></label>
+      <label><span>THỂ LOẠI:</span><select name="genre"><option value="">Tất cả thể loại</option>{genres.map(g=><option value={g.name} selected={genre===g.name}>{g.name}</option>)}</select></label>
+    </div>
+    <button class="button advanced-search-submit" type="submit">Tìm / Lọc</button>
+  </form>
+</section>
+
+{error?<div class="notice error">{error}</div>:<><div class="section-title"><h2>Kết quả</h2><span class="meta">{rows.length} truyện</span></div>{rows.length?<section class="grid">{rows.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'—'} · {statusLabel(item.status)}</div>{item.genres?.length?<div class="mini-genres">{item.genres.slice(0,3).join(' · ')}</div>:null}</div></a>)}</section>:<div class="empty-state">Không tìm thấy truyện phù hợp.</div>}</>}
+</BaseLayout>

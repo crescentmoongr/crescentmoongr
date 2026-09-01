@@ -1,0 +1,89 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getChapter,getSeriesBySlug,getPublicChapterPages,getChapters } from '../../../lib/supabase';
+import { ensureReaderSession,isSeriesUnlocked,signPageUrl } from '../../../lib/readerSecurity';
+import { getSessionUser } from '../../../lib/auth';
+import { novelRichTextToHtml } from '../../../lib/richText';
+export const prerender=false;
+const {slug,chapter}=Astro.params; if(!slug||!chapter) return Astro.redirect('/');
+const series=await getSeriesBySlug(slug); const current=series?await getChapter(series.id,chapter):null; if(!series||!current) return new Response('Không tìm thấy chapter.',{status:404});
+const readerSession=ensureReaderSession(Astro.cookies);
+let allowed=series.access_type==='public';
+if(series.access_type==='password') allowed=await isSeriesUnlocked(readerSession,series.id);
+const accountUser=await getSessionUser(Astro.cookies);
+if(series.access_type==='member') allowed=!!accountUser;
+const isNovel=String(series.type||'').toLowerCase()==='novel';
+const pages=allowed&&!isNovel?await getPublicChapterPages(current.id):[];
+const rendered=allowed&&!isNovel?await Promise.all(pages.map(async pg=>({ ...pg, url:await signPageUrl(pg.id,series.id,current.id,readerSession,300) }))):[];
+const novelHtml=allowed&&isNovel?novelRichTextToHtml(current.content_html):'';
+const unlockError=Astro.url.searchParams.get('unlock_error');
+
+const chapterList=await getChapters(series.id);
+const currentIndex=chapterList.findIndex(ch=>ch.id===current.id);
+const previousChapter=currentIndex>=0?chapterList[currentIndex+1]||null:null;
+const nextChapter=currentIndex>=0?chapterList[currentIndex-1]||null:null;
+
+---
+<BaseLayout title={`${series.title} - Chapter ${current.chapter_number} | Crescent Moon Translation`} description={`Đọc ${series.title} - Chapter ${current.chapter_number} tại Crescent Moon Translation.`} image={series.cover_key?`/api/og-cover/${series.id}`:"/social-preview.png"} imageAlt={`Bìa truyện ${series.title} - Chapter ${current.chapter_number}`} ogType="article">
+<h1>{series.title} — Chapter {current.chapter_number}</h1>
+{!allowed&&series.access_type==='password'?<section class="lock-panel"><h2>🔒 Truyện cần mật khẩu</h2><p class="description">Chỉ cần nhập một lần để mở toàn bộ chapter của bộ này trong 12 giờ</p>
+<p class="description">Lấy gợi ý mở khóa truyện ở mục <a href="/password"><strong>Mật khẩu</strong></a> tại menu web.</p>{unlockError&&<div class="notice error">{unlockError}</div>}<form method="POST" action="/api/series-unlock"><input type="hidden" name="slug" value={series.slug}/><input type="hidden" name="return_to" value={`/read/${series.slug}/${current.chapter_number}`}/><label class="field"><span>Mật khẩu</span><input name="password" type="password" required autocomplete="current-password"/></label><button class="button" type="submit">Mở khóa truyện</button></form></section>:!allowed&&series.access_type==='member'?<section class="lock-panel"><h2>🔒 Truyện dành cho thành viên</h2><p class="description">Đăng nhập tài khoản để đọc bộ truyện này.</p><a class="button" href={`/login?next=${encodeURIComponent(`/read/${series.slug}/${current.chapter_number}`)}`}>Đăng nhập</a></section>:<><div class="reader-nav"><a class="button secondary" href={`/manga/${series.slug}`}>← Danh sách chapter</a><span class="meta">{isNovel?'Novel':`${pages.length} trang`}</span></div><div data-reader-view data-chapter-id={current.id}></div>{isNovel?(novelHtml?<article class="novel-reader-content rich-content" set:html={novelHtml}></article>:<div class="empty-state">Chapter chưa có nội dung.</div>):(pages.length?<div class="reader-pages" data-protected-reader data-series-id={series.id} data-chapter-id={current.id}>{rendered.map(pg=><div class="reader-canvas-wrap" data-page={pg.page_number}><canvas class="reader-canvas" data-src={pg.url} aria-label={`Trang ${pg.page_number}`}></canvas><div class="reader-loading">Đang tải trang {pg.page_number}…</div></div>)}</div>:<div class="empty-state">Chapter chưa có ảnh.</div>)}</>}
+{allowed&&accountUser&&<div class="reading-progress-marker" data-reading-progress data-series-id={series.id} data-chapter-id={current.id}></div>}
+
+{allowed&&
+<nav class="reader-bottom-nav" aria-label="Điều hướng chapter">
+  <a class="reader-bottom-home" href="/" aria-label="Trang chủ" title="Trang chủ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.8 12 3l9 7.8v9.7a.5.5 0 0 1-.5.5H15v-6H9v6H3.5a.5.5 0 0 1-.5-.5v-9.7Z"/></svg></a>
+
+  {previousChapter
+    ? <a class="reader-bottom-step" href={`/read/${series.slug}/${previousChapter.chapter_number}`}>‹ Trước</a>
+    : <span class="reader-bottom-step is-disabled">‹ Trước</span>}
+
+  <label class="reader-bottom-current" aria-label="Chọn chapter">
+    <span class="reader-bottom-current-label">Chapter {current.chapter_number}{current.title?` - ${current.title}`:''}</span>
+    <select class="reader-bottom-select" data-chapter-jump>
+      {chapterList.map(ch=><option value={`/read/${series.slug}/${ch.chapter_number}`} selected={ch.id===current.id}>Chapter {ch.chapter_number}{ch.title?` - ${ch.title}`:''}</option>)}
+    </select>
+  </label>
+
+  {nextChapter
+    ? <a class="reader-bottom-step" href={`/read/${series.slug}/${nextChapter.chapter_number}`}>Sau ›</a>
+    : <span class="reader-bottom-step is-disabled">Sau ›</span>}
+
+  <a class="reader-bottom-info" href={`/manga/${series.slug}`} aria-label="Thông tin truyện" title="Thông tin truyện"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10.5v6"/><circle cx="12" cy="7.5" r=".8"/></svg></a>
+</nav>}
+</BaseLayout>
+<script>
+const chapterJump=document.querySelector('[data-chapter-jump]');
+if(chapterJump instanceof HTMLSelectElement){
+  chapterJump.addEventListener('change',()=>{
+    const url=chapterJump.value;
+    if(url) window.location.href=url;
+  });
+}
+
+const viewMarker=document.querySelector('[data-reader-view]');
+if(viewMarker instanceof HTMLElement){
+  fetch('/api/stats/view',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({chapter_id:viewMarker.dataset.chapterId})}).catch(()=>{});
+}
+const reader=document.querySelector('[data-protected-reader]');
+const progress=document.querySelector('[data-reading-progress]');
+if(progress instanceof HTMLElement){
+  fetch('/api/library/progress',{
+    method:'POST',
+    credentials:'same-origin',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({series_id:progress.dataset.seriesId,chapter_id:progress.dataset.chapterId})
+  }).catch(()=>{});
+}
+const wraps=[...document.querySelectorAll('.reader-canvas-wrap')];
+const loadPage=async(wrap)=>{
+  if(!(wrap instanceof HTMLElement)||wrap.dataset.loaded==='1'||wrap.dataset.loading==='1')return;
+  wrap.dataset.loading='1'; const canvas=wrap.querySelector('canvas'); const loading=wrap.querySelector('.reader-loading');
+  if(!(canvas instanceof HTMLCanvasElement))return;
+  try{const src=canvas.dataset.src||''; const res=await fetch(src,{credentials:'same-origin',cache:'no-store',headers:{'X-Crescent-Reader':'1'}}); if(!res.ok)throw new Error(String(res.status)); const blob=await res.blob(); const img=await createImageBitmap(blob); canvas.width=img.width; canvas.height=img.height; const ctx=canvas.getContext('2d',{alpha:false}); if(!ctx)throw new Error('canvas'); ctx.drawImage(img,0,0); img.close(); wrap.dataset.loaded='1'; if(loading instanceof HTMLElement)loading.remove();}catch{if(loading instanceof HTMLElement)loading.textContent='Không tải được ảnh. Hãy tải lại trang.'}finally{delete wrap.dataset.loading}
+};
+const io=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting){loadPage(e.target);io.unobserve(e.target)}},{rootMargin:'1400px 0px'}); wraps.forEach(w=>io.observe(w));
+document.addEventListener('contextmenu',e=>{if(e.target instanceof Element&&e.target.closest('[data-protected-reader]'))e.preventDefault()});
+document.addEventListener('dragstart',e=>{if(e.target instanceof Element&&e.target.closest('[data-protected-reader]'))e.preventDefault()});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['s','u'].includes(e.key.toLowerCase())&&document.querySelector('[data-protected-reader]'))e.preventDefault()});
+</script>

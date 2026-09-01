@@ -1,0 +1,224 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAdminSeriesList, getAdminChapters, getChapterStats, statusLabel, getSiteSetting, getAdminMembers, getAuthors, getGenres } from '../../lib/supabase';
+import { requireAdminSession } from '../../lib/auth';
+export const prerender=false;
+const adminSession=await requireAdminSession(Astro.cookies);if(!adminSession)return Astro.redirect('/login?next=/admin');const token=adminSession.token;const admin=adminSession.user;
+let rows=[];let connected=false;const stats=new Map<string,{chapters:number,views:number}>();
+try{rows=await getAdminSeriesList(token);connected=true;await Promise.all(rows.map(async item=>{const chapters=await getAdminChapters(item.id,token);const cs=await getChapterStats(chapters.map(c=>c.id),token);stats.set(item.id,{chapters:chapters.length,views:cs.reduce((n,x)=>n+Number(x.view_count||0),0)})}))}catch{}
+const success=Astro.url.searchParams.get('success');const error=Astro.url.searchParams.get('error');
+let adHtml='';
+try{adHtml=(await getSiteSetting('reader_ad_html',token))?.value||''}catch{}
+let socialLinks:{facebook?:string;telegram?:string;discord?:string}={};
+try{
+  const raw=(await getSiteSetting('social_links',token))?.value||'';
+  const parsed=raw?JSON.parse(raw):{};
+  if(parsed&&typeof parsed==='object')socialLinks=parsed;
+}catch{}
+let members:any[]=[];let membersError='';
+try{members=await getAdminMembers(token)}catch(e){membersError=e instanceof Error?e.message:'Không tải được thành viên.'}
+let authors:any[]=[];let genresManaged:any[]=[];
+try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{}
+---
+<BaseLayout title="Admin — Crescent Moon Translation">
+<section class="admin-card admin-wide"><div class="admin-top"><div><h1>Admin</h1><p class="meta">Đăng nhập: {admin.email}</p></div><form method="POST" action="/api/auth/logout"><button class="button secondary" type="submit">Đăng xuất</button></form></div>
+<div class={connected?'notice success':'notice error'}>{connected?`Supabase đã kết nối · ${rows.length} truyện hiện có`:'Chưa kết nối được Supabase'}</div>{success&&<div class="notice success top-gap">{success}</div>}{error&&<div class="notice error top-gap">{error}</div>}
+</section>
+
+<div class="admin-dashboard-layout wp-admin-layout">
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-title">Quản lý</div>
+    <nav class="admin-section-menu" aria-label="Menu quản trị">
+  <a href="#admin-social">🌐 Mạng xã hội</a>
+  <a href="#admin-ads">📢 Quảng cáo</a>
+  <a href="#admin-add-series">➕ Thêm truyện</a>
+  <a href="#admin-manage-series">📚 Quản lý truyện</a>
+  <a href="#admin-members">👥 Thành viên</a>
+  <a href="#admin-authors">✍️ Tác giả</a>
+  <a href="#admin-genres">🏷️ Thể loại</a>
+</nav>
+  </aside>
+  <div class="admin-dashboard-content">
+
+
+
+<section class="admin-card admin-wide admin-anchor-section" id="admin-social">
+  <div class="section-title">
+    <div><h2>Mạng xã hội</h2><p class="meta">Các link đã nhập sẽ hiển thị bằng icon ở chính giữa cuối website.</p></div>
+  </div>
+  <form method="POST" action="/api/admin/settings/social" class="admin-form">
+    <div class="form-grid">
+      <label class="field"><span>Facebook</span><input name="facebook" type="url" maxlength="1000" value={socialLinks.facebook||''} placeholder="https://facebook.com/..."/></label>
+      <label class="field"><span>Telegram</span><input name="telegram" type="url" maxlength="1000" value={socialLinks.telegram||''} placeholder="https://t.me/..."/></label>
+      <label class="field"><span>Discord</span><input name="discord" type="url" maxlength="1000" value={socialLinks.discord||''} placeholder="https://discord.gg/..."/></label>
+    </div>
+    <p class="meta">Để trống ứng dụng nào thì icon ứng dụng đó sẽ không hiển thị ngoài website.</p>
+    <button class="button" type="submit">Lưu mạng xã hội</button>
+  </form>
+</section>
+
+<section class="admin-ad-section admin-anchor-section" id="admin-ads">
+  <div class="section-title"><h2>Quảng cáo</h2></div>
+  <form method="POST" action="/api/admin/settings/ads" class="admin-form">
+    <label class="field">
+      <span>HTML / Script quảng cáo</span>
+      <textarea name="ad_html" rows="9" maxlength="100000" placeholder="Dán nguyên code HTML / script của bên quảng cáo vào đây...">{adHtml}</textarea>
+    </label>
+    <p class="meta">Mã này được chạy trên toàn bộ website, trừ trang Admin. Để trống rồi lưu nếu muốn tắt quảng cáo.</p>
+    <button class="button" type="submit">Lưu quảng cáo</button>
+  </form>
+</section>
+<hr class="soft-rule"/>
+<section class="admin-anchor-section" id="admin-add-series">
+<div class="section-title"><h2>Thêm truyện</h2></div>
+<form method="POST" action="/api/admin/series/create" enctype="multipart/form-data" class="admin-form"><div class="form-grid">
+<label class="field"><span>Tên truyện *</span><input id="title" name="title" required maxlength="200"/></label><label class="field"><span>Slug *</span><input id="slug" name="slug" required maxlength="200" placeholder="ten-truyen"/></label><label class="field"><span>Tác giả</span><input name="author" maxlength="200" list="author-suggestions" placeholder="Nhập tên tác giả..."/><datalist id="author-suggestions">{authors.map(a=><option value={a.name}/>)}</datalist><small class="meta">Có thể chọn tác giả có sẵn hoặc nhập tên mới. Tác giả mới sẽ tự tạo slug và xuất hiện trong mục “Tác giả”.</small></label><div class="field genre-picker-field">
+  <span>Thể loại</span>
+  <div class="genre-bubble-picker" data-genre-picker>
+    {genresManaged.map(g=>
+      <label class="genre-bubble">
+        <input type="checkbox" name="genres" value={g.name}/>
+        <span>{g.name}</span>
+      </label>
+    )}
+  </div>
+  <small class="meta">Bấm vào từng thể loại để chọn nhiều mục.</small>
+</div><label class="field"><span>Link mua raw</span><input name="raw_url" type="url" maxlength="1000" placeholder="https://..."/><small class="meta">Link trang chính thức để người đọc mua raw và ủng hộ tác giả.</small></label><label class="field"><span>Loại truyện</span><select name="type"><option value="">— Chưa chọn —</option><option value="Manga">Manga</option><option value="Manhwa">Manhwa</option><option value="Manhua">Manhua</option><option value="Novel">Novel</option><option value="Other">Khác</option></select></label><label class="field"><span>Trạng thái *</span><select name="status" required><option value="ongoing">Đang tiến hành</option><option value="completed">Hoàn thành</option><option value="hiatus">Tạm ngưng</option><option value="dropped">Drop</option></select></label><label class="field"><span>Quyền đọc *</span><select name="access_type" id="new_access_type" required><option value="public">Public</option><option value="password">Khóa mật khẩu cả bộ</option><option value="member">Thành viên</option></select></label><label class="field" id="new_series_password_field" hidden><span>Mật khẩu truyện *</span><input name="series_password" type="password" minlength="4" autocomplete="new-password"/></label></div>
+
+<label class="field rich-field">
+  <span>Giới thiệu</span>
+  <div class="rich-editor-shell">
+    <div class="rich-toolbar" role="toolbar" aria-label="Định dạng giới thiệu">
+      <button type="button" class="rich-tool" data-rich-cmd="bold" title="In đậm"><strong>B</strong></button>
+      <button type="button" class="rich-tool" data-rich-cmd="italic" title="In nghiêng"><em>I</em></button>
+      <button type="button" class="rich-tool" data-rich-cmd="underline" title="Gạch chân"><u>U</u></button>
+      <button type="button" class="rich-tool rich-tool-text" data-rich-block="h3" title="Tiêu đề">Tiêu đề</button>
+      <button type="button" class="rich-tool rich-tool-text" data-rich-block="p" title="Đoạn văn">Đoạn</button>
+      <button type="button" class="rich-tool rich-tool-text" data-rich-cmd="insertUnorderedList" title="Danh sách">• Danh sách</button>
+      <button type="button" class="rich-tool rich-tool-text" data-rich-action="break" title="Xuống dòng">↵ Xuống dòng</button>
+      <button type="button" class="rich-tool rich-tool-text" data-rich-action="rule" title="Đường ngăn cách">— Ngăn cách</button>
+      <button type="button" class="rich-tool rich-tool-text" data-rich-action="clear" title="Xóa định dạng">Xóa định dạng</button>
+    </div>
+    <div class="rich-editor" contenteditable="true" data-placeholder="Nhập phần giới thiệu..."></div>
+    <textarea class="rich-source" name="description" maxlength="20000" hidden></textarea>
+  </div>
+  <small class="meta">Có thể in đậm, in nghiêng, gạch chân, tạo tiêu đề, danh sách, xuống dòng và đường ngăn cách.</small>
+</label>
+<label class="field"><span>Ảnh bìa *</span><input name="cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required/><small class="meta">JPG, PNG, WebP hoặc GIF. Tối đa 8 MB.</small></label><label class="check-row"><input name="is_published" type="checkbox" value="true" checked/><span>Đăng công khai ngay</span></label><button class="button" type="submit">Lưu truyện</button></form>
+</section>
+<section class="admin-card admin-wide admin-anchor-section" id="admin-manage-series"><div class="section-title"><h2>Quản lý truyện</h2><span class="meta">{rows.length} truyện</span></div>{rows.length===0?<div class="empty-state">Chưa có truyện nào.</div>:<div class="admin-series-list">{rows.map(item=>{const x=stats.get(item.id)||{chapters:0,views:0};return <div class="admin-series-row"><div class="admin-thumb">{item.cover_key?<img src={`/api/cover/${item.id}`} alt="" loading="lazy"/>:<span>Không bìa</span>}</div><div><strong>{item.title}</strong><div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.access_type==='password'?'🔒 Mật khẩu cả bộ':item.access_type==='member'?'🔒 Thành viên':'Public'} · {item.is_published?'Công khai':'Bản nháp'}</div><div class="admin-statline"><span>{x.chapters} chapter</span><span>{x.views.toLocaleString('vi-VN')} lượt đọc</span></div></div><div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa / Chapters</a>{item.is_published&&<a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div></div>})}</div>}</section>
+
+
+<section class="admin-card admin-wide admin-anchor-section" id="admin-authors">
+  <div class="section-title"><div><h2>Quản lý tác giả</h2><p class="meta">Mỗi tác giả có trang riêng và có thể gắn tài khoản X.</p></div><span class="meta">{authors.length} tác giả</span></div>
+  <form method="POST" action="/api/admin/author/save" class="admin-form taxonomy-create-form">
+    <div class="form-grid">
+      <label class="field"><span>Tên tác giả *</span><input name="name" required maxlength="200" placeholder="Tên tác giả"/></label>
+      <label class="field"><span>Link tài khoản X</span><input name="x_url" type="url" maxlength="1000" placeholder="https://x.com/..."/></label>
+    </div>
+    <button class="button" type="submit">Thêm tác giả</button>
+  </form>
+  {authors.length?<div class="taxonomy-admin-list">{authors.map(a=>
+    <form method="POST" action="/api/admin/author/save" class="taxonomy-admin-row">
+      <input type="hidden" name="id" value={a.id}/>
+      <label><span>Tên</span><input name="name" value={a.name} required maxlength="200"/></label>
+      <label><span>X</span><input name="x_url" type="url" value={a.x_url||''} maxlength="1000" placeholder="https://x.com/..."/></label>
+      <a class="button secondary small-button" href={`/author/${a.slug}`}>Xem trang</a>
+      <button class="button secondary small-button" type="submit">Lưu</button>
+      <button class="danger-button small-danger" type="submit" formaction="/api/admin/author/delete" onclick="return confirm('Xóa tác giả này khỏi danh mục? Truyện hiện có vẫn giữ tên tác giả.');">Xóa</button>
+    </form>)}</div>:<div class="empty-state">Chưa có tác giả.</div>}
+</section>
+
+<section class="admin-card admin-wide admin-anchor-section" id="admin-genres">
+  <div class="section-title"><div><h2>Quản lý thể loại</h2><p class="meta">Mỗi thể loại có trang riêng liệt kê các truyện tương ứng.</p></div><span class="meta">{genresManaged.length} thể loại</span></div>
+  <form method="POST" action="/api/admin/genre/save" class="admin-form taxonomy-create-form" data-batch-genre-form>
+    <div class="form-grid">
+      <label class="field">
+        <span>Tên thể loại *</span>
+        <input name="name" required maxlength="2000" placeholder="Romance, Comedy, Drama, Slice of Life"/>
+        <small class="meta">Có thể nhập nhiều thể loại cùng lúc, ngăn cách từng mục bằng dấu phẩy.</small>
+      </label>
+    </div>
+    <button class="button" type="submit">Thêm thể loại</button>
+  </form>
+  {genresManaged.length?<div class="taxonomy-admin-list">{genresManaged.map(g=>
+    <form method="POST" action="/api/admin/genre/save" class="taxonomy-admin-row genre-admin-row">
+      <input type="hidden" name="id" value={g.id}/>
+      <label><span>Tên</span><input name="name" value={g.name} required maxlength="120"/></label>
+      <a class="button secondary small-button" href={`/genre/${g.slug}`}>Xem trang</a>
+      <button class="button secondary small-button" type="submit">Lưu</button>
+      <button class="danger-button small-danger" type="submit" formaction="/api/admin/genre/delete" onclick="return confirm('Xóa thể loại này khỏi danh mục?');">Xóa</button>
+    </form>)}</div>:<div class="empty-state">Chưa có thể loại.</div>}
+</section>
+
+<section class="admin-card admin-wide admin-anchor-section" id="admin-members">
+  <div class="section-title">
+    <div><h2>Quản lý thành viên</h2><p class="meta">Khóa tài khoản, bật/tắt quyền bình luận hoặc thay đổi vai trò.</p></div>
+    <span class="meta">{members.length} tài khoản</span>
+  </div>
+  {membersError
+    ? <div class="notice error">{membersError}</div>
+    : members.length===0
+      ? <div class="empty-state">Chưa có thành viên.</div>
+      : <div class="admin-member-list">
+          {members.map(member=>
+            <form method="POST" action="/api/admin/member/update" class="admin-member-row">
+              <input type="hidden" name="user_id" value={member.user_id}/>
+              <div class="admin-member-main">
+                <strong>{member.display_name||member.username||member.email||'Thành viên'}</strong>
+                <span class="meta">{member.email||member.user_id}</span>
+                <span class="meta">Tham gia: {member.created_at?new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(member.created_at)):'—'}</span>
+              </div>
+              <label class="member-control"><span>Vai trò</span><select name="role"><option value="member" selected={member.role==='member'}>Member</option><option value="admin" selected={member.role==='admin'}>Admin</option></select></label>
+              <label class="member-check"><input type="checkbox" name="is_active" value="true" checked={member.is_active}/><span>Hoạt động</span></label>
+              <label class="member-check"><input type="checkbox" name="can_comment" value="true" checked={member.can_comment}/><span>Được bình luận</span></label>
+              <button class="button secondary small-button" type="submit">Lưu</button>
+            </form>
+          )}
+        </div>}
+</section>
+
+  </div>
+</div>
+<script>
+const title=document.querySelector('#title'),slug=document.querySelector('#slug');let slugTouched=false;slug?.addEventListener('input',()=>slugTouched=true);title?.addEventListener('input',()=>{if(slugTouched||!(slug instanceof HTMLInputElement)||!(title instanceof HTMLInputElement))return;slug.value=title.value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')});const access=document.querySelector('#new_access_type'),passwordField=document.querySelector('#new_series_password_field');const toggle=()=>{if(access instanceof HTMLSelectElement&&passwordField instanceof HTMLElement)passwordField.hidden=access.value!=='password'};access?.addEventListener('change',toggle);toggle();
+</script>
+<script>
+function setupRichEditors(){
+  document.querySelectorAll('.rich-editor-shell').forEach(shell=>{
+    if(!(shell instanceof HTMLElement) || shell.dataset.ready==='1') return;
+    shell.dataset.ready='1';
+    const editor=shell.querySelector('.rich-editor');
+    const source=shell.querySelector('.rich-source');
+    if(!(editor instanceof HTMLElement)||!(source instanceof HTMLTextAreaElement)) return;
+    const sync=()=>{source.value=editor.innerHTML.trim()};
+    const focus=()=>editor.focus();
+
+    shell.querySelectorAll('[data-rich-cmd]').forEach(btn=>btn.addEventListener('click',()=>{
+      focus();
+      document.execCommand(btn.getAttribute('data-rich-cmd')||'',false);
+      sync();
+    }));
+    shell.querySelectorAll('[data-rich-block]').forEach(btn=>btn.addEventListener('click',()=>{
+      focus();
+      const block=btn.getAttribute('data-rich-block')||'p';
+      document.execCommand('formatBlock',false,block);
+      sync();
+    }));
+    shell.querySelectorAll('[data-rich-action]').forEach(btn=>btn.addEventListener('click',()=>{
+      focus();
+      const action=btn.getAttribute('data-rich-action');
+      if(action==='break') document.execCommand('insertHTML',false,'<br>');
+      if(action==='rule') document.execCommand('insertHTML',false,'<hr><p><br></p>');
+      if(action==='clear') document.execCommand('removeFormat',false);
+      sync();
+    }));
+    editor.addEventListener('input',sync);
+    editor.addEventListener('blur',sync);
+    editor.closest('form')?.addEventListener('submit',sync);
+    sync();
+  });
+}
+setupRichEditors();
+</script>
+</BaseLayout>

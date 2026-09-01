@@ -531,3 +531,11 @@ Trang chi tiết truyện:
 - Social icons are not shown on Admin pages.
 - Run `supabase-v11-42-social-links.sql` once to allow public pages to read the social link setting.
 - ZIP contains only this new SQL migration.
+
+
+## v11.43 — Fix site_settings write permission
+- Fixes Supabase 403 `permission denied for table site_settings` when saving social links or ad code.
+- Grants authenticated users table-level SELECT/INSERT/UPDATE privileges, while RLS still restricts writes to active admins only.
+- Public pages can read only `reader_ad_html` and `social_links`.
+- Run `supabase-v11-43-fix-site-settings-write.sql` once.
+- ZIP contains only this new SQL migration.

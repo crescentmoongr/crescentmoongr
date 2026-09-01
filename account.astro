@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getSession } from '../lib/auth';
+import { getMyBookmarks,getMyHistory,getSeriesById,getAdminChapter } from '../lib/supabase';
+export const prerender=false;
+const session=await getSession(Astro.cookies); if(!session) return Astro.redirect('/login?next=/account');
+const user=session.user; const success=Astro.url.searchParams.get('success'); const error=Astro.url.searchParams.get('error');
+const [bookmarkRows,historyRows]=await Promise.all([getMyBookmarks(user.id,session.token),getMyHistory(user.id,session.token)]);
+const bookmarks=(await Promise.all(bookmarkRows.map(async b=>({b,series:await getSeriesById(b.series_id)})))).filter(x=>x.series);
+const history=(await Promise.all(historyRows.map(async h=>({h,series:await getSeriesById(h.series_id),chapter:await getAdminChapter(h.chapter_id,session.token)})))).filter(x=>x.series&&x.chapter);
+---
+<BaseLayout title="Tài khoản — Crescent Reader">
+<section class="account-grid">
+  <div class="admin-card account-card"><div class="account-head"><div class="avatar-box">{user.avatar_key?<img src={`/api/avatar/${user.id}?v=${Date.now()}`} alt="Avatar"/>:<span>☾</span>}</div><div><h1>{user.display_name||user.username||'Tài khoản'}</h1><div class="meta">{user.email}</div><span class="pill">{user.role==='admin'?'Admin':'Member'}</span></div></div>{success&&<div class="notice success top-gap">{success}</div>}{error&&<div class="notice error top-gap">{error}</div>}<form method="POST" action="/api/account/avatar" enctype="multipart/form-data"><label class="field"><span>Avatar</span><input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required/><small class="meta">JPG, PNG hoặc WebP · tối đa 2 MB.</small></label><button class="button secondary" type="submit">Đổi avatar</button></form></div>
+  <div class="admin-card account-card"><h2>Hồ sơ</h2><form method="POST" action="/api/account/profile"><label class="field"><span>Tên hiển thị</span><input name="display_name" maxlength="80" value={user.display_name||''}/></label><label class="field"><span>Username</span><input name="username" maxlength="40" value={user.username||''}/></label><button class="button" type="submit">Lưu hồ sơ</button></form></div>
+  <div class="admin-card account-card"><h2>Đổi mật khẩu</h2><form method="POST" action="/api/account/password"><label class="field"><span>Mật khẩu mới</span><input name="password" type="password" minlength="8" autocomplete="new-password" required/></label><label class="field"><span>Nhập lại mật khẩu mới</span><input name="confirm_password" type="password" minlength="8" autocomplete="new-password" required/></label><button class="button" type="submit">Đổi mật khẩu</button></form></div>
+</section>
+<section class="admin-card admin-wide"><div class="section-title"><h2>★ Truyện đã bookmark</h2><span class="meta">{bookmarks.length} truyện</span></div>{bookmarks.length?<div class="chapter-list">{bookmarks.map(({series})=><a class="chapter" href={`/manga/${series!.slug}`}><span>{series!.title}</span><span class="meta">Xem truyện →</span></a>)}</div>:<div class="empty-state">Chưa bookmark truyện nào.</div>}</section>
+<section class="admin-card admin-wide"><div class="section-title"><h2>Đọc tiếp</h2><span class="meta">Lịch sử gần đây</span></div>{history.length?<div class="chapter-list">{history.map(({series,chapter})=><a class="chapter" href={`/read/${series!.slug}/${chapter!.chapter_number}`}><span>{series!.title} — Chapter {chapter!.chapter_number}</span><span class="meta">Đọc tiếp →</span></a>)}</div>:<div class="empty-state">Chưa có lịch sử đọc.</div>}</section>
+</BaseLayout>

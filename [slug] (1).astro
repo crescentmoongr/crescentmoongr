@@ -1,0 +1,220 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getChapters,getSeriesBySlug,statusLabel,getBookmark,getReadingHistory,getChapterReads,getSeriesComments } from '../../lib/supabase';
+import { getSession } from '../../lib/auth';
+import { richTextToHtml,commentRichTextToHtml } from '../../lib/richText';
+import { slugifyTaxonomy } from '../../lib/slug';
+export const prerender=false;
+const {slug}=Astro.params; if(!slug) return Astro.redirect('/');
+let series=null; let chapters=[]; let error='';
+try{series=await getSeriesBySlug(slug); if(series) chapters=await getChapters(series.id)}catch(e){error=e instanceof Error?e.message:'Không thể tải dữ liệu.'}
+if(!series&&!error) return new Response('Không tìm thấy truyện.',{status:404});
+const session=series?await getSession(Astro.cookies):null;
+let bookmarked=false, history=null, readIds=new Set<string>();
+if(series&&session){
+  const [b,h,r]=await Promise.all([getBookmark(series.id,session.user.id,session.token),getReadingHistory(series.id,session.user.id,session.token),getChapterReads(series.id,session.user.id,session.token)]);
+  bookmarked=!!b; history=h; readIds=new Set(r.map(x=>x.chapter_id));
+}
+const continueChapter=history?chapters.find(c=>c.id===history.chapter_id):null;
+const latest=chapters[0]||null;
+const updated=latest?.published_at||series?.updated_at;
+const accessText=series?.access_type==='password'?'🔒 Khóa mật khẩu cả bộ':series?.access_type==='member'?'🔒 Dành cho thành viên':'Public';
+const fmt=(v?:string|null)=>v?new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(v)):'—';
+const introHtml=series?richTextToHtml(series.description):'';
+let comments:any[]=[];
+if(series){try{comments=await getSeriesComments(series.id)}catch{}}
+const commentError=Astro.url.searchParams.get('comment_error');
+const commentSuccess=Astro.url.searchParams.get('comment')==='success';
+---
+<BaseLayout title={series?`${series.title} | Crescent Moon Translation`:'Lỗi | Crescent Moon Translation'} description={series?.description?String(series.description).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,180):'Đọc truyện tại Crescent Moon Translation.'} image={series?.cover_key?`/api/og-cover/${series.id}`:"/social-preview.png"} imageAlt={series?`Bìa truyện ${series.title}`:"Crescent Moon Translation"} ogType="article">
+{error?<div class="notice error">{error}</div>:series?<>
+<section class="manga-head">
+  <div class="manga-cover-wrap">
+    <div class="cover manga-detail-cover">
+      {series.cover_key?<img src={`/api/cover/${series.id}`} alt={`Bìa ${series.title}`}/>:<span>{series.title}</span>}
+    </div>
+  </div>
+
+  <div class="manga-info">
+    <h1>{series.title}</h1>
+
+    <div class="series-info-list">
+      <div class="series-info-row"><span class="series-info-icon">✎</span><span><b>Tác giả:</b> {series.author?<a class="taxonomy-inline-link" href={`/author/${slugifyTaxonomy(series.author)}`}>{series.author}</a>:'Chưa cập nhật'}</span></div>
+        <div class="series-info-row"><span class="series-info-icon">▣</span><span><b>Loại:</b> {series.type||'—'}</span></div>
+        <div class="series-info-row"><span class="series-info-icon">♡</span><span><b>Trạng thái:</b> {statusLabel(series.status)}</span></div>
+        <div class="series-info-row"><span class="series-info-icon">▤</span><span><b>Số chapter:</b> {chapters.length}</span></div>
+        <div class="series-info-row"><span class="series-info-icon">▦</span><span><b>Cập nhật:</b> {fmt(updated)}</span></div>
+        <div class="series-info-row"><span class="series-info-icon">♙</span><span><b>Quyền đọc:</b> {accessText}</span></div>
+      {series.raw_url&&<div class="series-info-row series-raw-row"><span class="series-info-icon">🛒</span><span><b>Mua raw:</b> <a class="series-raw-link" href={series.raw_url} target="_blank" rel="noopener noreferrer nofollow sponsored">Ủng hộ tác giả ↗</a></span></div>}
+    </div>
+
+    {series.genres?.length?<div class="pills">{series.genres.map(g=><a class="pill taxonomy-pill" href={`/genre/${slugifyTaxonomy(g)}`}>{g}</a>)}</div>:null}
+
+    <div class="row-actions manga-actions">
+      <form method="POST" action="/api/library/bookmark">
+        <input type="hidden" name="series_id" value={series.id}/>
+        <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
+        <button class="button secondary" type="submit">{bookmarked?'★ Đã bookmark':'☆ Bookmark'}</button>
+      </form>
+      {continueChapter
+        ? <a class="button" href={`/read/${series.slug}/${continueChapter.chapter_number}`}>Đọc tiếp Chapter {continueChapter.chapter_number}</a>
+        : latest
+          ? <a class="button" href={`/read/${series.slug}/${chapters[chapters.length-1].chapter_number}`}>Bắt đầu đọc</a>
+          : null}
+    </div>
+  </div>
+</section>
+
+<section class="intro-section">
+  <div class="section-title intro-title"><h2 class="major-section-title">Giới thiệu</h2></div>
+  {introHtml
+    ? <div class="rich-content" set:html={introHtml}></div>
+    : <div class="empty-intro">Chưa có giới thiệu.</div>}
+</section>
+
+<div class="section-title"><h2 class="major-section-title">Mục lục</h2><span class="meta">{chapters.length} chap</span></div>
+{chapters.length===0?<div class="empty-state">Chưa có chapter được đăng.</div>:<div class="chapter-list">{chapters.map(ch=><a class={`chapter ${readIds.has(ch.id)?'chapter-read':''}`} href={`/read/${series.slug}/${ch.chapter_number}`}><span>Chapter {ch.chapter_number}{ch.title?` — ${ch.title}`:''}</span><span class="chapter-right">{session&&<span class={readIds.has(ch.id)?'read-state read':'read-state'}>{readIds.has(ch.id)?'✓ Đã đọc':'Chưa đọc'}</span>}<span class={series.access_type==='public'?'meta':'lock'}>{series.access_type==='password'?'🔒':series.access_type==='member'?'🔒':'Đọc'}</span></span></a>)}</div>}
+
+<section class="comments-section" id="comments">
+  <div class="section-title"><h2 class="major-section-title">Bình luận</h2><span class="meta">{comments.length} bình luận</span></div>
+  {commentSuccess&&<div class="notice success">Đã gửi bình luận.</div>}
+  {commentError&&<div class="notice error">{commentError}</div>}
+
+  {session
+    ? <form method="POST" action="/api/comments/create" class="comment-form" data-comment-form>
+        <input type="hidden" name="series_id" value={series.id}/>
+        <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
+        <div class="comment-author-line">Bình luận với tư cách <strong>{session.user.display_name||session.user.username||'Thành viên'}</strong></div>
+
+        <div class="comment-editor-shell">
+          <div class="comment-toolbar" role="toolbar" aria-label="Định dạng bình luận">
+            <button type="button" data-comment-cmd="bold" title="In đậm"><strong>B</strong></button>
+            <button type="button" data-comment-cmd="italic" title="In nghiêng"><em>I</em></button>
+            <button type="button" data-comment-cmd="underline" title="Gạch chân"><u>U</u></button>
+            <button type="button" data-comment-cmd="strikeThrough" title="Gạch ngang"><s>S</s></button>
+            <button type="button" data-comment-action="upper" title="IN HOA">AA</button>
+            <button type="button" data-comment-cmd="insertUnorderedList" title="Danh sách chấm">• List</button>
+            <button type="button" data-comment-cmd="insertOrderedList" title="Danh sách số">1. List</button>
+            <button type="button" data-comment-block="blockquote" title="Trích dẫn">❞</button>
+            <button type="button" data-comment-block="code" title="Code">&lt;/&gt;</button>
+            <button type="button" data-comment-action="clear" title="Xóa định dạng">Tx</button>
+          </div>
+          <div class="comment-editor" contenteditable="true" data-placeholder="Viết bình luận..." spellcheck="true"></div>
+          <textarea class="comment-source" name="body" maxlength="8000" hidden required></textarea>
+        </div>
+
+        <div class="comment-rules">
+          <strong>📌 Lưu ý khi bình luận:</strong>
+          <ul>
+            <li>Không dùng từ ngữ thô tục, xúc phạm cá nhân, tổ chức hoặc nhân vật trong truyện.</li>
+            <li>Không spam link, quảng cáo hoặc chia sẻ nội dung độc hại.</li>
+            <li>Vui lòng giữ cuộc trò chuyện lịch sự và tôn trọng người khác.</li>
+          </ul>
+        </div>
+
+        <div class="comment-form-footer"><span class="meta">Chỉ thành viên đã đăng nhập mới có thể bình luận.</span><button class="button" type="submit">Gửi bình luận</button></div>
+      </form>
+    : <div class="comment-login-note">💬 <a href={`/login?next=${encodeURIComponent(`/manga/${series.slug}#comments`)}`}>Đăng nhập</a> để tham gia bình luận.</div>}
+
+  {comments.length===0
+    ? <div class="empty-state comments-empty">Chưa có bình luận nào.</div>
+    : <div class="comment-list">
+        {comments.map(c=><article class="comment-item">
+          <div class="comment-head">
+            <div><strong>{c.display_name||c.username||'Thành viên'}</strong><span class="meta"> · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(c.created_at))}</span></div>
+            {session&&(session.user.id===c.user_id||session.user.role==='admin')&&
+              <form method="POST" action="/api/comments/delete" onsubmit="return confirm('Xóa bình luận này?');">
+                <input type="hidden" name="id" value={c.id}/>
+                <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
+                <button class="comment-delete" type="submit">Xóa</button>
+              </form>}
+          </div>
+          <div class="comment-body" set:html={commentRichTextToHtml(c.body)}></div>
+        </article>)}
+      </div>}
+</section>
+</>:null}
+
+<script>
+const commentForm=document.querySelector('[data-comment-form]');
+if(commentForm instanceof HTMLFormElement){
+  const editor=commentForm.querySelector('.comment-editor');
+  const source=commentForm.querySelector('.comment-source');
+
+  if(editor instanceof HTMLElement && source instanceof HTMLTextAreaElement){
+    const sync=()=>{source.value=editor.innerHTML.trim()};
+    const focus=()=>editor.focus();
+
+    commentForm.querySelectorAll('[data-comment-cmd]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        focus();
+        document.execCommand(btn.getAttribute('data-comment-cmd')||'',false);
+        sync();
+      });
+    });
+
+    commentForm.querySelectorAll('[data-comment-block]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        focus();
+        const block=btn.getAttribute('data-comment-block')||'p';
+        document.execCommand('formatBlock',false,block);
+        sync();
+      });
+    });
+
+    commentForm.querySelectorAll('[data-comment-action]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const action=btn.getAttribute('data-comment-action');
+        focus();
+        if(action==='clear'){
+          document.execCommand('removeFormat',false);
+        }
+        if(action==='upper'){
+          const selection=window.getSelection();
+          if(selection && selection.rangeCount && !selection.isCollapsed){
+            const range=selection.getRangeAt(0);
+            const text=selection.toString();
+            if(text){
+              range.deleteContents();
+              range.insertNode(document.createTextNode(text.toUpperCase()));
+              selection.removeAllRanges();
+            }
+          }
+        }
+        sync();
+      });
+    });
+
+    editor.addEventListener('input',sync);
+    editor.addEventListener('blur',sync);
+    commentForm.addEventListener('submit',e=>{
+      sync();
+      const plain=(editor.innerText||'').trim();
+      if(!plain){
+        e.preventDefault();
+        alert('Bình luận không được để trống.');
+        return;
+      }
+      if(plain.length>2000){
+        e.preventDefault();
+        alert('Bình luận tối đa 2.000 ký tự.');
+      }
+    });
+    sync();
+  }
+}
+</script>
+
+</BaseLayout>
+
+
+<style>
+@media (min-width:701px){
+  .series-info-list .series-info-row:nth-child(1){grid-column:1!important;grid-row:1!important}
+  .series-info-list .series-info-row:nth-child(2){grid-column:2!important;grid-row:1!important}
+  .series-info-list .series-info-row:nth-child(3){grid-column:1!important;grid-row:2!important}
+  .series-info-list .series-info-row:nth-child(4){grid-column:2!important;grid-row:2!important}
+  .series-info-list .series-info-row:nth-child(5){grid-column:1!important;grid-row:3!important}
+  .series-info-list .series-info-row:nth-child(6){grid-column:2!important;grid-row:3!important}
+}
+</style>

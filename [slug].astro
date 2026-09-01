@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getGenreBySlug,getSeriesList,statusLabel } from '../../lib/supabase';
+export const prerender=false;
+const slug=Astro.params.slug||'';
+const genre=await getGenreBySlug(slug);
+if(!genre)return new Response('Không tìm thấy thể loại.',{status:404});
+const all=await getSeriesList();
+const rows=all.filter(x=>(x.genres||[]).some(g=>g.trim().toLowerCase()===genre.name.trim().toLowerCase()));
+const badge=(s:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[s]||'';
+const badgeClass=(s:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'} as Record<string,string>)[s]||'';
+---
+<BaseLayout title={`${genre.name} — Thể loại | Crescent Moon Translation`} description={`Các truyện thuộc thể loại ${genre.name} tại Crescent Moon Translation.`}>
+<section class="taxonomy-page-head"><div><div class="taxonomy-kicker">Thể loại</div><h1>{genre.name}</h1><p class="meta">{rows.length} truyện</p></div></section>
+{rows.length?<section class="grid">{rows.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{badge(item.status)&&<span class={`cover-badge ${badgeClass(item.status)}`}>{badge(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'—'} · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện nào thuộc thể loại này.</div>}
+</BaseLayout>

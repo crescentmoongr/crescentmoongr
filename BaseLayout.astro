@@ -1,0 +1,386 @@
+---
+import '../styles/global.css';
+import { getSessionUser } from '../lib/auth';
+import { getSiteSetting } from '../lib/supabase';
+export const prerender=false;
+const {
+  title = 'Crescent Moon Translation',
+  description = 'Crescent Moon Translation',
+  image = '/social-preview.png',
+  imageAlt,
+  canonical,
+  ogType = 'website'
+} = Astro.props;
+
+const pageUrl = new URL(canonical || Astro.url.pathname, Astro.url.origin).href;
+const absoluteImage = new URL(image || '/social-preview.png', Astro.url.origin).href;
+const user = await getSessionUser(Astro.cookies);
+
+// v11.33: run the Admin ad code site-wide on public pages.
+// /admin and its sub-routes are intentionally excluded.
+const isAdminPage = Astro.url.pathname === '/admin' || Astro.url.pathname.startsWith('/admin/');
+let siteAdHtml = '';
+if (!isAdminPage) {
+  try {
+    siteAdHtml = (await getSiteSetting('reader_ad_html'))?.value || '';
+  } catch {}
+}
+
+let socialLinks:{facebook?:string;telegram?:string;discord?:string}={};
+if (!isAdminPage) {
+  try {
+    const raw=(await getSiteSetting('social_links'))?.value||'';
+    const parsed=raw?JSON.parse(raw):{};
+    if(parsed&&typeof parsed==='object') socialLinks=parsed;
+  } catch {}
+}
+const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.discord);
+
+---
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <link rel="canonical" href={pageUrl} />
+
+  <!-- Social preview: keep these server-rendered and near the top of HEAD -->
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={pageUrl} />
+  <meta property="og:type" content={ogType} />
+  <meta property="og:site_name" content="Crescent Moon Translation" />
+  <meta property="og:locale" content="vi_VN" />
+  <meta property="og:image" content={absoluteImage} />
+  <meta property="og:image:secure_url" content={absoluteImage} />
+  <meta property="og:image:alt" content={imageAlt || title} />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={absoluteImage} />
+  <meta name="twitter:image:alt" content={imageAlt || title} />
+
+  <meta itemprop="name" content={title} />
+  <meta itemprop="description" content={description} />
+  <meta itemprop="image" content={absoluteImage} />
+
+  <link rel="icon" type="image/png" href="/honeymoon_4213586.png" />
+  <link rel="shortcut icon" href="/honeymoon_4213586.png" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="/"><img src="/crescent-moon-logo.png" alt="Crescent Moon" class="site-logo" /></a>
+
+  <div class="header-actions">
+    <nav class="desktop-nav" aria-label="Điều hướng chính">
+      <a href="/">Trang chủ</a>
+      <a href="/search">Tìm kiếm</a>
+      <a href="/password">Mật khẩu</a>
+      {user?.role==='admin'&&<a href="/admin">Admin</a>}
+      {user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
+    </nav>
+
+    <a class="header-icon-button mobile-search-button" href="/search" aria-label="Tìm kiếm" title="Tìm kiếm">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
+    </a>
+
+    <div class="notification-wrap">
+      <button class="header-icon-button notification-button" type="button" aria-label="Thông báo chapter mới" aria-expanded="false" data-notification-toggle>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+        <span class="notification-badge" data-notification-badge hidden>0</span>
+      </button>
+
+      <section class="notification-panel" data-notification-panel hidden aria-label="Thông báo">
+        <div class="notification-panel-head">
+          <div class="notification-panel-title"><span>🔔</span><strong>Thông báo</strong></div>
+          <button type="button" class="notification-mark-all" data-notification-mark-all>Đánh dấu tất cả đã đọc</button>
+        </div>
+        <div class="notification-list" data-notification-list>
+          <div class="notification-empty">Đang tải thông báo...</div>
+        </div>
+      </section>
+    </div>
+
+    <button class="header-icon-button mobile-menu-button" type="button" aria-label="Mở menu" aria-expanded="false" data-mobile-menu-toggle>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+
+  <nav class="mobile-menu-panel" data-mobile-menu hidden aria-label="Menu trên điện thoại">
+    <a href="/">🏠 Trang chủ</a>
+    <a href="/password">Mật khẩu</a>
+    {user?.role==='admin'&&<a href="/admin">Admin</a>}
+    {user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
+  </nav>
+</header>
+<main class="shell"><slot />
+
+{siteAdHtml && (
+  <div class="sitewide-ad-code" aria-label="Quảng cáo" set:html={siteAdHtml}></div>
+)}
+</main><footer class="footer">
+  {!isAdminPage&&hasSocialLinks&&<div class="footer-socials" aria-label="Theo dõi Crescent Moon">
+    {socialLinks.facebook&&<a class="footer-social-link facebook" href={socialLinks.facebook} target="_blank" rel="noopener noreferrer nofollow" aria-label="Facebook" title="Facebook">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.3 8H17V4.2c-.47-.06-2.08-.2-4-.2-3.95 0-6.65 2.4-6.65 6.83V14H2v4.25h4.35V24h5.34v-5.75h3.58L15.84 14h-4.15v-2.75c0-1.23.33-2.07 2.61-2.07Z"/></svg>
+    </a>}
+    {socialLinks.telegram&&<a class="footer-social-link telegram" href={socialLinks.telegram} target="_blank" rel="noopener noreferrer nofollow" aria-label="Telegram" title="Telegram">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.8 3.2 18.6 20c-.24 1.18-.88 1.47-1.78.92l-4.87-3.59-2.35 2.26c-.26.26-.48.48-.98.48l.35-4.96 9.03-8.16c.39-.35-.09-.55-.61-.2L6.23 13.78 1.42 12.28c-1.05-.33-1.07-1.05.22-1.55L20.45 3.48c.87-.32 1.63.2 1.35-.28Z"/></svg>
+    </a>}
+    {socialLinks.discord&&<a class="footer-social-link discord" href={socialLinks.discord} target="_blank" rel="noopener noreferrer nofollow" aria-label="Discord" title="Discord">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 5.34A16.2 16.2 0 0 0 15.45 4l-.5 1.04a15.1 15.1 0 0 0-5.9 0L8.55 4A16.3 16.3 0 0 0 4.5 5.35C1.94 9.14 1.25 12.84 1.6 16.5A16.5 16.5 0 0 0 6.57 19l1.2-1.64a10.7 10.7 0 0 1-1.88-.9l.46-.35c3.62 1.68 7.55 1.68 11.13 0l.46.35c-.6.36-1.23.66-1.88.9L17.26 19a16.5 16.5 0 0 0 4.96-2.5c.42-4.24-.72-7.9-2.72-11.16ZM8.15 14.28c-1.08 0-1.97-.99-1.97-2.2 0-1.22.87-2.2 1.97-2.2 1.1 0 1.99.99 1.97 2.2 0 1.21-.87 2.2-1.97 2.2Zm7.7 0c-1.08 0-1.97-.99-1.97-2.2 0-1.22.87-2.2 1.97-2.2 1.1 0 1.99.99 1.97 2.2 0 1.21-.87 2.2-1.97 2.2Z"/></svg>
+    </a>}
+  </div>}
+  <div>2024 Crescent Moon Translation</div>
+</footer><script is:inline data-copy-protection>
+(() => {
+  const canEdit = (target) => {
+    if (!(target instanceof Element)) return false;
+    return !!target.closest('input, textarea, select, [contenteditable="true"], .rich-editor, .rich-editor-shell');
+  };
+
+  document.addEventListener('copy', (event) => {
+    if (!canEdit(event.target)) event.preventDefault();
+  });
+
+  document.addEventListener('cut', (event) => {
+    if (!canEdit(event.target)) event.preventDefault();
+  });
+
+  document.addEventListener('contextmenu', (event) => {
+    if (!canEdit(event.target)) event.preventDefault();
+  });
+
+  document.addEventListener('dragstart', (event) => {
+    if (!canEdit(event.target)) event.preventDefault();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (canEdit(event.target)) return;
+    const key = String(event.key || '').toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && ['c','x','a','s','u'].includes(key)) {
+      event.preventDefault();
+    }
+  });
+})();
+</script>
+<script is:inline data-password-toggle>
+(() => {
+  const enhance = (input) => {
+    if (!(input instanceof HTMLInputElement) || input.dataset.passwordToggleReady === '1') return;
+    input.dataset.passwordToggleReady = '1';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'password-toggle-wrap';
+    input.parentNode?.insertBefore(wrap, input);
+    wrap.appendChild(input);
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'password-toggle-button';
+    button.setAttribute('aria-label', 'Hiện mật khẩu');
+    button.setAttribute('title', 'Hiện mật khẩu');
+    button.innerHTML = `
+      <svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+        <circle cx="12" cy="12" r="2.7"></circle>
+      </svg>
+      <svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 3l18 18"></path>
+        <path d="M10.6 6.2A10.6 10.6 0 0 1 12 6c6 0 9.5 6 9.5 6a15 15 0 0 1-3 3.7"></path>
+        <path d="M6.1 6.1C3.7 7.8 2.5 12 2.5 12s3.5 6 9.5 6a9.8 9.8 0 0 0 3.1-.5"></path>
+      </svg>`;
+    wrap.appendChild(button);
+
+    button.addEventListener('click', () => {
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      wrap.classList.toggle('is-visible', show);
+      const label = show ? 'Ẩn mật khẩu' : 'Hiện mật khẩu';
+      button.setAttribute('aria-label', label);
+      button.setAttribute('title', label);
+    });
+  };
+
+  const run = () => document.querySelectorAll('input[type="password"]').forEach(enhance);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
+</script>
+
+
+<script is:inline data-header-ui>
+(() => {
+  const menuButton=document.querySelector('[data-mobile-menu-toggle]');
+  const mobileMenu=document.querySelector('[data-mobile-menu]');
+  const notifButton=document.querySelector('[data-notification-toggle]');
+  const notifPanel=document.querySelector('[data-notification-panel]');
+  const notifList=document.querySelector('[data-notification-list]');
+  const badge=document.querySelector('[data-notification-badge]');
+  const markAll=document.querySelector('[data-notification-mark-all]');
+
+  const SEEN_KEY='crescent_seen_chapters_v2';
+  let items=[];
+
+  const getSeen=()=>{
+    try{
+      const value=JSON.parse(localStorage.getItem(SEEN_KEY)||'[]');
+      return Array.isArray(value)?value:[];
+    }catch{return []}
+  };
+  const saveSeen=(seen)=>localStorage.setItem(SEEN_KEY,JSON.stringify([...new Set(seen)].slice(0,300)));
+
+  const closeMobile=()=>{
+    if(!(mobileMenu instanceof HTMLElement)||!(menuButton instanceof HTMLButtonElement))return;
+    mobileMenu.hidden=true;
+    menuButton.setAttribute('aria-expanded','false');
+  };
+  const closeNotif=()=>{
+    if(!(notifPanel instanceof HTMLElement)||!(notifButton instanceof HTMLButtonElement))return;
+    notifPanel.hidden=true;
+    notifButton.setAttribute('aria-expanded','false');
+  };
+
+  if(menuButton instanceof HTMLButtonElement && mobileMenu instanceof HTMLElement){
+    menuButton.addEventListener('click',()=>{
+      const open=mobileMenu.hidden;
+      closeNotif();
+      mobileMenu.hidden=!open;
+      menuButton.setAttribute('aria-expanded',String(open));
+    });
+  }
+
+  const relativeTime=(value)=>{
+    const time=new Date(value||0).getTime();
+    if(!Number.isFinite(time))return '';
+    const diff=Math.max(0,Date.now()-time);
+    const min=Math.floor(diff/60000);
+    if(min<1)return 'Vừa xong';
+    if(min<60)return `${min} phút trước`;
+    const hour=Math.floor(min/60);
+    if(hour<24)return `${hour} giờ trước`;
+    const day=Math.floor(hour/24);
+    return `${day} ngày trước`;
+  };
+
+  const markRead=(id)=>{
+    const seen=getSeen();
+    if(!seen.includes(id)){seen.unshift(id);saveSeen(seen)}
+    render();
+  };
+
+  const render=()=>{
+    if(!(notifList instanceof HTMLElement))return;
+    const seen=getSeen();
+    const unread=items.filter(x=>x?.id&&!seen.includes(x.id)).length;
+
+    if(badge instanceof HTMLElement){
+      badge.textContent=unread>99?'99+':String(unread);
+      badge.hidden=unread===0;
+    }
+
+    notifList.innerHTML='';
+    if(!items.length){
+      const empty=document.createElement('div');
+      empty.className='notification-empty';
+      empty.textContent='Chưa có chapter mới.';
+      notifList.appendChild(empty);
+      return;
+    }
+
+    for(const item of items){
+      const isUnread=!seen.includes(item.id);
+      const link=document.createElement('a');
+      link.className=`notification-item${isUnread?' is-unread':''}`;
+      link.href=String(item.href||'/');
+
+      const cover=document.createElement('div');
+      cover.className='notification-cover';
+      if(item.cover){
+        const img=document.createElement('img');
+        img.src=String(item.cover);
+        img.alt='';
+        img.loading='lazy';
+        cover.appendChild(img);
+      }else{
+        cover.textContent='☾';
+      }
+
+      const body=document.createElement('div');
+      body.className='notification-item-body';
+
+      const title=document.createElement('div');
+      title.className='notification-item-title';
+      title.innerHTML=`<strong></strong> đã cập nhật chapter mới`;
+      title.querySelector('strong').textContent=String(item.title||'Truyện');
+
+      const chapter=document.createElement('div');
+      chapter.className='notification-item-chapter';
+      chapter.textContent=`Chapter ${item.chapter_number}${item.chapter_title?' — '+item.chapter_title:''}`;
+
+      const meta=document.createElement('div');
+      meta.className='notification-item-meta';
+      const dot=document.createElement('span');
+      dot.className='notification-unread-dot';
+      dot.textContent=isUnread?'• Chưa đọc':'✓ Đã đọc';
+      const time=document.createElement('span');
+      time.textContent=relativeTime(item.published_at);
+      meta.append(dot,time);
+
+      body.append(title,chapter,meta);
+      link.append(cover,body);
+      link.addEventListener('click',()=>markRead(item.id));
+      notifList.appendChild(link);
+    }
+  };
+
+  const loadNotifications=()=>{
+    fetch('/api/notifications/latest',{credentials:'same-origin'})
+      .then(r=>r.ok?r.json():null)
+      .then(data=>{
+        items=Array.isArray(data?.items)?data.items:[];
+        render();
+      })
+      .catch(()=>{
+        if(notifList instanceof HTMLElement){
+          notifList.innerHTML='<div class="notification-empty">Không tải được thông báo.</div>';
+        }
+      });
+  };
+
+  if(notifButton instanceof HTMLButtonElement && notifPanel instanceof HTMLElement){
+    notifButton.addEventListener('click',()=>{
+      const open=notifPanel.hidden;
+      closeMobile();
+      notifPanel.hidden=!open;
+      notifButton.setAttribute('aria-expanded',String(open));
+      if(open && !items.length)loadNotifications();
+    });
+  }
+
+  if(markAll instanceof HTMLButtonElement){
+    markAll.addEventListener('click',()=>{
+      saveSeen(items.map(x=>x.id).filter(Boolean));
+      render();
+    });
+  }
+
+  document.addEventListener('click',event=>{
+    if(!(event.target instanceof Element))return;
+    if(!event.target.closest('.notification-wrap'))closeNotif();
+    if(!event.target.closest('.site-header'))closeMobile();
+  });
+
+  // Load once on page open so the bell badge can show unread updates immediately.
+  loadNotifications();
+})();
+</script>
+
+</body></html>

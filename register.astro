@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getSession } from '../lib/auth';
+export const prerender=false;
+const current=await getSession(Astro.cookies); const next=Astro.url.searchParams.get('next')||'';
+if(current) return Astro.redirect(next.startsWith('/')&&!next.startsWith('//')?next:'/account');
+const error=Astro.url.searchParams.get('error');
+---
+<BaseLayout title="Đăng ký — Crescent Reader">
+<section class="admin-card auth-card"><h1>Đăng ký</h1><p class="description">Tài khoản mới mặc định là thành viên. Phiên đăng nhập được giữ tối đa 30 ngày.</p>{error&&<div class="notice error">{error}</div>}
+<form method="POST" action="/api/auth/register"><input type="hidden" name="next" value={next}/><label class="field"><span>Email</span><input name="email" type="email" autocomplete="email" required/></label><label class="field"><span>Mật khẩu</span><input name="password" type="password" minlength="8" autocomplete="new-password" required/></label><label class="field"><span>Nhập lại mật khẩu</span><input name="confirm_password" type="password" minlength="8" autocomplete="new-password" required/></label><button class="button" type="submit">Tạo tài khoản</button></form><p class="auth-switch">Đã có tài khoản? <a href={`/login${next?`?next=${encodeURIComponent(next)}`:''}`}>Đăng nhập</a></p></section>
+</BaseLayout>
