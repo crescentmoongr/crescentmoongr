@@ -2322,3 +2322,71 @@ body{
     justify-content:flex-start;
   }
 }
+
+/* v11.55 — Compact Admin navigation on phones */
+.admin-mobile-menu-toggle{display:none}
+
+@media(max-width:900px){
+  .wp-admin-layout .admin-sidebar{
+    position:sticky;
+    top:68px;
+    z-index:40;
+    min-height:0;
+    margin-bottom:14px;
+    padding:8px;
+    border-radius:14px;
+    background:rgba(255,255,255,.9);
+  }
+
+  .admin-mobile-menu-toggle{
+    width:100%;
+    min-height:44px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid rgba(226,194,212,.9);
+    border-radius:11px;
+    background:rgba(255,247,252,.95);
+    color:#765c6b;
+    font:inherit;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  .wp-admin-layout .admin-sidebar-title{display:none}
+
+  .wp-admin-layout .admin-section-menu{
+    display:none!important;
+    margin-top:8px;
+    max-height:min(58vh,420px);
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:6px;
+    border:1px solid rgba(232,200,217,.8);
+    border-radius:12px;
+    background:rgba(255,255,255,.96);
+    box-shadow:0 10px 28px rgba(91,58,80,.08);
+  }
+
+  .wp-admin-layout .admin-sidebar.mobile-menu-open .admin-section-menu{
+    display:grid!important;
+    gap:6px;
+  }
+
+  .wp-admin-layout .admin-section-menu a{
+    width:100%;
+    min-height:42px;
+    padding:9px 12px;
+    justify-content:flex-start;
+    white-space:normal;
+    background:rgba(255,244,250,.82);
+    border:1px solid rgba(232,200,217,.8);
+    border-radius:10px;
+  }
+}
+
+@media(max-width:560px){
+  .wp-admin-layout .admin-sidebar{top:64px}
+  .admin-mobile-menu-toggle{min-height:42px;font-size:.92rem}
+  .wp-admin-layout .admin-section-menu{max-height:54vh}
+}

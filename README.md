@@ -630,3 +630,9 @@ Trang chi tiết truyện:
 - Also includes the saved UI change: Admin names in member management are red/pink with a subtle glow.
 - Run `supabase-v11-54-comment-moderation.sql` once before deploying v11.54.
 - ZIP contains only this new SQL migration.
+
+## v11.55 — Mobile Admin menu
+- Mobile Admin sidebar collapses to a single Menu button by default.
+- Tapping opens a compact scrollable menu; choosing an item closes it.
+- Desktop sidebar stays unchanged.
+- No SQL changes.

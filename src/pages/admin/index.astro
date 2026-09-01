@@ -29,9 +29,10 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
 </section>
 
 <div class="admin-dashboard-layout wp-admin-layout">
-  <aside class="admin-sidebar">
+  <aside class="admin-sidebar" data-admin-sidebar>
+    <button class="admin-mobile-menu-toggle" type="button" aria-expanded="false" data-admin-menu-toggle>☰ Menu quản trị</button>
     <div class="admin-sidebar-title">Quản lý</div>
-    <nav class="admin-section-menu" aria-label="Menu quản trị">
+    <nav class="admin-section-menu" aria-label="Menu quản trị" data-admin-section-menu>
   <a href="#admin-social">🌐 Mạng xã hội</a>
   <a href="#admin-ads">📢 Quảng cáo</a>
   <a href="#admin-add-series">➕ Thêm truyện</a>
@@ -275,4 +276,32 @@ function setupRichEditors(){
 }
 setupRichEditors();
 </script>
+
+<script>
+(() => {
+  const sidebar=document.querySelector('[data-admin-sidebar]');
+  const toggle=document.querySelector('[data-admin-menu-toggle]');
+  const menu=document.querySelector('[data-admin-section-menu]');
+  if(!(sidebar instanceof HTMLElement)||!(toggle instanceof HTMLButtonElement)||!(menu instanceof HTMLElement))return;
+
+  const mobile=()=>window.matchMedia('(max-width:900px)').matches;
+  const close=()=>{
+    sidebar.classList.remove('mobile-menu-open');
+    toggle.setAttribute('aria-expanded','false');
+  };
+
+  toggle.addEventListener('click',()=>{
+    if(!mobile())return;
+    const open=sidebar.classList.toggle('mobile-menu-open');
+    toggle.setAttribute('aria-expanded',String(open));
+  });
+
+  menu.querySelectorAll('a').forEach(link=>{
+    link.addEventListener('click',()=>{ if(mobile()) close(); });
+  });
+
+  window.addEventListener('resize',()=>{ if(!mobile()) close(); });
+})();
+</script>
+
 </BaseLayout>
