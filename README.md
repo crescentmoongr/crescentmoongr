@@ -455,3 +455,9 @@ Trang chi tiết truyện:
 - Main content panels remain softly translucent so the background is still visible.
 - Mobile uses scroll background attachment for Safari compatibility.
 - No SQL changes; ZIP contains no SQL files.
+
+## v11.32
+- WordPress-like sticky full-height Admin sidebar on desktop.
+- Main tools occupy a separate right column.
+- Mobile/tablet sidebar becomes a compact horizontal scroll menu.
+- No SQL changes.

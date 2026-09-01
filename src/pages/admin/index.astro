@@ -19,7 +19,7 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
 <div class={connected?'notice success':'notice error'}>{connected?`Supabase đã kết nối · ${rows.length} truyện hiện có`:'Chưa kết nối được Supabase'}</div>{success&&<div class="notice success top-gap">{success}</div>}{error&&<div class="notice error top-gap">{error}</div>}
 </section>
 
-<div class="admin-dashboard-layout">
+<div class="admin-dashboard-layout wp-admin-layout">
   <aside class="admin-sidebar">
     <div class="admin-sidebar-title">Quản lý</div>
     <nav class="admin-section-menu" aria-label="Menu quản trị">
