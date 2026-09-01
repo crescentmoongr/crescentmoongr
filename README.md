@@ -493,3 +493,11 @@ Trang chi tiết truyện:
 - Moved `Tác giả` to the first position in the public series information block.
 - Desktop and mobile both prioritize author first.
 - No SQL changes.
+
+
+## v11.38 — Mobile cover alignment
+- Fixed the series-detail cover on phones so the image sits flush against the top of its rounded frame.
+- Cover images use `object-fit: cover` with top-centered positioning on mobile.
+- Removes visible pink/background padding caused by conflicting responsive cover rules.
+- Desktop layout is unchanged.
+- No SQL changes.

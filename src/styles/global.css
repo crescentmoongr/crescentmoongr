@@ -1937,3 +1937,32 @@ body{
     font-size:.84rem;
   }
 }
+
+
+/* v11.38 — mobile series cover alignment
+   Keep the cover flush to the frame and crop from the top when necessary. */
+@media (max-width:700px){
+  .manga-head .manga-cover-wrap{
+    align-items:flex-start;
+  }
+  .manga-head .manga-detail-cover{
+    position:relative;
+    display:block;
+    padding:0!important;
+    line-height:0;
+    overflow:hidden;
+  }
+  .manga-head .manga-detail-cover > img{
+    position:absolute;
+    inset:0;
+    width:100%!important;
+    height:100%!important;
+    max-width:none!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    object-fit:cover!important;
+    object-position:center top!important;
+    border-radius:inherit;
+  }
+}
