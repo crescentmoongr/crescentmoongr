@@ -1850,3 +1850,90 @@ body{
   .wp-admin-layout .admin-dashboard-content>.admin-anchor-section,
   .wp-admin-layout .admin-dashboard-content>.admin-card{padding:17px 14px;border-radius:15px}
 }
+
+/* v11.33 — site-wide ad injection. The ad provider controls its own layout. */
+.sitewide-ad-code{display:contents}
+
+
+/* =========================================================
+   v11.34 — Clickable genre bubble multi-select
+   ========================================================= */
+.genre-picker-field{
+  align-content:start;
+}
+
+.genre-bubble-picker{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  min-height:48px;
+  padding:10px;
+  border:1px solid #dec5d3;
+  border-radius:13px;
+  background:rgba(255,255,255,.78);
+}
+
+.genre-bubble{
+  position:relative;
+  display:inline-flex;
+  cursor:pointer;
+  user-select:none;
+}
+
+.genre-bubble input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.genre-bubble span{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:34px;
+  padding:7px 13px;
+  border:1px solid #e7cddd;
+  border-radius:999px;
+  background:#fff;
+  color:#765c6b;
+  font-size:.88rem;
+  line-height:1;
+  transition:
+    background .15s ease,
+    border-color .15s ease,
+    color .15s ease,
+    box-shadow .15s ease,
+    transform .15s ease;
+}
+
+.genre-bubble:hover span{
+  border-color:#cfa5d8;
+  background:#fff8fc;
+  transform:translateY(-1px);
+}
+
+.genre-bubble input:checked + span{
+  border-color:#AC87C5;
+  background:linear-gradient(135deg,#f7dceb 0%,#e9ddf8 100%);
+  color:#805a99;
+  box-shadow:0 3px 10px rgba(172,135,197,.16);
+  font-weight:700;
+}
+
+.genre-bubble input:focus-visible + span{
+  outline:2px solid #AC87C5;
+  outline-offset:2px;
+}
+
+@media(max-width:560px){
+  .genre-bubble-picker{
+    gap:7px;
+    padding:9px;
+  }
+
+  .genre-bubble span{
+    min-height:32px;
+    padding:6px 11px;
+    font-size:.84rem;
+  }
+}

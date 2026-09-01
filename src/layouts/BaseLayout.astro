@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { getSessionUser } from '../lib/auth';
+import { getSiteSetting } from '../lib/supabase';
 export const prerender=false;
 const {
   title = 'Crescent Moon Translation',
@@ -14,6 +15,16 @@ const {
 const pageUrl = new URL(canonical || Astro.url.pathname, Astro.url.origin).href;
 const absoluteImage = new URL(image || '/social-preview.png', Astro.url.origin).href;
 const user = await getSessionUser(Astro.cookies);
+
+// v11.33: run the Admin ad code site-wide on public pages.
+// /admin and its sub-routes are intentionally excluded.
+const isAdminPage = Astro.url.pathname === '/admin' || Astro.url.pathname.startsWith('/admin/');
+let siteAdHtml = '';
+if (!isAdminPage) {
+  try {
+    siteAdHtml = (await getSiteSetting('reader_ad_html'))?.value || '';
+  } catch {}
+}
 ---
 <!doctype html>
 <html lang="vi">
@@ -99,7 +110,12 @@ const user = await getSessionUser(Astro.cookies);
     {user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
   </nav>
 </header>
-<main class="shell"><slot /></main><footer class="footer">2024 Crescent Moon Translation</footer><script is:inline data-copy-protection>
+<main class="shell"><slot />
+
+{siteAdHtml && (
+  <div class="sitewide-ad-code" aria-label="Quảng cáo" set:html={siteAdHtml}></div>
+)}
+</main><footer class="footer">2024 Crescent Moon Translation</footer><script is:inline data-copy-protection>
 (() => {
   const canEdit = (target) => {
     if (!(target instanceof Element)) return false;

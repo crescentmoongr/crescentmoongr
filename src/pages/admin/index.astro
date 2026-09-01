@@ -41,7 +41,7 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
       <span>HTML / Script quảng cáo</span>
       <textarea name="ad_html" rows="9" maxlength="100000" placeholder="Dán nguyên code HTML / script của bên quảng cáo vào đây...">{adHtml}</textarea>
     </label>
-    <p class="meta">Mã này được chèn ở trang đọc chapter. Để trống rồi lưu nếu muốn tắt quảng cáo.</p>
+    <p class="meta">Mã này được chạy trên toàn bộ website, trừ trang Admin. Để trống rồi lưu nếu muốn tắt quảng cáo.</p>
     <button class="button" type="submit">Lưu quảng cáo</button>
   </form>
 </section>
@@ -49,7 +49,18 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
 <section class="admin-anchor-section" id="admin-add-series">
 <div class="section-title"><h2>Thêm truyện</h2></div>
 <form method="POST" action="/api/admin/series/create" enctype="multipart/form-data" class="admin-form"><div class="form-grid">
-<label class="field"><span>Tên truyện *</span><input id="title" name="title" required maxlength="200"/></label><label class="field"><span>Slug *</span><input id="slug" name="slug" required maxlength="200" placeholder="ten-truyen"/></label><label class="field"><span>Tác giả</span><input name="author" maxlength="200" list="author-suggestions" placeholder="Nhập tên tác giả..."/><datalist id="author-suggestions">{authors.map(a=><option value={a.name}/>)}</datalist><small class="meta">Có thể chọn tác giả có sẵn hoặc nhập tên mới. Tác giả mới sẽ tự tạo slug và xuất hiện trong mục “Tác giả”.</small></label><label class="field"><span>Họa sĩ</span><input name="artist" maxlength="200"/></label><label class="field"><span>Thể loại</span><select name="genres" multiple size="5">{genresManaged.map(g=><option value={g.name}>{g.name}</option>)}</select><small class="meta">Giữ Ctrl/Cmd để chọn nhiều thể loại.</small></label><label class="field"><span>Link mua raw</span><input name="raw_url" type="url" maxlength="1000" placeholder="https://..."/><small class="meta">Link trang chính thức để người đọc mua raw và ủng hộ tác giả.</small></label><label class="field"><span>Loại truyện</span><select name="type"><option value="">— Chưa chọn —</option><option value="Manga">Manga</option><option value="Manhwa">Manhwa</option><option value="Manhua">Manhua</option><option value="Novel">Novel</option><option value="Other">Khác</option></select></label><label class="field"><span>Trạng thái *</span><select name="status" required><option value="ongoing">Đang tiến hành</option><option value="completed">Hoàn thành</option><option value="hiatus">Tạm ngưng</option><option value="dropped">Drop</option></select></label><label class="field"><span>Quyền đọc *</span><select name="access_type" id="new_access_type" required><option value="public">Public</option><option value="password">Khóa mật khẩu cả bộ</option><option value="member">Thành viên</option></select></label><label class="field" id="new_series_password_field" hidden><span>Mật khẩu truyện *</span><input name="series_password" type="password" minlength="4" autocomplete="new-password"/></label></div>
+<label class="field"><span>Tên truyện *</span><input id="title" name="title" required maxlength="200"/></label><label class="field"><span>Slug *</span><input id="slug" name="slug" required maxlength="200" placeholder="ten-truyen"/></label><label class="field"><span>Tác giả</span><input name="author" maxlength="200" list="author-suggestions" placeholder="Nhập tên tác giả..."/><datalist id="author-suggestions">{authors.map(a=><option value={a.name}/>)}</datalist><small class="meta">Có thể chọn tác giả có sẵn hoặc nhập tên mới. Tác giả mới sẽ tự tạo slug và xuất hiện trong mục “Tác giả”.</small></label><label class="field"><span>Họa sĩ</span><input name="artist" maxlength="200"/></label><div class="field genre-picker-field">
+  <span>Thể loại</span>
+  <div class="genre-bubble-picker" data-genre-picker>
+    {genresManaged.map(g=>
+      <label class="genre-bubble">
+        <input type="checkbox" name="genres" value={g.name}/>
+        <span>{g.name}</span>
+      </label>
+    )}
+  </div>
+  <small class="meta">Bấm vào từng thể loại để chọn nhiều mục.</small>
+</div><label class="field"><span>Link mua raw</span><input name="raw_url" type="url" maxlength="1000" placeholder="https://..."/><small class="meta">Link trang chính thức để người đọc mua raw và ủng hộ tác giả.</small></label><label class="field"><span>Loại truyện</span><select name="type"><option value="">— Chưa chọn —</option><option value="Manga">Manga</option><option value="Manhwa">Manhwa</option><option value="Manhua">Manhua</option><option value="Novel">Novel</option><option value="Other">Khác</option></select></label><label class="field"><span>Trạng thái *</span><select name="status" required><option value="ongoing">Đang tiến hành</option><option value="completed">Hoàn thành</option><option value="hiatus">Tạm ngưng</option><option value="dropped">Drop</option></select></label><label class="field"><span>Quyền đọc *</span><select name="access_type" id="new_access_type" required><option value="public">Public</option><option value="password">Khóa mật khẩu cả bộ</option><option value="member">Thành viên</option></select></label><label class="field" id="new_series_password_field" hidden><span>Mật khẩu truyện *</span><input name="series_password" type="password" minlength="4" autocomplete="new-password"/></label></div>
 
 <label class="field rich-field">
   <span>Giới thiệu</span>
@@ -97,8 +108,14 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
 
 <section class="admin-card admin-wide admin-anchor-section" id="admin-genres">
   <div class="section-title"><div><h2>Quản lý thể loại</h2><p class="meta">Mỗi thể loại có trang riêng liệt kê các truyện tương ứng.</p></div><span class="meta">{genresManaged.length} thể loại</span></div>
-  <form method="POST" action="/api/admin/genre/save" class="admin-form taxonomy-create-form">
-    <div class="form-grid"><label class="field"><span>Tên thể loại *</span><input name="name" required maxlength="120" placeholder="Romance"/></label></div>
+  <form method="POST" action="/api/admin/genre/save" class="admin-form taxonomy-create-form" data-batch-genre-form>
+    <div class="form-grid">
+      <label class="field">
+        <span>Tên thể loại *</span>
+        <input name="name" required maxlength="2000" placeholder="Romance, Comedy, Drama, Slice of Life"/>
+        <small class="meta">Có thể nhập nhiều thể loại cùng lúc, ngăn cách từng mục bằng dấu phẩy.</small>
+      </label>
+    </div>
     <button class="button" type="submit">Thêm thể loại</button>
   </form>
   {genresManaged.length?<div class="taxonomy-admin-list">{genresManaged.map(g=>

@@ -461,3 +461,21 @@ Trang chi tiết truyện:
 - Main tools occupy a separate right column.
 - Mobile/tablet sidebar becomes a compact horizontal scroll menu.
 - No SQL changes.
+
+
+## v11.34 — Genre bubble picker
+- Replaces the old Ctrl/Cmd multi-select box in Add Story with clickable genre bubbles.
+- Multiple genres can be selected simply by tapping/clicking each bubble.
+- Selected genres use a soft pink-purple gradient and `#AC87C5` accent.
+- Edit Story uses the same bubble picker and keeps existing genres preselected.
+- Existing series create/update APIs continue receiving repeated `genres` form values, so no backend or SQL change is needed.
+- No SQL changes; ZIP contains no SQL files.
+
+
+## v11.35 — Batch genres + genre bubbles
+- Admin > Genres now accepts multiple names separated by commas in one submission.
+- Example: `Romance, Comedy, Drama, Slice of Life`.
+- Empty values and duplicates in the same submission are removed automatically.
+- Existing individual genre Edit/Save/Delete/View controls are preserved.
+- Add Story and Edit Story retain the v11.34 clickable multi-select genre bubbles.
+- No SQL changes.
