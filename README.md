@@ -446,3 +446,12 @@ Trang chi tiết truyện:
 - Overall site background uses a very light blurred pink-purple-blue gradient, roughly 50% softer than the preview direction.
 - Header is lightly translucent with backdrop blur so the background glow shows through subtly.
 - No SQL changes.
+
+
+## v11.31 — Custom sky background
+- Uses the uploaded `pink-sky-background-with-crescent-moon.jpg` as the full-site background.
+- Adds a 50% translucent white overlay over the image for readability.
+- Header stays lightly translucent with blur.
+- Main content panels remain softly translucent so the background is still visible.
+- Mobile uses scroll background attachment for Safari compatibility.
+- No SQL changes; ZIP contains no SQL files.

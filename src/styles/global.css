@@ -1751,3 +1751,50 @@ body{
   backdrop-filter:blur(16px) saturate(115%);
   border-bottom-color:rgba(239,216,230,.78);
 }
+
+
+/* =========================================================
+   v11.31 — User-supplied sky background + 50% white overlay
+   ========================================================= */
+html{
+  min-height:100%;
+  background:#fdf8fb;
+}
+
+body{
+  position:relative;
+  min-height:100vh;
+  background:
+    linear-gradient(rgba(255,255,255,.50),rgba(255,255,255,.50)),
+    url('/crescent-sky-bg.jpg') center top / cover fixed no-repeat;
+}
+
+/* Keep content readable while allowing the custom background to show through. */
+.site-header{
+  background:rgba(255,255,255,.48)!important;
+  border-bottom:1px solid rgba(232,205,221,.72);
+  backdrop-filter:blur(14px) saturate(115%);
+  -webkit-backdrop-filter:blur(14px) saturate(115%);
+}
+
+/* Main cards/panels remain lightly translucent rather than fully opaque. */
+.card,
+.intro-section .rich-content,
+.comments-section .comment-form,
+.comment-item,
+.advanced-search-form,
+.taxonomy-page-head,
+.admin-card,
+.admin-ad-section,
+.admin-anchor-section{
+  background-color:rgba(255,255,255,.82);
+}
+
+/* Mobile Safari behaves better without fixed background attachment. */
+@media(max-width:700px){
+  body{
+    background:
+      linear-gradient(rgba(255,255,255,.50),rgba(255,255,255,.50)),
+      url('/crescent-sky-bg.jpg') center top / cover scroll no-repeat;
+  }
+}
