@@ -487,3 +487,9 @@ Trang chi tiết truyện:
 - Removed the `Họa sĩ` input from both Add Story and Edit Story in Admin.
 - Existing database/API columns are left intact for compatibility; no migration is required.
 - No SQL changes.
+
+
+## v11.37 — Reorder series information
+- Moved `Tác giả` to the first position in the public series information block.
+- Desktop and mobile both prioritize author first.
+- No SQL changes.
