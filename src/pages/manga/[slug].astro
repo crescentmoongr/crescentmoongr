@@ -21,6 +21,7 @@ const updated=latest?.published_at||series?.updated_at;
 const accessText=series?.access_type==='password'?'🔒 Khóa mật khẩu cả bộ':series?.access_type==='member'?'🔒 Dành cho thành viên':'Public';
 const fmt=(v?:string|null)=>v?new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(v)):'—';
 const introHtml=series?richTextToHtml(series.description):'';
+const seriesAuthors=series?.author?series.author.split(',').map(x=>x.trim()).filter(Boolean):[];
 let comments:any[]=[];
 if(series){try{comments=await getSeriesComments(series.id)}catch{}}
 const commentError=Astro.url.searchParams.get('comment_error');
@@ -39,7 +40,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
     <h1>{series.title}</h1>
 
     <div class="series-info-list">
-      <div class="series-info-row"><span class="series-info-icon">✎</span><span><b>Tác giả:</b> {series.author?<a class="taxonomy-inline-link" href={`/author/${slugifyTaxonomy(series.author)}`}>{series.author}</a>:'Chưa cập nhật'}</span></div>
+      <div class="series-info-row"><span class="series-info-icon">✎</span><span><b>Tác giả:</b> {seriesAuthors.length?seriesAuthors.map((name,i)=><>{i>0?', ':''}<a class="taxonomy-inline-link" href={`/author/${slugifyTaxonomy(name)}`}>{name}</a></>):'Chưa cập nhật'}</span></div>
         <div class="series-info-row"><span class="series-info-icon">▣</span><span><b>Loại:</b> {series.type||'—'}</span></div>
         <div class="series-info-row"><span class="series-info-icon">♡</span><span><b>Trạng thái:</b> {statusLabel(series.status)}</span></div>
         <div class="series-info-row"><span class="series-info-icon">▤</span><span><b>Số chapter:</b> {chapters.length}</span></div>

@@ -6,7 +6,8 @@ const slug=Astro.params.slug||'';
 const author=await getAuthorBySlug(slug);
 if(!author)return new Response('Không tìm thấy tác giả.',{status:404});
 const all=await getSeriesList();
-const rows=all.filter(x=>(x.author||'').trim().toLowerCase()===author.name.trim().toLowerCase());
+const authorKey=author.name.trim().toLocaleLowerCase('vi-VN');
+const rows=all.filter(x=>(x.author||'').split(',').map(name=>name.trim().toLocaleLowerCase('vi-VN')).includes(authorKey));
 const badge=(s:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[s]||'';
 const badgeClass=(s:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'} as Record<string,string>)[s]||'';
 ---

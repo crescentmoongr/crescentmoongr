@@ -77,7 +77,7 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
 <section class="admin-anchor-section" id="admin-add-series">
 <div class="section-title"><h2>Thêm truyện</h2></div>
 <form method="POST" action="/api/admin/series/create" enctype="multipart/form-data" class="admin-form"><div class="form-grid">
-<label class="field"><span>Tên truyện *</span><input id="title" name="title" required maxlength="200"/></label><label class="field"><span>Slug *</span><input id="slug" name="slug" required maxlength="200" placeholder="ten-truyen"/></label><label class="field"><span>Tác giả</span><input name="author" maxlength="200" list="author-suggestions" placeholder="Nhập tên tác giả..."/><datalist id="author-suggestions">{authors.map(a=><option value={a.name}/>)}</datalist><small class="meta">Có thể chọn tác giả có sẵn hoặc nhập tên mới. Tác giả mới sẽ tự tạo slug và xuất hiện trong mục “Tác giả”.</small></label><div class="field genre-picker-field">
+<label class="field"><span>Tên truyện *</span><input id="title" name="title" required maxlength="200"/></label><label class="field"><span>Slug *</span><input id="slug" name="slug" required maxlength="200" placeholder="ten-truyen"/></label><label class="field"><span>Tác giả</span><input name="author" maxlength="500" list="author-suggestions" placeholder="Ví dụ: Kasukabe Akira, Hanabusa Suuji"/><datalist id="author-suggestions">{authors.map(a=><option value={a.name}/>)}</datalist><small class="meta">Có nhiều tác giả thì ngăn cách bằng dấu phẩy. Mỗi tên sẽ tự tạo thành một tác giả riêng với slug riêng.</small></label><div class="field genre-picker-field">
   <span>Thể loại</span>
   <div class="genre-bubble-picker" data-genre-picker>
     {genresManaged.map(g=>

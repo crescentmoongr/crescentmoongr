@@ -15,7 +15,7 @@ try{[all,authors,genres]=await Promise.all([getSeriesList(),getAuthors(),getGenr
 let rows=all.filter(x=>{
   const text=[x.title,x.author,...(x.genres||[])].filter(Boolean).join(' ').toLowerCase();
   return (!q||text.includes(q))
-    &&(!author||x.author===author)
+    &&(!author||(x.author||'').split(',').map(name=>name.trim()).includes(author))
     &&(!status||x.status===status)
     &&(!genre||(x.genres||[]).includes(genre));
 });

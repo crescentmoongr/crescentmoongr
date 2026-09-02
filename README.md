@@ -695,3 +695,14 @@ Trang chi tiết truyện:
 - Pasted text is inserted in a neutral state and no longer becomes bold because of a previous formatting state.
 - Applied to both Add Series and Edit Series.
 - No SQL changes; ZIP contains no `.sql` files.
+
+
+## v11.63 — Multiple authors separated by commas
+- Admin can enter multiple authors in one field separated by commas, e.g. `Kasukabe Akira, Hanabusa Suuji`.
+- Each author is automatically created as a separate author taxonomy record with its own slug.
+- Duplicate names in the same field are removed case-insensitively.
+- Series stores the normalized display string joined with `, `.
+- Public series detail renders each author as a separate clickable author link.
+- Author archive pages correctly include series where that author is one of several authors.
+- Search author filtering also supports multi-author series.
+- No SQL changes; ZIP contains no `.sql` files.

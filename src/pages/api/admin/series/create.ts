@@ -8,6 +8,7 @@ const validStatus=new Set(['ongoing','completed','hiatus','dropped']);
 const validAccess=new Set(['public','password','member']);
 const validMime:Record<string,string>={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
 const clean=(v:FormDataEntryValue|null)=>String(v||'').trim();
+const parseAuthors=(v:string)=>[...new Map(v.split(',').map(x=>x.trim()).filter(Boolean).map(name=>[name.toLocaleLowerCase('vi-VN'),name])).values()];
 const safeSlug=(v:string)=>v.toLowerCase().trim().replace(/[^a-z0-9-]+/g,'-').replace(/-+/g,'-').replace(/^-+|-+$/g,'');
 const safeUrl=(v:string)=>{if(!v)return null;try{const u=new URL(v);if(!['http:','https:'].includes(u.protocol))throw 0;return u.href.slice(0,1000)}catch{throw new Error('Link mua raw không hợp lệ. Hãy dùng URL bắt đầu bằng http:// hoặc https://.')}};
 export const POST:APIRoute=async({request,cookies,redirect})=>{
@@ -16,11 +17,18 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
   try{
     const f=await request.formData(); const selectedGenres=f.getAll('genres').map(x=>clean(x)).filter(Boolean); const title=clean(f.get('title')); const slug=safeSlug(clean(f.get('slug'))); const status=clean(f.get('status')); const access=clean(f.get('access_type'))||'public'; const password=clean(f.get('series_password')); const rawUrl=safeUrl(clean(f.get('raw_url')));
     if(!title||!slug) throw new Error('Tên truyện và slug là bắt buộc.'); if(!validStatus.has(status)) throw new Error('Trạng thái không hợp lệ.'); if(!validAccess.has(access)) throw new Error('Quyền đọc không hợp lệ.'); if(access==='password'&&password.length<4) throw new Error('Mật khẩu truyện cần ít nhất 4 ký tự.');
-    const authorName=clean(f.get('author'));
-    if(authorName){
+    const authorNames=parseAuthors(clean(f.get('author')));
+    const authorName=authorNames.join(', ');
+    if(authorNames.length){
       const existingAuthors=await getAuthors();
-      const exists=existingAuthors.some(a=>a.name.trim().toLocaleLowerCase('vi-VN')===authorName.toLocaleLowerCase('vi-VN'));
-      if(!exists) await supabaseRpc('admin_save_author',{p_id:null,p_name:authorName,p_x_url:null},token);
+      const existingKeys=new Set(existingAuthors.map(a=>a.name.trim().toLocaleLowerCase('vi-VN')));
+      for(const name of authorNames){
+        const key=name.toLocaleLowerCase('vi-VN');
+        if(!existingKeys.has(key)){
+          await supabaseRpc('admin_save_author',{p_id:null,p_name:name,p_x_url:null},token);
+          existingKeys.add(key);
+        }
+      }
     }
     const cover=f.get('cover'); if(!(cover instanceof File)||!cover.size) throw new Error('Vui lòng chọn ảnh bìa.'); if(cover.size>8*1024*1024||!validMime[cover.type]) throw new Error('Ảnh bìa không hợp lệ hoặc vượt 8 MB.');
     coverKey=`covers/${crypto.randomUUID()}.${validMime[cover.type]}`; await env.MANGA_STORAGE.put(coverKey,await cover.arrayBuffer(),{httpMetadata:{contentType:cover.type,cacheControl:'public, max-age=86400'},customMetadata:{originalName:cover.name.slice(0,180)}});
