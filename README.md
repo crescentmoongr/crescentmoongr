@@ -653,3 +653,11 @@ Trang chi tiết truyện:
 - Admin comments also record `moderated_at` and `moderated_by` automatically.
 - Run `supabase-v11-57-admin-comment-auto-approve.sql` once before deploying.
 - ZIP contains only this new SQL migration.
+
+
+## v11.58 — Redirect old Workers.dev domain
+- Permanently redirects `https://read.crescentmoonmanga.workers.dev/*` to `https://crescentmoonmanga.com/*`.
+- Uses HTTP 301.
+- Preserves the full path and query string.
+- The new `crescentmoonmanga.com` domain is not redirected and continues serving the site normally.
+- No SQL changes; this ZIP contains no `.sql` files.
