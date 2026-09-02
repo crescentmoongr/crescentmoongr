@@ -2392,3 +2392,46 @@ body{
   .admin-mobile-menu-toggle{min-height:42px;font-size:.92rem}
   .wp-admin-layout .admin-section-menu{max-height:54vh}
 }
+
+
+/* v11.60 — Comment avatars */
+.comment-item{
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr);
+  gap:12px;
+  align-items:start;
+}
+.comment-content{min-width:0}
+.comment-avatar{
+  width:44px;
+  height:44px;
+  flex:0 0 44px;
+  border-radius:50%;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(145deg,#f4c6dd,#ead4f0);
+  border:1px solid rgba(214,171,202,.78);
+  color:#9d6c94;
+  font-size:1.15rem;
+  font-weight:700;
+}
+.comment-avatar img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+
+@media(max-width:520px){
+  .comment-item{
+    grid-template-columns:38px minmax(0,1fr);
+    gap:10px;
+  }
+  .comment-avatar{
+    width:38px;
+    height:38px;
+    flex-basis:38px;
+    font-size:1rem;
+  }
+}

@@ -120,16 +120,23 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
     ? <div class="empty-state comments-empty">Chưa có bình luận nào.</div>
     : <div class="comment-list">
         {comments.map(c=><article class="comment-item">
-          <div class="comment-head">
-            <div><strong class={c.role==='admin'?'admin-name-glow':''}>{c.display_name||c.username||'Thành viên'}</strong><span class="meta"> · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(c.created_at))}</span></div>
-            {session&&(session.user.id===c.user_id||session.user.role==='admin')&&
-              <form method="POST" action="/api/comments/delete" onsubmit="return confirm('Xóa bình luận này?');">
-                <input type="hidden" name="id" value={c.id}/>
-                <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
-                <button class="comment-delete" type="submit">Xóa</button>
-              </form>}
+          <div class="comment-avatar">
+            {c.avatar_key
+              ? <img src={`/api/avatar/${c.user_id}`} alt={`Avatar ${c.display_name||c.username||'Thành viên'}`} loading="lazy"/>
+              : <span aria-hidden="true">☾</span>}
           </div>
-          <div class="comment-body" set:html={commentRichTextToHtml(c.body)}></div>
+          <div class="comment-content">
+            <div class="comment-head">
+              <div><strong class={c.role==='admin'?'admin-name-glow':''}>{c.display_name||c.username||'Thành viên'}</strong><span class="meta"> · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(c.created_at))}</span></div>
+              {session&&(session.user.id===c.user_id||session.user.role==='admin')&&
+                <form method="POST" action="/api/comments/delete" onsubmit="return confirm('Xóa bình luận này?');">
+                  <input type="hidden" name="id" value={c.id}/>
+                  <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
+                  <button class="comment-delete" type="submit">Xóa</button>
+                </form>}
+            </div>
+            <div class="comment-body" set:html={commentRichTextToHtml(c.body)}></div>
+          </div>
         </article>)}
       </div>}
 </section>

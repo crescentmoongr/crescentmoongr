@@ -670,3 +670,12 @@ Trang chi tiết truyện:
 - Public/admin comment RPCs now return the comment author's role.
 - Run `supabase-v11-59-admin-name-role-in-comments.sql` once before deploying.
 - ZIP contains only this new SQL migration.
+
+
+## v11.60 — Comment avatars
+- Public comments now show each user's uploaded avatar.
+- Users without an avatar get a circular moon placeholder.
+- Avatar images are served from private R2 through `/api/avatar/[id]`.
+- The avatar endpoint no longer requires the viewer to own that avatar; it exposes only the rendered image, not the private R2 object key.
+- Run `supabase-v11-60-comment-avatars.sql` once before deploying.
+- ZIP contains only this new SQL migration.
