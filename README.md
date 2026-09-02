@@ -716,3 +716,31 @@ Trang chi tiết truyện:
 - The Bold button no longer looks active simply because it has keyboard/mouse focus.
 - Applied to both Add Series and Edit Series.
 - No SQL changes; ZIP contains no `.sql` files.
+
+
+## v11.65 — WordPress-style Giới thiệu editor
+- Rebuilt the Giới thiệu field as a WordPress Classic Editor-style interface.
+- Adds Trực quan / Văn bản tabs.
+- Visual toolbar: paragraph/headings/blockquote, bold, italic, underline, bullet/numbered lists, alignment, horizontal rule, clear formatting.
+- Text mode exposes editable HTML like WordPress's Text tab.
+- Clipboard HTML formatting is preserved in Visual mode, closer to WordPress behavior.
+- The Novel chapter editor remains separate and unchanged.
+- Applied to Add Series and Edit Series.
+- No SQL changes; ZIP contains no `.sql` files.
+
+
+## v11.66 — Classic Editor style
+- Reworked the Giới thiệu field to visually and functionally resemble WordPress Classic Editor more closely.
+- Keeps Trực quan / Văn bản tabs.
+- Toolbar now includes paragraph/heading formats, bold, italic, strikethrough, lists, blockquote, alignment, link/unlink, horizontal rule, underline, clear formatting, undo and redo.
+- Visual styling now follows WordPress Classic Editor more closely: square editor frame, gray toolbar, compact controls, white editing canvas.
+- Text tab remains editable HTML.
+- No SQL changes; ZIP contains no `.sql` files.
+
+
+## v11.67 — Classic Editor for Novel chapters
+- Applies the same WordPress Classic Editor-style interface to Novel chapter content.
+- Works for both creating a new Novel chapter and editing existing Novel chapters.
+- Includes Visual/Text tabs, paragraph/headings, bold/italic/underline/strikethrough, lists, quote, alignment, link/unlink, horizontal rule, clear formatting, undo/redo.
+- Novel editor is taller for long-form writing.
+- No SQL changes; ZIP contains no `.sql` files.
