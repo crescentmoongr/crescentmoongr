@@ -175,7 +175,7 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
             <article class={`admin-comment-row ${comment.moderation_status==='pending'?'is-pending':'is-approved'}`}>
               <div class="admin-comment-main">
                 <div class="admin-comment-headline">
-                  <strong>{comment.display_name||comment.username||'Thành viên'}</strong>
+                  <strong class={comment.role==='admin'?'admin-name-glow':''}>{comment.display_name||comment.username||'Thành viên'}</strong>
                   <span class={`comment-status-badge ${comment.moderation_status}`}>
                     {comment.moderation_status==='pending'?'Chờ duyệt':'Đã duyệt'}
                   </span>

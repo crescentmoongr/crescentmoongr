@@ -128,6 +128,7 @@ export type SeriesComment = {
   updated_at:string | null;
   display_name:string | null;
   username:string | null;
+  role:'admin'|'member' | null;
 };
 
 export async function getSeriesComments(seriesId:string){

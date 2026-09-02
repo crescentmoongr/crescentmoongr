@@ -84,7 +84,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
     ? <form method="POST" action="/api/comments/create" class="comment-form" data-comment-form>
         <input type="hidden" name="series_id" value={series.id}/>
         <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
-        <div class="comment-author-line">Bình luận với tư cách <strong>{session.user.display_name||session.user.username||'Thành viên'}</strong></div>
+        <div class="comment-author-line">Bình luận với tư cách <strong class={session.user.role==='admin'?'admin-name-glow':''}>{session.user.display_name||session.user.username||'Thành viên'}</strong></div>
 
         <div class="comment-editor-shell">
           <div class="comment-toolbar" role="toolbar" aria-label="Định dạng bình luận">
@@ -121,7 +121,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
     : <div class="comment-list">
         {comments.map(c=><article class="comment-item">
           <div class="comment-head">
-            <div><strong>{c.display_name||c.username||'Thành viên'}</strong><span class="meta"> · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(c.created_at))}</span></div>
+            <div><strong class={c.role==='admin'?'admin-name-glow':''}>{c.display_name||c.username||'Thành viên'}</strong><span class="meta"> · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(c.created_at))}</span></div>
             {session&&(session.user.id===c.user_id||session.user.role==='admin')&&
               <form method="POST" action="/api/comments/delete" onsubmit="return confirm('Xóa bình luận này?');">
                 <input type="hidden" name="id" value={c.id}/>

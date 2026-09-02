@@ -661,3 +661,12 @@ Trang chi tiết truyện:
 - Preserves the full path and query string.
 - The new `crescentmoonmanga.com` domain is not redirected and continues serving the site normally.
 - No SQL changes; this ZIP contains no `.sql` files.
+
+
+## v11.59 — Admin name glow everywhere
+- Admin display names use the red/pink glow style across the site.
+- Includes public comments, the “Bình luận với tư cách …” line, Admin comment management, header account name, account page, and member management.
+- Member names remain unchanged.
+- Public/admin comment RPCs now return the comment author's role.
+- Run `supabase-v11-59-admin-name-role-in-comments.sql` once before deploying.
+- ZIP contains only this new SQL migration.

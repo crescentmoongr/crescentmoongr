@@ -85,7 +85,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
       <a href="/search">Tìm kiếm</a>
       <a href="/password">Mật khẩu</a>
       {user?.role==='admin'&&<a href="/admin">Admin</a>}
-      {user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
+      {user?<a href="/account" class={user.role==='admin'?'admin-name-glow':''}>{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
     </nav>
 
     <a class="header-icon-button mobile-search-button" href="/search" aria-label="Tìm kiếm" title="Tìm kiếm">
@@ -118,7 +118,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
     <a href="/">🏠 Trang chủ</a>
     <a href="/password">Mật khẩu</a>
     {user?.role==='admin'&&<a href="/admin">Admin</a>}
-    {user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
+    {user?<a href="/account" class={user.role==='admin'?'admin-name-glow':''}>{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
   </nav>
 </header>
 <main class="shell"><slot />
