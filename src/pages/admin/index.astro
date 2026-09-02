@@ -508,20 +508,6 @@ function setupAdminCommentEditors(){
       });
     });
 
-    // Preserve paragraph breaks explicitly.
-    editor.addEventListener('keydown',e=>{
-      if(e.key==='Enter' && !e.shiftKey){
-        e.preventDefault();
-        document.execCommand('insertParagraph',false);
-        sync();
-      }
-      if(e.key==='Enter' && e.shiftKey){
-        e.preventDefault();
-        document.execCommand('insertLineBreak',false);
-        sync();
-      }
-    });
-
     editor.addEventListener('input',sync);
     editor.addEventListener('blur',sync);
     editor.closest('form')?.addEventListener('submit',sync);

@@ -2791,3 +2791,9 @@ body{
 .admin-comment-editor p:last-child{
   margin-bottom:0;
 }
+
+/* v11.71 — let contenteditable handle Enter natively */
+.admin-comment-editor div,
+.admin-comment-editor p{
+  min-height:1em;
+}

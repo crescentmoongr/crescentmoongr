@@ -769,3 +769,10 @@ Trang chi tiết truyện:
 - Fixed mismatched label/div tags in Admin Novel editor introduced in v11.69.
 - Keeps all v11.69 sticky-Bold and paragraph-preservation fixes.
 - No SQL changes; ZIP contains no .sql files.
+
+
+## v11.71 — Fix Enter in admin editors
+- Removed the custom keydown/preventDefault handler for Enter and Shift+Enter.
+- The browser now handles Enter natively inside contenteditable, which fixes Enter doing nothing on some Chromium/Cloudflare deployments.
+- Existing save-time DIV -> P normalization remains, so paragraph breaks are still preserved after saving.
+- No SQL changes; ZIP contains no `.sql` files.
