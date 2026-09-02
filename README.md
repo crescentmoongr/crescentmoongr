@@ -764,3 +764,8 @@ Trang chi tiết truyện:
 - Server sanitizers also convert DIV blocks to P before stripping tags, preventing saved paragraph spacing from disappearing.
 - Applies to Add Series Giới thiệu, Edit Series Giới thiệu, Create Novel chapter, and Edit Novel chapter.
 - No SQL changes; ZIP contains no `.sql` files.
+
+## v11.70 — Build fix
+- Fixed mismatched label/div tags in Admin Novel editor introduced in v11.69.
+- Keeps all v11.69 sticky-Bold and paragraph-preservation fixes.
+- No SQL changes; ZIP contains no .sql files.
