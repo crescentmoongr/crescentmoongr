@@ -636,3 +636,20 @@ Trang chi tiết truyện:
 - Tapping opens a compact scrollable menu; choosing an item closes it.
 - Desktop sidebar stays unchanged.
 - No SQL changes.
+
+
+## v11.56 — Fix comment submission RLS
+- Fixes `new row violates row-level security policy for table "series_comments"`.
+- Comment creation now uses the `create_pending_comment` SECURITY DEFINER RPC.
+- The RPC validates active/comment-enabled users, enforces a 15-second cooldown, and always saves new comments as `pending`.
+- Admin approval flow from v11.54 remains unchanged.
+- Run `supabase-v11-56-comment-submit-fix.sql` once before deploying.
+- ZIP contains only this new SQL migration.
+
+
+## v11.57 — Admin comments publish immediately
+- Member comments are still saved as `pending` and require Admin approval.
+- Admin comments are saved as `approved` and appear immediately.
+- Admin comments also record `moderated_at` and `moderated_by` automatically.
+- Run `supabase-v11-57-admin-comment-auto-approve.sql` once before deploying.
+- ZIP contains only this new SQL migration.

@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSession } from '../../../lib/auth';
-import { supabaseGet,supabasePost } from '../../../lib/supabase';
+import { supabaseRpc } from '../../../lib/supabase';
 import { sanitizeCommentRichText } from '../../../lib/richText';
 
 export const prerender=false;
@@ -21,15 +21,10 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
     if(!plainBody)throw new Error('Bình luận không được để trống.');
     if(plainBody.length>2000)throw new Error('Bình luận tối đa 2.000 ký tự.');
 
-    const last=await supabaseGet<any[]>(`series_comments?select=created_at&user_id=eq.${encodeURIComponent(session.user.id)}&order=created_at.desc&limit=1`,session.token);
-    if(last[0]&&Date.now()-new Date(last[0].created_at).getTime()<15000)throw new Error('Vui lòng chờ 15 giây trước khi bình luận tiếp.');
-
-    await supabasePost('series_comments',session.token,{
-      series_id:seriesId,
-      user_id:session.user.id,
-      body,
-      moderation_status:'pending'
-    });
+    await supabaseRpc('create_pending_comment',{
+      p_series_id:seriesId,
+      p_body:body
+    },session.token);
     return redirect(returnTo+'?comment=success#comments');
   }catch(e:any){
     const join=returnTo.includes('?')?'&':'?';
