@@ -753,3 +753,14 @@ Trang chi tiết truyện:
 - Toolbar: Bold, Italic, Underline, Strikethrough, Uppercase, bullet list, numbered list, blockquote, code, clear formatting.
 - Existing saved Giới thiệu/Novel HTML is loaded into the editor when editing.
 - No SQL changes; ZIP contains no `.sql` files.
+
+
+## v11.69 — Fix sticky Bold + lost paragraph breaks
+- Fixed the root cause of Bold being triggered when clicking/selecting inside admin rich editors: the editor/toolbar was nested inside a HTML <label>, which can activate the first button. Rich editor fields now use neutral <div> wrappers instead.
+- Bold/Italic/Underline/Strikethrough are now strictly selection-only and do not use sticky execCommand state.
+- Toolbar button focus/active styles can no longer look permanently selected.
+- Enter creates paragraphs and Shift+Enter creates a line break.
+- Before submit, browser-generated DIV blocks are normalized to P blocks.
+- Server sanitizers also convert DIV blocks to P before stripping tags, preventing saved paragraph spacing from disappearing.
+- Applies to Add Series Giới thiệu, Edit Series Giới thiệu, Create Novel chapter, and Edit Novel chapter.
+- No SQL changes; ZIP contains no `.sql` files.

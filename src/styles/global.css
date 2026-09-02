@@ -2774,3 +2774,20 @@ body{
     max-height:620px;
   }
 }
+
+
+/* v11.69 — editor focus/sticky-format fixes */
+.admin-comment-editor-shell .comment-toolbar button:focus,
+.admin-comment-editor-shell .comment-toolbar button:focus-visible,
+.admin-comment-editor-shell .comment-toolbar button:active{
+  outline:none!important;
+  box-shadow:none!important;
+  background:#fff!important;
+  color:#654e5b!important;
+}
+.admin-comment-editor p{
+  margin:0 0 1em;
+}
+.admin-comment-editor p:last-child{
+  margin-bottom:0;
+}

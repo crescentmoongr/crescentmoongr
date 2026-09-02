@@ -90,7 +90,7 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
   <small class="meta">Bấm vào từng thể loại để chọn nhiều mục.</small>
 </div><label class="field"><span>Link mua raw</span><input name="raw_url" type="url" maxlength="1000" placeholder="https://..."/><small class="meta">Link trang chính thức để người đọc mua raw và ủng hộ tác giả.</small></label><label class="field"><span>Loại truyện</span><select name="type"><option value="">— Chưa chọn —</option><option value="Manga">Manga</option><option value="Manhwa">Manhwa</option><option value="Manhua">Manhua</option><option value="Novel">Novel</option><option value="Other">Khác</option></select></label><label class="field"><span>Trạng thái *</span><select name="status" required><option value="ongoing">Đang tiến hành</option><option value="completed">Hoàn thành</option><option value="hiatus">Tạm ngưng</option><option value="dropped">Drop</option></select></label><label class="field"><span>Quyền đọc *</span><select name="access_type" id="new_access_type" required><option value="public">Public</option><option value="password">Khóa mật khẩu cả bộ</option><option value="member">Thành viên</option></select></label><label class="field" id="new_series_password_field" hidden><span>Mật khẩu truyện *</span><input name="series_password" type="password" minlength="4" autocomplete="new-password"/></label></div>
 
-<label class="field rich-field">
+<div class="field rich-field">
   <span>Giới thiệu</span>
   <div class="comment-editor-shell admin-comment-editor-shell " data-admin-rich-editor>
   <div class="comment-toolbar" role="toolbar" aria-label="Định dạng văn bản">
@@ -109,7 +109,7 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
   <textarea class="comment-source admin-comment-source" name="description" maxlength="20000" hidden></textarea>
 </div>
   <small class="meta">Dùng cùng kiểu soạn thảo với phần Bình luận để tránh lỗi định dạng.</small>
-</label>
+</div>
 <label class="field"><span>Ảnh bìa *</span><input name="cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required/><small class="meta">JPG, PNG, WebP hoặc GIF. Tối đa 8 MB.</small></label><label class="check-row"><input name="is_published" type="checkbox" value="true" checked/><span>Đăng công khai ngay</span></label><button class="button" type="submit">Lưu truyện</button></form>
 </section>
 <section class="admin-card admin-wide admin-anchor-section" id="admin-manage-series"><div class="section-title"><h2>Quản lý truyện</h2><span class="meta">{rows.length} truyện</span></div>{rows.length===0?<div class="empty-state">Chưa có truyện nào.</div>:<div class="admin-series-list">{rows.map(item=>{const x=stats.get(item.id)||{chapters:0,views:0};return <div class="admin-series-row"><div class="admin-thumb">{item.cover_key?<img src={`/api/cover/${item.id}`} alt="" loading="lazy"/>:<span>Không bìa</span>}</div><div><strong>{item.title}</strong><div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.access_type==='password'?'🔒 Mật khẩu cả bộ':item.access_type==='member'?'🔒 Thành viên':'Public'} · {item.is_published?'Công khai':'Bản nháp'}</div><div class="admin-statline"><span>{x.chapters} chapter</span><span>{x.views.toLocaleString('vi-VN')} lượt đọc</span></div></div><div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa / Chapters</a>{item.is_published&&<a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div></div>})}</div>}</section>
@@ -401,49 +401,125 @@ function setupAdminCommentEditors(){
     const source=shell.querySelector('.admin-comment-source');
     if(!(editor instanceof HTMLElement) || !(source instanceof HTMLTextAreaElement)) return;
 
-    const sync=()=>{ source.value=editor.innerHTML.trim(); };
-    const focus=()=>editor.focus();
+    const normalizeHtml=()=>{
+      const clone=editor.cloneNode(true);
+      if(!(clone instanceof HTMLElement)) return editor.innerHTML.trim();
+
+      // Chrome contenteditable commonly creates DIV blocks when Enter is pressed.
+      // Normalize those blocks to paragraphs before submit so line/paragraph spacing survives sanitizing.
+      clone.querySelectorAll('div').forEach(div=>{
+        const p=document.createElement('p');
+        while(div.firstChild) p.appendChild(div.firstChild);
+        div.replaceWith(p);
+      });
+      return clone.innerHTML.trim();
+    };
+
+    const sync=()=>{ source.value=normalizeHtml(); };
+
+    const getSelectedRange=()=>{
+      const sel=window.getSelection();
+      if(!sel || !sel.rangeCount || sel.isCollapsed) return null;
+      const range=sel.getRangeAt(0);
+      if(!editor.contains(range.commonAncestorContainer)) return null;
+      return range;
+    };
+
+    const wrapSelection=(tag)=>{
+      const range=getSelectedRange();
+      if(!range) return;
+      const node=document.createElement(tag);
+      try{
+        range.surroundContents(node);
+      }catch{
+        const frag=range.extractContents();
+        node.appendChild(frag);
+        range.insertNode(node);
+      }
+      const sel=window.getSelection();
+      sel?.removeAllRanges();
+      sync();
+    };
 
     shell.querySelectorAll('[data-admin-comment-cmd]').forEach(btn=>{
+      btn.addEventListener('mousedown',e=>e.preventDefault());
       btn.addEventListener('click',()=>{
-        focus();
-        document.execCommand(btn.getAttribute('data-admin-comment-cmd')||'',false);
+        const cmd=btn.getAttribute('data-admin-comment-cmd')||'';
+
+        // Inline formatting is selection-only. Clicking B/I/U/S with no selected text
+        // does absolutely nothing, so formatting can never become sticky.
+        if(cmd==='bold') return wrapSelection('strong');
+        if(cmd==='italic') return wrapSelection('em');
+        if(cmd==='underline') return wrapSelection('u');
+        if(cmd==='strikeThrough') return wrapSelection('s');
+
+        // Lists still use browser block commands, but only with an active selection/caret in editor.
+        editor.focus();
+        document.execCommand(cmd,false);
         sync();
       });
     });
 
     shell.querySelectorAll('[data-admin-comment-block]').forEach(btn=>{
+      btn.addEventListener('mousedown',e=>e.preventDefault());
       btn.addEventListener('click',()=>{
-        focus();
         const block=btn.getAttribute('data-admin-comment-block')||'p';
-        document.execCommand('formatBlock',false,block);
-        sync();
+        const range=getSelectedRange();
+        if(!range) return;
+        if(block==='code') wrapSelection('code');
+        else{
+          const node=document.createElement(block);
+          try{
+            range.surroundContents(node);
+          }catch{
+            const frag=range.extractContents();
+            node.appendChild(frag);
+            range.insertNode(node);
+          }
+          window.getSelection()?.removeAllRanges();
+          sync();
+        }
       });
     });
 
     shell.querySelectorAll('[data-admin-comment-action]').forEach(btn=>{
+      btn.addEventListener('mousedown',e=>e.preventDefault());
       btn.addEventListener('click',()=>{
         const action=btn.getAttribute('data-admin-comment-action');
-        focus();
-
-        if(action==='clear'){
-          document.execCommand('removeFormat',false);
-        }
+        const range=getSelectedRange();
+        if(!range) return;
 
         if(action==='upper'){
-          const selection=window.getSelection();
-          if(selection && selection.rangeCount && !selection.isCollapsed){
-            const range=selection.getRangeAt(0);
-            const text=selection.toString();
-            if(text){
-              range.deleteContents();
-              range.insertNode(document.createTextNode(text.toUpperCase()));
-              selection.removeAllRanges();
-            }
+          const text=range.toString();
+          if(text){
+            range.deleteContents();
+            range.insertNode(document.createTextNode(text.toUpperCase()));
           }
         }
+
+        if(action==='clear'){
+          const text=range.toString();
+          range.deleteContents();
+          range.insertNode(document.createTextNode(text));
+        }
+
+        window.getSelection()?.removeAllRanges();
         sync();
       });
+    });
+
+    // Preserve paragraph breaks explicitly.
+    editor.addEventListener('keydown',e=>{
+      if(e.key==='Enter' && !e.shiftKey){
+        e.preventDefault();
+        document.execCommand('insertParagraph',false);
+        sync();
+      }
+      if(e.key==='Enter' && e.shiftKey){
+        e.preventDefault();
+        document.execCommand('insertLineBreak',false);
+        sync();
+      }
     });
 
     editor.addEventListener('input',sync);
