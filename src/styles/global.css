@@ -2710,3 +2710,67 @@ body{
   .novel-wp-editor .wp-visual-editor,
   .novel-wp-editor .wp-text-editor{min-height:380px;max-height:620px}
 }
+
+
+/* v11.68 — Admin Giới thiệu + Novel use the same editor behavior as Bình luận */
+.admin-comment-editor-shell{
+  width:100%;
+}
+.admin-comment-editor-shell .comment-toolbar{
+  border:1px solid #ead4e0;
+  border-bottom:0;
+  border-radius:10px 10px 0 0;
+  background:#fff8fc;
+  padding:7px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+}
+.admin-comment-editor-shell .comment-toolbar button{
+  min-height:32px;
+  padding:5px 9px;
+  border:1px solid #e1c7d5;
+  border-radius:6px;
+  background:#fff;
+  color:#654e5b;
+  cursor:pointer;
+}
+.admin-comment-editor-shell .comment-toolbar button:hover{
+  background:#f9edf4;
+}
+.admin-comment-editor{
+  min-height:260px;
+  padding:14px 15px;
+  border:1px solid #ead4e0;
+  border-radius:0 0 10px 10px;
+  background:#fff;
+  outline:none;
+  line-height:1.75;
+  overflow:auto;
+}
+.admin-comment-editor:empty:before{
+  content:attr(data-placeholder);
+  color:#a99aa2;
+  pointer-events:none;
+}
+.admin-comment-editor:focus{
+  border-color:#cba1ba;
+  box-shadow:0 0 0 2px rgba(203,161,186,.12);
+}
+.novel-comment-editor-shell .admin-comment-editor{
+  min-height:520px;
+  max-height:760px;
+}
+@media(max-width:600px){
+  .admin-comment-editor-shell .comment-toolbar{gap:4px}
+  .admin-comment-editor-shell .comment-toolbar button{
+    min-height:31px;
+    padding:4px 7px;
+    font-size:.82rem;
+  }
+  .admin-comment-editor{min-height:240px;padding:12px}
+  .novel-comment-editor-shell .admin-comment-editor{
+    min-height:380px;
+    max-height:620px;
+  }
+}

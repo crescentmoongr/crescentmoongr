@@ -744,3 +744,12 @@ Trang chi tiết truyện:
 - Includes Visual/Text tabs, paragraph/headings, bold/italic/underline/strikethrough, lists, quote, alignment, link/unlink, horizontal rule, clear formatting, undo/redo.
 - Novel editor is taller for long-form writing.
 - No SQL changes; ZIP contains no `.sql` files.
+
+
+## v11.68 — Reuse Bình luận editor behavior
+- Removed the WordPress-like custom editor implementation from Giới thiệu and Novel content because it was still causing formatting issues.
+- Giới thiệu (Add Series + Edit Series) now uses the same toolbar behavior and execCommand flow as the working public Bình luận editor.
+- Novel chapter content (Create + Edit) now uses the same editor behavior too.
+- Toolbar: Bold, Italic, Underline, Strikethrough, Uppercase, bullet list, numbered list, blockquote, code, clear formatting.
+- Existing saved Giới thiệu/Novel HTML is loaded into the editor when editing.
+- No SQL changes; ZIP contains no `.sql` files.

@@ -92,55 +92,23 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
 
 <label class="field rich-field">
   <span>Giới thiệu</span>
-  <div class="wp-editor" data-wp-editor>
-    <div class="wp-editor-tabs">
-      <button type="button" class="wp-editor-tab is-active" data-wp-mode="visual">Trực quan</button>
-      <button type="button" class="wp-editor-tab" data-wp-mode="text">Văn bản</button>
-    </div>
-    <div class="wp-editor-toolbar" role="toolbar" aria-label="Định dạng giới thiệu">
-      <select class="wp-format-select" data-wp-block title="Định dạng">
-        <option value="p">Đoạn văn</option>
-        <option value="h2">Tiêu đề 2</option>
-        <option value="h3">Tiêu đề 3</option>
-        <option value="h4">Tiêu đề 4</option>
-        <option value="blockquote">Trích dẫn</option>
-        <option value="pre">Định dạng sẵn</option>
-      </select>
-
-      <button type="button" class="wp-icon-btn" data-wp-cmd="bold" title="In đậm"><strong>B</strong></button>
-      <button type="button" class="wp-icon-btn wp-italic-btn" data-wp-cmd="italic" title="In nghiêng">I</button>
-      <button type="button" class="wp-icon-btn" data-wp-cmd="strikethrough" title="Gạch ngang"><s>abc</s></button>
-
-      <span class="wp-toolbar-sep"></span>
-
-      <button type="button" class="wp-icon-btn" data-wp-cmd="insertUnorderedList" title="Danh sách chấm">•≡</button>
-      <button type="button" class="wp-icon-btn" data-wp-cmd="insertOrderedList" title="Danh sách số">1≡</button>
-      <button type="button" class="wp-icon-btn" data-wp-cmd="blockquote" data-wp-special="blockquote" title="Trích dẫn">❝</button>
-
-      <span class="wp-toolbar-sep"></span>
-
-      <button type="button" class="wp-icon-btn" data-wp-cmd="justifyLeft" title="Căn trái">≡</button>
-      <button type="button" class="wp-icon-btn wp-align-center" data-wp-cmd="justifyCenter" title="Căn giữa">≡</button>
-      <button type="button" class="wp-icon-btn wp-align-right" data-wp-cmd="justifyRight" title="Căn phải">≡</button>
-
-      <span class="wp-toolbar-sep"></span>
-
-      <button type="button" class="wp-icon-btn" data-wp-action="link" title="Chèn / sửa liên kết">🔗</button>
-      <button type="button" class="wp-icon-btn" data-wp-action="unlink" title="Gỡ liên kết">⛓</button>
-      <button type="button" class="wp-icon-btn" data-wp-action="rule" title="Đường ngang">—</button>
-
-      <span class="wp-toolbar-sep"></span>
-
-      <button type="button" class="wp-icon-btn" data-wp-action="underline" title="Gạch chân"><u>U</u></button>
-      <button type="button" class="wp-icon-btn" data-wp-action="clear" title="Xóa định dạng">Tx</button>
-      <button type="button" class="wp-icon-btn" data-wp-action="undo" title="Hoàn tác">↶</button>
-      <button type="button" class="wp-icon-btn" data-wp-action="redo" title="Làm lại">↷</button>
-    </div>
-    <div class="wp-visual-editor" contenteditable="true" data-placeholder="Nhập phần giới thiệu..."></div>
-    <textarea class="wp-text-editor" spellcheck="false" maxlength="20000" hidden></textarea>
-    <textarea class="wp-editor-source" name="description" maxlength="20000" hidden></textarea>
+  <div class="comment-editor-shell admin-comment-editor-shell " data-admin-rich-editor>
+  <div class="comment-toolbar" role="toolbar" aria-label="Định dạng văn bản">
+    <button type="button" data-admin-comment-cmd="bold" title="In đậm"><strong>B</strong></button>
+    <button type="button" data-admin-comment-cmd="italic" title="In nghiêng"><em>I</em></button>
+    <button type="button" data-admin-comment-cmd="underline" title="Gạch chân"><u>U</u></button>
+    <button type="button" data-admin-comment-cmd="strikeThrough" title="Gạch ngang"><s>S</s></button>
+    <button type="button" data-admin-comment-action="upper" title="IN HOA">AA</button>
+    <button type="button" data-admin-comment-cmd="insertUnorderedList" title="Danh sách chấm">• List</button>
+    <button type="button" data-admin-comment-cmd="insertOrderedList" title="Danh sách số">1. List</button>
+    <button type="button" data-admin-comment-block="blockquote" title="Trích dẫn">❞</button>
+    <button type="button" data-admin-comment-block="code" title="Code">&lt;/&gt;</button>
+    <button type="button" data-admin-comment-action="clear" title="Xóa định dạng">Tx</button>
   </div>
-  <small class="meta">Trình soạn thảo kiểu WordPress: có chế độ Trực quan và Văn bản (HTML).</small>
+  <div class="comment-editor admin-comment-editor" contenteditable="true" data-placeholder="Nhập phần giới thiệu..." spellcheck="true"></div>
+  <textarea class="comment-source admin-comment-source" name="description" maxlength="20000" hidden></textarea>
+</div>
+  <small class="meta">Dùng cùng kiểu soạn thảo với phần Bình luận để tránh lỗi định dạng.</small>
 </label>
 <label class="field"><span>Ảnh bìa *</span><input name="cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required/><small class="meta">JPG, PNG, WebP hoặc GIF. Tối đa 8 MB.</small></label><label class="check-row"><input name="is_published" type="checkbox" value="true" checked/><span>Đăng công khai ngay</span></label><button class="button" type="submit">Lưu truyện</button></form>
 </section>
@@ -422,155 +390,69 @@ setupRichEditors();
 </script>
 
 
+
 <script>
-function setupWpEditors(){
-  document.querySelectorAll('[data-wp-editor]').forEach(shell=>{
-    if(!(shell instanceof HTMLElement)||shell.dataset.ready==='1')return;
+function setupAdminCommentEditors(){
+  document.querySelectorAll('[data-admin-rich-editor]').forEach(shell=>{
+    if(!(shell instanceof HTMLElement) || shell.dataset.ready==='1') return;
     shell.dataset.ready='1';
-    const visual=shell.querySelector('.wp-visual-editor');
-    const text=shell.querySelector('.wp-text-editor');
-    const source=shell.querySelector('.wp-editor-source');
-    if(!(visual instanceof HTMLElement)||!(text instanceof HTMLTextAreaElement)||!(source instanceof HTMLTextAreaElement))return;
 
-    let mode='visual';
-    let savedRange=null;
+    const editor=shell.querySelector('.admin-comment-editor');
+    const source=shell.querySelector('.admin-comment-source');
+    if(!(editor instanceof HTMLElement) || !(source instanceof HTMLTextAreaElement)) return;
 
-    const syncFromVisual=()=>{
-      const html=visual.innerHTML.trim();
-      source.value=html;
-      text.value=html;
-    };
-    const syncFromText=()=>{
-      source.value=text.value.trim();
-    };
-    const saveSelection=()=>{
-      const sel=window.getSelection();
-      if(!sel||!sel.rangeCount)return;
-      const r=sel.getRangeAt(0);
-      if(visual.contains(r.commonAncestorContainer))savedRange=r.cloneRange();
-    };
-    const restoreSelection=()=>{
-      visual.focus();
-      if(!savedRange)return;
-      const sel=window.getSelection();
-      if(!sel)return;
-      sel.removeAllRanges();
-      sel.addRange(savedRange);
-    };
+    const sync=()=>{ source.value=editor.innerHTML.trim(); };
+    const focus=()=>editor.focus();
 
-    visual.addEventListener('mouseup',saveSelection);
-    visual.addEventListener('keyup',saveSelection);
-    visual.addEventListener('input',syncFromVisual);
-    visual.addEventListener('blur',syncFromVisual);
-    text.addEventListener('input',syncFromText);
-
-    shell.querySelectorAll('[data-wp-cmd],[data-wp-action]').forEach(btn=>{
-      btn.addEventListener('mousedown',e=>{e.preventDefault();saveSelection()});
+    shell.querySelectorAll('[data-admin-comment-cmd]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        focus();
+        document.execCommand(btn.getAttribute('data-admin-comment-cmd')||'',false);
+        sync();
+      });
     });
 
-    shell.querySelectorAll('[data-wp-cmd]').forEach(btn=>btn.addEventListener('click',()=>{
-      if(mode!=='visual')return;
-      restoreSelection();
-      document.execCommand(btn.getAttribute('data-wp-cmd')||'',false);
-      saveSelection();
-      syncFromVisual();
-    }));
-
-
-    shell.querySelectorAll('[data-wp-special="blockquote"]').forEach(btn=>btn.addEventListener('click',()=>{
-      if(mode!=='visual')return;
-      restoreSelection();
-      document.execCommand('formatBlock',false,'blockquote');
-      saveSelection();
-      syncFromVisual();
-    }));
-
-    const block=shell.querySelector('[data-wp-block]');
-    if(block instanceof HTMLSelectElement){
-      block.addEventListener('change',()=>{
-        if(mode!=='visual')return;
-        restoreSelection();
-        document.execCommand('formatBlock',false,block.value||'p');
-        saveSelection();
-        syncFromVisual();
+    shell.querySelectorAll('[data-admin-comment-block]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        focus();
+        const block=btn.getAttribute('data-admin-comment-block')||'p';
+        document.execCommand('formatBlock',false,block);
+        sync();
       });
-    }
+    });
 
-    shell.querySelectorAll('[data-wp-action]').forEach(btn=>btn.addEventListener('click',()=>{
-      if(mode!=='visual')return;
-      restoreSelection();
-      const action=btn.getAttribute('data-wp-action');
+    shell.querySelectorAll('[data-admin-comment-action]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const action=btn.getAttribute('data-admin-comment-action');
+        focus();
 
-      if(action==='rule') document.execCommand('insertHorizontalRule',false);
-      if(action==='clear') document.execCommand('removeFormat',false);
-      if(action==='underline') document.execCommand('underline',false);
-      if(action==='unlink') document.execCommand('unlink',false);
-      if(action==='undo') document.execCommand('undo',false);
-      if(action==='redo') document.execCommand('redo',false);
+        if(action==='clear'){
+          document.execCommand('removeFormat',false);
+        }
 
-      if(action==='link'){
-        const sel=window.getSelection();
-        if(!sel || !sel.rangeCount || sel.isCollapsed){
-          alert('Hãy bôi đen đoạn chữ cần gắn liên kết trước.');
-        }else{
-          const href=prompt('Nhập URL liên kết:','https://');
-          if(href){
-            try{
-              const url=new URL(href);
-              if(url.protocol==='http:'||url.protocol==='https:'){
-                document.execCommand('createLink',false,url.href);
-              }else{
-                alert('URL phải bắt đầu bằng http:// hoặc https://');
-              }
-            }catch{
-              alert('URL không hợp lệ.');
+        if(action==='upper'){
+          const selection=window.getSelection();
+          if(selection && selection.rangeCount && !selection.isCollapsed){
+            const range=selection.getRangeAt(0);
+            const text=selection.toString();
+            if(text){
+              range.deleteContents();
+              range.insertNode(document.createTextNode(text.toUpperCase()));
+              selection.removeAllRanges();
             }
           }
         }
-      }
-
-      saveSelection();
-      syncFromVisual();
-    }));
-
-    // WordPress-like paste behavior: preserve formatting from the clipboard.
-    // If clipboard HTML is unavailable, insert normal text with line breaks.
-    visual.addEventListener('paste',e=>{
-      e.preventDefault();
-      const html=e.clipboardData?.getData('text/html')||'';
-      const plain=e.clipboardData?.getData('text/plain')||'';
-      if(html)document.execCommand('insertHTML',false,html);
-      else document.execCommand('insertText',false,plain);
-      syncFromVisual();
+        sync();
+      });
     });
 
-    shell.querySelectorAll('[data-wp-mode]').forEach(tab=>tab.addEventListener('click',()=>{
-      const next=tab.getAttribute('data-wp-mode')==='text'?'text':'visual';
-      if(next===mode)return;
-      if(next==='text'){
-        syncFromVisual();
-        visual.hidden=true;
-        text.hidden=false;
-      }else{
-        visual.innerHTML=text.value;
-        source.value=text.value.trim();
-        text.hidden=true;
-        visual.hidden=false;
-      }
-      mode=next;
-      shell.querySelectorAll('[data-wp-mode]').forEach(x=>x.classList.toggle('is-active',x.getAttribute('data-wp-mode')===mode));
-      const toolbar=shell.querySelector('.wp-editor-toolbar');
-      if(toolbar instanceof HTMLElement)toolbar.classList.toggle('is-disabled',mode==='text');
-    }));
-
-    const form=shell.closest('form');
-    form?.addEventListener('submit',()=>{
-      if(mode==='visual')syncFromVisual(); else syncFromText();
-    });
-    syncFromVisual();
+    editor.addEventListener('input',sync);
+    editor.addEventListener('blur',sync);
+    editor.closest('form')?.addEventListener('submit',sync);
+    sync();
   });
 }
-setupWpEditors();
+setupAdminCommentEditors();
 </script>
 
 </BaseLayout>
