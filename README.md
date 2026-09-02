@@ -679,3 +679,19 @@ Trang chi tiết truyện:
 - The avatar endpoint no longer requires the viewer to own that avatar; it exposes only the rendered image, not the private R2 object key.
 - Run `supabase-v11-60-comment-avatars.sql` once before deploying.
 - ZIP contains only this new SQL migration.
+
+
+## v11.61 — Intro editor paste formatting
+- Pasting text into the `Giới thiệu` rich-text editor now pastes as plain text.
+- Bold/italic/underline styles from Word, websites, Google Docs, etc. are no longer carried over automatically.
+- Manual toolbar formatting still works normally after pasting.
+- Applied to both Add Series and Edit Series screens.
+- No SQL changes; this ZIP contains no `.sql` files.
+
+
+## v11.62 — Fix sticky bold in Giới thiệu editor
+- Fixes the rich editor losing the selected text when a toolbar button is clicked.
+- Bold/italic/underline now apply only to the selected text instead of becoming a sticky formatting state at the caret.
+- Pasted text is inserted in a neutral state and no longer becomes bold because of a previous formatting state.
+- Applied to both Add Series and Edit Series.
+- No SQL changes; ZIP contains no `.sql` files.

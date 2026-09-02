@@ -247,27 +247,83 @@ function setupRichEditors(){
     const source=shell.querySelector('.rich-source');
     if(!(editor instanceof HTMLElement)||!(source instanceof HTMLTextAreaElement)) return;
     const sync=()=>{source.value=editor.innerHTML.trim()};
-    const focus=()=>editor.focus();
+    let savedRange=null;
+    const saveSelection=()=>{
+      const sel=window.getSelection();
+      if(!sel||sel.rangeCount===0)return;
+      const range=sel.getRangeAt(0);
+      if(editor.contains(range.commonAncestorContainer))savedRange=range.cloneRange();
+    };
+    const restoreSelection=()=>{
+      editor.focus();
+      if(!savedRange)return;
+      const sel=window.getSelection();
+      if(!sel)return;
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+    };
+
+    editor.addEventListener('mouseup',saveSelection);
+    editor.addEventListener('keyup',saveSelection);
+    editor.addEventListener('focus',saveSelection);
+    shell.querySelectorAll('.rich-tool').forEach(btn=>{
+      btn.addEventListener('mousedown',e=>{
+        e.preventDefault();
+        saveSelection();
+      });
+    });
 
     shell.querySelectorAll('[data-rich-cmd]').forEach(btn=>btn.addEventListener('click',()=>{
-      focus();
+      restoreSelection();
       document.execCommand(btn.getAttribute('data-rich-cmd')||'',false);
+      saveSelection();
       sync();
     }));
     shell.querySelectorAll('[data-rich-block]').forEach(btn=>btn.addEventListener('click',()=>{
-      focus();
+      restoreSelection();
       const block=btn.getAttribute('data-rich-block')||'p';
       document.execCommand('formatBlock',false,block);
+      saveSelection();
       sync();
     }));
     shell.querySelectorAll('[data-rich-action]').forEach(btn=>btn.addEventListener('click',()=>{
-      focus();
+      restoreSelection();
       const action=btn.getAttribute('data-rich-action');
       if(action==='break') document.execCommand('insertHTML',false,'<br>');
       if(action==='rule') document.execCommand('insertHTML',false,'<hr><p><br></p>');
       if(action==='clear') document.execCommand('removeFormat',false);
+      saveSelection();
       sync();
     }));
+    editor.addEventListener('paste',e=>{
+      e.preventDefault();
+      const text=e.clipboardData?.getData('text/plain')||'';
+      const sel=window.getSelection();
+      if(!sel||sel.rangeCount===0)return;
+      const range=sel.getRangeAt(0);
+      range.deleteContents();
+
+      // Insert pasted text as neutral text so it cannot inherit a sticky
+      // bold/italic/underline command state from a previous selection.
+      const frag=document.createDocumentFragment();
+      const lines=text.replace(/\r\n?/g,'\n').split('\n');
+      lines.forEach((line,index)=>{
+        if(index)frag.appendChild(document.createElement('br'));
+        frag.appendChild(document.createTextNode(line));
+      });
+      const last=frag.lastChild;
+      range.insertNode(frag);
+      if(last){
+        const next=document.createRange();
+        next.setStartAfter(last);
+        next.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(next);
+      }
+      document.execCommand('removeFormat',false);
+      savedRange=sel.rangeCount?sel.getRangeAt(0).cloneRange():null;
+      sync();
+    });
     editor.addEventListener('input',sync);
     editor.addEventListener('blur',sync);
     editor.closest('form')?.addEventListener('submit',sync);
