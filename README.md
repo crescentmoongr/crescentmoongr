@@ -706,3 +706,13 @@ Trang chi tiết truyện:
 - Author archive pages correctly include series where that author is one of several authors.
 - Search author filtering also supports multi-author series.
 - No SQL changes; ZIP contains no `.sql` files.
+
+
+## v11.64 — Stronger fix for automatic Bold
+- Bold/Italic/Underline buttons now do nothing unless text is actually selected.
+- This prevents inline formatting from becoming a sticky typing state.
+- After formatting selected text, the caret is collapsed and sticky inline formatting is explicitly neutralized.
+- Pasted text is inserted into a neutral wrapper so it cannot inherit Bold from the current caret/container.
+- The Bold button no longer looks active simply because it has keyboard/mouse focus.
+- Applied to both Add Series and Edit Series.
+- No SQL changes; ZIP contains no `.sql` files.

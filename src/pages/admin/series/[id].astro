@@ -96,8 +96,35 @@ function setupRichEditors(){
 
     shell.querySelectorAll('[data-rich-cmd]').forEach(btn=>btn.addEventListener('click',()=>{
       restoreSelection();
-      document.execCommand(btn.getAttribute('data-rich-cmd')||'',false);
-      saveSelection();
+      const cmd=btn.getAttribute('data-rich-cmd')||'';
+      const sel=window.getSelection();
+      const hadSelection=!!(sel && sel.rangeCount && !sel.isCollapsed);
+
+      // Formatting buttons only affect selected text.
+      // If there is no selection, do nothing so Bold/Italic/Underline
+      // can never become a sticky typing state.
+      if(!hadSelection && ['bold','italic','underline'].includes(cmd)){
+        return;
+      }
+
+      document.execCommand(cmd,false);
+
+      // After formatting selected text, collapse the caret to the end
+      // and explicitly neutralize any sticky inline formatting state.
+      if(sel && sel.rangeCount && !sel.isCollapsed && ['bold','italic','underline'].includes(cmd)){
+        const r=sel.getRangeAt(0).cloneRange();
+        r.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(r);
+
+        try{
+          if(cmd==='bold' && document.queryCommandState('bold')) document.execCommand('bold',false);
+          if(cmd==='italic' && document.queryCommandState('italic')) document.execCommand('italic',false);
+          if(cmd==='underline' && document.queryCommandState('underline')) document.execCommand('underline',false);
+        }catch{}
+      }
+
+      savedRange=sel&&sel.rangeCount?sel.getRangeAt(0).cloneRange():null;
       sync();
     }));
     shell.querySelectorAll('[data-rich-block]').forEach(btn=>btn.addEventListener('click',()=>{
@@ -121,28 +148,29 @@ function setupRichEditors(){
       const text=e.clipboardData?.getData('text/plain')||'';
       const sel=window.getSelection();
       if(!sel||sel.rangeCount===0)return;
+
       const range=sel.getRangeAt(0);
       range.deleteContents();
 
-      // Insert pasted text as neutral text so it cannot inherit a sticky
-      // bold/italic/underline command state from a previous selection.
-      const frag=document.createDocumentFragment();
+      // Always paste into a neutral wrapper. This prevents pasted text
+      // from inheriting <strong>/<b> from the current caret container.
+      const wrapper=document.createElement('span');
+      wrapper.className='rich-paste-plain';
+
       const lines=text.replace(/\r\n?/g,'\n').split('\n');
       lines.forEach((line,index)=>{
-        if(index)frag.appendChild(document.createElement('br'));
-        frag.appendChild(document.createTextNode(line));
+        if(index)wrapper.appendChild(document.createElement('br'));
+        wrapper.appendChild(document.createTextNode(line));
       });
-      const last=frag.lastChild;
-      range.insertNode(frag);
-      if(last){
-        const next=document.createRange();
-        next.setStartAfter(last);
-        next.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(next);
-      }
-      document.execCommand('removeFormat',false);
-      savedRange=sel.rangeCount?sel.getRangeAt(0).cloneRange():null;
+
+      range.insertNode(wrapper);
+
+      const next=document.createRange();
+      next.setStartAfter(wrapper);
+      next.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(next);
+      savedRange=next.cloneRange();
       sync();
     });
     editor.addEventListener('input',sync);

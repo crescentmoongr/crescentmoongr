@@ -2435,3 +2435,20 @@ body{
     font-size:1rem;
   }
 }
+
+
+/* v11.64 — prevent sticky Bold in Giới thiệu editor */
+.rich-editor .rich-paste-plain,
+.rich-editor .rich-paste-plain *{
+  font-weight:400!important;
+  font-style:normal!important;
+  text-decoration:none!important;
+}
+.rich-tool:focus{
+  outline:none;
+}
+.rich-tool:focus:not(:hover){
+  background:#fff;
+  color:#6e5362;
+  border-color:#e4c9d8;
+}
