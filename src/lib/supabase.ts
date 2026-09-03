@@ -130,6 +130,8 @@ export type SeriesComment = {
   username:string | null;
   role:'admin'|'member' | null;
   avatar_key:string | null;
+  parent_id:number | null;
+  depth:number;
 };
 
 export async function getSeriesComments(seriesId:string){

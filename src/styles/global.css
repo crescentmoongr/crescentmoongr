@@ -2868,3 +2868,78 @@ body{
     font-size:.8rem;
   }
 }
+
+
+/* v11.74 — threaded comments / replies */
+.comment-thread-list{
+  display:block;
+}
+.comment-thread-node{
+  position:relative;
+}
+.comment-children{
+  margin-left:28px;
+  padding-left:18px;
+  border-left:2px solid rgba(207,164,194,.28);
+}
+.comment-children .comment-thread-node{
+  margin-top:10px;
+}
+.comment-reply-actions{
+  margin-top:9px;
+}
+.comment-reply-toggle,
+.comment-reply-cancel{
+  border:0;
+  background:transparent;
+  color:#a46f98;
+  font:inherit;
+  font-size:.84rem;
+  font-weight:600;
+  cursor:pointer;
+  padding:3px 0;
+}
+.comment-reply-toggle:hover,
+.comment-reply-cancel:hover{
+  color:#845379;
+  text-decoration:underline;
+}
+.comment-reply-form{
+  margin-top:10px;
+  padding:12px;
+  border-radius:12px;
+  background:rgba(255,255,255,.55);
+  border:1px solid rgba(225,194,212,.72);
+}
+.comment-reply-form[hidden]{
+  display:none!important;
+}
+.comment-reply-form .comment-editor{
+  min-height:100px;
+}
+.replying-to{
+  margin-bottom:8px;
+  color:#79626f;
+  font-size:.84rem;
+}
+.comment-reply-footer{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:12px;
+  margin-top:9px;
+}
+@media(max-width:700px){
+  .comment-children{
+    margin-left:12px;
+    padding-left:9px;
+  }
+  /* From deeper reply levels onward, keep mobile width usable. */
+  .comment-children .comment-children .comment-children{
+    margin-left:5px;
+    padding-left:6px;
+  }
+  .comment-reply-form{
+    padding:9px;
+  }
+}

@@ -12,18 +12,22 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
   const form=await request.formData();
   const seriesId=clean(form.get('series_id'));
   const returnTo=safeReturn(clean(form.get('return_to')));
+  const parentRaw=clean(form.get('parent_id'));
+  const parentId=parentRaw?Number(parentRaw):null;
   if(!session)return redirect('/login?next='+encodeURIComponent(returnTo));
   try{
     const rawBody=clean(form.get('body'));
     const body=sanitizeCommentRichText(rawBody);
     const plainBody=body.replace(/<[^>]*>/g,' ').replace(/&nbsp;/gi,' ').replace(/\s+/g,' ').trim();
     if(!seriesId)throw new Error('Thiếu truyện.');
+    if(parentRaw && (!Number.isInteger(parentId)||Number(parentId)<=0))throw new Error('Bình luận cha không hợp lệ.');
     if(!plainBody)throw new Error('Bình luận không được để trống.');
     if(plainBody.length>2000)throw new Error('Bình luận tối đa 2.000 ký tự.');
 
     await supabaseRpc('create_pending_comment',{
       p_series_id:seriesId,
-      p_body:body
+      p_body:body,
+      p_parent_id:parentId
     },session.token);
     return redirect(returnTo+'?comment=success#comments');
   }catch(e:any){

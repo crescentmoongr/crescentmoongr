@@ -785,3 +785,23 @@ Trang chi tiết truyện:
 - Added hover lift, soft shadow, and animated arrow for better visibility.
 - Novel link text is standardized to "Xem tất cả".
 - No SQL changes; ZIP contains no `.sql` files.
+
+
+## v11.74 — Threaded comment replies
+- Added reply-to-comment support with up to 10 levels total (depth 0–9).
+- Replies render nested below their parent comment with a soft vertical guide line.
+- Each approved visible comment can be replied to while logged in, until the 10-level limit is reached.
+- Reply editor uses the same rich-comment toolbar.
+- Admin replies remain approved immediately; member replies continue to enter moderation.
+- Deleting a parent comment also deletes replies beneath it.
+- Mobile indentation is capped so deep threads remain readable.
+- Also carries the saved preference from v11.73: homepage ombre “Xem tất cả” button font-weight reduced from 800 to 600.
+- SQL migration REQUIRED: run `supabase-v11-74-threaded-comments.sql` once in Supabase SQL Editor.
+
+
+## v11.75 — Threaded comments SQL fix
+- Fixes the v11.74 SQL error: `profiles` identifies users with column `id`, not `user_id`.
+- Corrected both the public comment join (`p.id = c.user_id`) and member profile lookup (`where id = auth.uid()`).
+- Keeps all v11.74 threaded-reply code and the 10-level limit.
+- Run `supabase-v11-75-threaded-comments-fix.sql` once in Supabase SQL Editor.
+- The ZIP contains only this corrected SQL migration; the broken v11.74 SQL file was removed.
