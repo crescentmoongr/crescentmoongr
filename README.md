@@ -835,3 +835,11 @@ Trang chi tiết truyện:
 - Changed the series title on the detail page to the same pink family as the “Ủng hộ tác giả” accent.
 - Keeps the saved comment-footer changes from v11.78.
 - No SQL; ZIP contains no .sql files.
+
+## v11.80 — Replace chapter images safely
+- Added “Thay toàn bộ ảnh chapter” to each non-Novel chapter in Admin > Sửa truyện.
+- Uses the same multi-image upload format as Add Chapter (JPG/PNG/WebP/GIF, sorted by filename, max 15 MB each).
+- Safe replacement flow: upload every new image to a new R2 revision path first; only then swap `chapter_pages`; only after the swap succeeds are old R2 objects deleted.
+- If upload or DB swap fails, the new revision is cleaned up and the old chapter page rows are restored/kept so the existing chapter remains readable.
+- Chapter metadata, publish state, stats, history, and chapter ID are unchanged.
+- No SQL changes; ZIP contains no `.sql` files.

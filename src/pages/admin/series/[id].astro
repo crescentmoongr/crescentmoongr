@@ -80,6 +80,16 @@ const adminSession=await requireAdminSession(Astro.cookies);if(!adminSession)ret
   <div class="comment-editor admin-comment-editor" contenteditable="true" data-placeholder="Dán hoặc nhập nội dung chapter Novel vào đây..." spellcheck="true" set:html={novelRichTextToHtml(ch.content_html)}></div>
   <textarea class="comment-source admin-comment-source" name="content_html" maxlength="500000" hidden></textarea>
 </div></div>}<div class="row-actions"><button class="button secondary" type="submit">Lưu chapter</button><a class="button secondary" href={`/admin/preview/${ch.id}`}>Preview</a>{st==='Published'&&<a class="button secondary" href={`/read/${series.slug}/${ch.chapter_number}`}>Xem public</a>}</div></form>
+{!isNovel&&<form method="POST" action="/api/admin/chapter/replace-pages" enctype="multipart/form-data" class="chapter-replace-pages-form" onsubmit="return confirm('Thay toàn bộ ảnh của chapter này bằng bộ ảnh mới? Ảnh cũ sẽ được tự động dọn sau khi upload mới thành công.');">
+  <input type="hidden" name="id" value={ch.id}/>
+  <input type="hidden" name="series_id" value={series.id}/>
+  <label class="field chapter-replace-pages-field">
+    <span>Thay toàn bộ ảnh chapter</span>
+    <input name="pages" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple required/>
+    <small class="meta">Chọn đầy đủ bộ ảnh mới. Hệ thống upload bộ mới trước, chuyển chapter sang bộ mới rồi mới xóa ảnh cũ.</small>
+  </label>
+  <button class="button secondary small-button" type="submit">Thay ảnh chapter</button>
+</form>}
 <div class="chapter-extra-actions"><form method="POST" action="/api/admin/chapter/duplicate" class="duplicate-form"><input type="hidden" name="source_id" value={ch.id}/><input type="hidden" name="series_id" value={series.id}/><input name="target_number" type="number" step="0.01" required placeholder="Số chap copy"/><button class="button secondary small-button" type="submit">Duplicate</button></form><form method="POST" action="/api/admin/chapter/delete" onsubmit="return confirm('Xóa chapter này và toàn bộ ảnh?');"><input type="hidden" name="id" value={ch.id}/><input type="hidden" name="series_id" value={series.id}/><button class="danger-button small-danger" type="submit">Xóa chapter</button></form></div></details>})}</div>}
 </section>
 <script>
