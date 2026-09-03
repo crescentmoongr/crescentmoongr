@@ -24,7 +24,7 @@ let authors:any[]=[];let genresManaged:any[]=[];
 try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{}
 ---
 <BaseLayout title="Admin — Crescent Moon Translation">
-<section class="admin-card admin-wide"><div class="admin-top"><div><h1>Admin</h1><p class="meta">Đăng nhập: {admin.email}</p></div><form method="POST" action="/api/auth/logout"><button class="button secondary" type="submit">Đăng xuất</button></form></div>
+<section class="admin-card admin-wide"><div class="admin-top"><div><h1>Admin</h1><p class="meta">Đăng nhập: {admin.email}</p></div></div>
 <div class={connected?'notice success':'notice error'}>{connected?`Supabase đã kết nối · ${rows.length} truyện hiện có`:'Chưa kết nối được Supabase'}</div>{success&&<div class="notice success top-gap">{success}</div>}{error&&<div class="notice error top-gap">{error}</div>}
 </section>
 

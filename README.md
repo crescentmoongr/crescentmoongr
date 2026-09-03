@@ -820,3 +820,10 @@ Trang chi tiết truyện:
 - Reply depth uses CSS classes instead of inline style bindings.
 - Keeps reply support up to 10 levels.
 - No new SQL; ZIP contains no `.sql` files.
+
+## v11.78 — Account logout + saved UI fixes
+- Moved the logout button from Admin to the Account page for logged-in users, including Admin accounts.
+- Removed the logout button from the Admin page.
+- Applied the saved comment-form changes: removed “Chỉ thành viên đã đăng nhập mới có thể bình luận.” and aligned “Gửi bình luận” to the right.
+- Keeps the thinner homepage “Xem tất cả” bubble text from v11.77.
+- No SQL changes; ZIP contains no `.sql` files.

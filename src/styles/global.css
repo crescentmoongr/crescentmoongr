@@ -991,7 +991,7 @@ body:has(.reader-bottom-nav) .site-notification-toast{bottom:104px}
   .admin-member-row>.button{justify-self:start}
 }
 @media(max-width:560px){
-  .comment-form-footer{align-items:flex-start;flex-direction:column}
+  .comment-form-footer{align-items:flex-end;flex-direction:column}
   .site-notification-toast{right:10px;bottom:10px;width:calc(100% - 20px)}
   body:has(.reader-bottom-nav) .site-notification-toast{bottom:88px}
 }
@@ -2956,3 +2956,11 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
 @media(max-width:700px){
 .comment-depth-1{margin-left:12px}.comment-depth-2{margin-left:20px}
 .comment-depth-3,.comment-depth-4,.comment-depth-5,.comment-depth-6,.comment-depth-7,.comment-depth-8,.comment-depth-9{margin-left:28px}}
+
+/* v11.78 — logout moved from Admin to Account */
+.account-top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.account-logout-form{margin-left:auto;flex:0 0 auto}
+@media(max-width:700px){
+  .account-top-row{gap:12px}
+  .account-logout-form .button{padding:8px 12px}
+}
