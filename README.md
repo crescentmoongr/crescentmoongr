@@ -776,3 +776,12 @@ Trang chi tiết truyện:
 - The browser now handles Enter natively inside contenteditable, which fixes Enter doing nothing on some Chromium/Cloudflare deployments.
 - Existing save-time DIV -> P normalization remains, so paragraph breaks are still preserved after saving.
 - No SQL changes; ZIP contains no `.sql` files.
+
+
+## v11.73 — Homepage spacing + ombre bubble buttons
+- Built directly from v11.71; v11.72 section-card design was intentionally skipped.
+- Increased vertical spacing between Lịch sử đọc gần đây, Mới cập nhật, Manga / Manhwa / Manhua, and Novel.
+- Replaced plain text "Xem tất cả" links with pastel ombre bubble buttons.
+- Added hover lift, soft shadow, and animated arrow for better visibility.
+- Novel link text is standardized to "Xem tất cả".
+- No SQL changes; ZIP contains no `.sql` files.

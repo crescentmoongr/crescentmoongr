@@ -2797,3 +2797,74 @@ body{
 .admin-comment-editor p{
   min-height:1em;
 }
+
+
+/* v11.73 — homepage breathing room + ombre bubble "Xem tất cả" */
+.home-section-head{
+  margin-top:68px;
+  margin-bottom:18px;
+}
+.home-section-head-first{
+  margin-top:20px;
+}
+.home-section-content{
+  margin-bottom:8px;
+}
+.home-more-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:38px;
+  padding:8px 16px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#f6bfd8 0%,#d9b8ef 52%,#b9c9ff 100%);
+  color:#fff!important;
+  font-size:.88rem;
+  font-weight:800;
+  line-height:1;
+  text-decoration:none!important;
+  border:1px solid rgba(255,255,255,.72);
+  box-shadow:
+    0 7px 18px rgba(185,143,205,.22),
+    inset 0 1px 0 rgba(255,255,255,.48);
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    filter .18s ease;
+}
+.home-more-button span{
+  font-size:1rem;
+  transition:transform .18s ease;
+}
+.home-more-button:hover{
+  transform:translateY(-2px);
+  filter:saturate(1.06) brightness(1.02);
+  box-shadow:
+    0 10px 24px rgba(185,143,205,.3),
+    inset 0 1px 0 rgba(255,255,255,.58);
+}
+.home-more-button:hover span{
+  transform:translateX(3px);
+}
+.home-more-button:active{
+  transform:translateY(0) scale(.98);
+}
+.home-more-button:focus-visible{
+  outline:3px solid rgba(172,135,197,.28);
+  outline-offset:3px;
+}
+@media(max-width:700px){
+  .home-section-head{
+    margin-top:50px;
+    margin-bottom:14px;
+  }
+  .home-section-head-first{
+    margin-top:14px;
+  }
+  .home-more-button{
+    min-height:34px;
+    padding:7px 13px;
+    font-size:.8rem;
+  }
+}
