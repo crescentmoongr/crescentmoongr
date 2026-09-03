@@ -812,3 +812,11 @@ Trang chi tiết truyện:
 - Replaced the problematic inline template style binding with Astro-compatible object style binding.
 - Keeps all threaded comment/reply logic from v11.75 and the corrected SQL migration.
 - No new SQL changes. The ZIP keeps the same `supabase-v11-75-threaded-comments-fix.sql`; if you already ran it successfully, do not run it again.
+
+
+## v11.77 — Astro threaded-comments build fix
+- Removed the frontmatter JSX/Astro renderer function that caused the parser error.
+- Threading is now flattened in plain JS and rendered directly in the Astro template.
+- Reply depth uses CSS classes instead of inline style bindings.
+- Keeps reply support up to 10 levels.
+- No new SQL; ZIP contains no `.sql` files.

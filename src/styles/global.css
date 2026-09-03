@@ -2943,3 +2943,16 @@ body{
     padding:9px;
   }
 }
+
+/* v11.77 threaded comments build-safe depth classes */
+.comment-thread-node{position:relative;margin-top:10px}
+.comment-thread-node:first-child{margin-top:0}
+.comment-depth-1{margin-left:28px}.comment-depth-2{margin-left:56px}.comment-depth-3{margin-left:84px}
+.comment-depth-4{margin-left:112px}.comment-depth-5{margin-left:140px}.comment-depth-6{margin-left:168px}
+.comment-depth-7{margin-left:196px}.comment-depth-8{margin-left:224px}.comment-depth-9{margin-left:252px}
+.comment-depth-1::before,.comment-depth-2::before,.comment-depth-3::before,.comment-depth-4::before,
+.comment-depth-5::before,.comment-depth-6::before,.comment-depth-7::before,.comment-depth-8::before,.comment-depth-9::before{
+content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:999px;background:rgba(207,164,194,.28)}
+@media(max-width:700px){
+.comment-depth-1{margin-left:12px}.comment-depth-2{margin-left:20px}
+.comment-depth-3,.comment-depth-4,.comment-depth-5,.comment-depth-6,.comment-depth-7,.comment-depth-8,.comment-depth-9{margin-left:28px}}

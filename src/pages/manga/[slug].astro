@@ -40,65 +40,16 @@ const sortComments=(items:CommentNode[])=>{
   items.forEach(x=>sortComments(x.replies));
 };
 sortComments(commentRoots);
-
+const threadedComments:any[]=[];
+const flattenComments=(items:CommentNode[],level=0)=>{
+  for(const c of items){
+    threadedComments.push({...c,displayDepth:Math.min(level,9)});
+    if(c.replies?.length) flattenComments(c.replies,level+1);
+  }
+};
+flattenComments(commentRoots);
 const commentError=Astro.url.searchParams.get('comment_error');
 const commentSuccess=Astro.url.searchParams.get('comment')==='success';
-
-const renderComment=(c:CommentNode)=>(
-  <div class="comment-thread-node" style={{"--comment-depth": String(Math.min(Number(c.depth||0),9))}}>
-    <article class="comment-item" id={`comment-${c.id}`}>
-      <div class="comment-avatar">
-        {c.avatar_key
-          ? <img src={`/api/avatar/${c.user_id}`} alt={`Avatar ${c.display_name||c.username||'Thành viên'}`} loading="lazy"/>
-          : <span aria-hidden="true">☾</span>}
-      </div>
-      <div class="comment-content">
-        <div class="comment-head">
-          <div><strong class={c.role==='admin'?'admin-name-glow':''}>{c.display_name||c.username||'Thành viên'}</strong><span class="meta"> · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(c.created_at))}</span></div>
-          {session&&(session.user.id===c.user_id||session.user.role==='admin')&&
-            <form method="POST" action="/api/comments/delete" onsubmit="return confirm('Xóa bình luận này? Các trả lời bên dưới cũng sẽ bị xóa.');">
-              <input type="hidden" name="id" value={c.id}/>
-              <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
-              <button class="comment-delete" type="submit">Xóa</button>
-            </form>}
-        </div>
-        <div class="comment-body" set:html={commentRichTextToHtml(c.body)}></div>
-        {session && Number(c.depth||0)<9 &&
-          <div class="comment-reply-actions">
-            <button type="button" class="comment-reply-toggle" data-reply-toggle={`reply-${c.id}`}>↩ Trả lời</button>
-          </div>}
-        {session && Number(c.depth||0)<9 &&
-          <form method="POST" action="/api/comments/create" class="comment-form comment-reply-form" data-comment-form id={`reply-${c.id}`} hidden>
-            <input type="hidden" name="series_id" value={series.id}/>
-            <input type="hidden" name="parent_id" value={c.id}/>
-            <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
-            <div class="replying-to">Trả lời <strong class={c.role==='admin'?'admin-name-glow':''}>{c.display_name||c.username||'Thành viên'}</strong></div>
-            <div class="comment-editor-shell">
-              <div class="comment-toolbar" role="toolbar" aria-label="Định dạng trả lời">
-                <button type="button" data-comment-cmd="bold" title="In đậm"><strong>B</strong></button>
-                <button type="button" data-comment-cmd="italic" title="In nghiêng"><em>I</em></button>
-                <button type="button" data-comment-cmd="underline" title="Gạch chân"><u>U</u></button>
-                <button type="button" data-comment-cmd="strikeThrough" title="Gạch ngang"><s>S</s></button>
-                <button type="button" data-comment-action="upper" title="IN HOA">AA</button>
-                <button type="button" data-comment-cmd="insertUnorderedList" title="Danh sách chấm">• List</button>
-                <button type="button" data-comment-cmd="insertOrderedList" title="Danh sách số">1. List</button>
-                <button type="button" data-comment-block="blockquote" title="Trích dẫn">❞</button>
-                <button type="button" data-comment-block="code" title="Code">&lt;/&gt;</button>
-                <button type="button" data-comment-action="clear" title="Xóa định dạng">Tx</button>
-              </div>
-              <div class="comment-editor" contenteditable="true" data-placeholder="Viết trả lời..." spellcheck="true"></div>
-              <textarea class="comment-source" name="body" maxlength="8000" hidden required></textarea>
-            </div>
-            <div class="comment-reply-footer">
-              <button type="button" class="comment-reply-cancel" data-reply-toggle={`reply-${c.id}`}>Hủy</button>
-              <button class="button small-button" type="submit">Gửi trả lời</button>
-            </div>
-          </form>}
-      </div>
-    </article>
-    {c.replies.length>0 && <div class="comment-children">{c.replies.map((reply:CommentNode)=>renderComment(reply))}</div>}
-  </div>
-);
 ---
 <BaseLayout title={series?`${series.title} | Crescent Moon Translation`:'Lỗi | Crescent Moon Translation'} description={series?.description?String(series.description).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,180):'Đọc truyện tại Crescent Moon Translation.'} image={series?.cover_key?`/api/og-cover/${series.id}`:"/social-preview.png"} imageAlt={series?`Bìa truyện ${series.title}`:"Crescent Moon Translation"} ogType="article">
 {error?<div class="notice error">{error}</div>:series?<>
@@ -191,10 +142,66 @@ const renderComment=(c:CommentNode)=>(
     : <div class="comment-login-note">💬 <a href={`/login?next=${encodeURIComponent(`/manga/${series.slug}#comments`)}`}>Đăng nhập</a> để tham gia bình luận.</div>}
 
   {comments.length===0
-    ? <div class="empty-state comments-empty">Chưa có bình luận nào.</div>
-    : <div class="comment-list comment-thread-list">
-        {commentRoots.map(c=>renderComment(c))}
-      </div>}
+  ? <div class="empty-state comments-empty">Chưa có bình luận nào.</div>
+  : <div class="comment-list comment-thread-list">
+      {threadedComments.map(c=>
+        <div class={`comment-thread-node comment-depth-${Math.min(Number(c.displayDepth||0),9)}`}>
+          <article class="comment-item" id={`comment-${c.id}`}>
+            <div class="comment-avatar">
+              {c.avatar_key
+                ? <img src={`/api/avatar/${c.user_id}`} alt={`Avatar ${c.display_name||c.username||'Thành viên'}`} loading="lazy"/>
+                : <span aria-hidden="true">☾</span>}
+            </div>
+            <div class="comment-content">
+              <div class="comment-head">
+                <div>
+                  <strong class={c.role==='admin'?'admin-name-glow':''}>{c.display_name||c.username||'Thành viên'}</strong>
+                  <span class="meta"> · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(c.created_at))}</span>
+                </div>
+                {session&&(session.user.id===c.user_id||session.user.role==='admin')&&
+                  <form method="POST" action="/api/comments/delete" onsubmit="return confirm('Xóa bình luận này? Các trả lời bên dưới cũng sẽ bị xóa.');">
+                    <input type="hidden" name="id" value={c.id}/>
+                    <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
+                    <button class="comment-delete" type="submit">Xóa</button>
+                  </form>}
+              </div>
+              <div class="comment-body" set:html={commentRichTextToHtml(c.body)}></div>
+              {session && Number(c.depth||0)<9 &&
+                <div class="comment-reply-actions">
+                  <button type="button" class="comment-reply-toggle" data-reply-toggle={`reply-${c.id}`}>↩ Trả lời</button>
+                </div>}
+              {session && Number(c.depth||0)<9 &&
+                <form method="POST" action="/api/comments/create" class="comment-form comment-reply-form" data-comment-form id={`reply-${c.id}`} hidden>
+                  <input type="hidden" name="series_id" value={series.id}/>
+                  <input type="hidden" name="parent_id" value={c.id}/>
+                  <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
+                  <div class="replying-to">Trả lời <strong class={c.role==='admin'?'admin-name-glow':''}>{c.display_name||c.username||'Thành viên'}</strong></div>
+                  <div class="comment-editor-shell">
+                    <div class="comment-toolbar" role="toolbar" aria-label="Định dạng trả lời">
+                      <button type="button" data-comment-cmd="bold"><strong>B</strong></button>
+                      <button type="button" data-comment-cmd="italic"><em>I</em></button>
+                      <button type="button" data-comment-cmd="underline"><u>U</u></button>
+                      <button type="button" data-comment-cmd="strikeThrough"><s>S</s></button>
+                      <button type="button" data-comment-action="upper">AA</button>
+                      <button type="button" data-comment-cmd="insertUnorderedList">• List</button>
+                      <button type="button" data-comment-cmd="insertOrderedList">1. List</button>
+                      <button type="button" data-comment-block="blockquote">❞</button>
+                      <button type="button" data-comment-block="code">&lt;/&gt;</button>
+                      <button type="button" data-comment-action="clear">Tx</button>
+                    </div>
+                    <div class="comment-editor" contenteditable="true" data-placeholder="Viết trả lời..." spellcheck="true"></div>
+                    <textarea class="comment-source" name="body" maxlength="8000" hidden required></textarea>
+                  </div>
+                  <div class="comment-reply-footer">
+                    <button type="button" class="comment-reply-cancel" data-reply-toggle={`reply-${c.id}`}>Hủy</button>
+                    <button class="button small-button" type="submit">Gửi trả lời</button>
+                  </div>
+                </form>}
+            </div>
+          </article>
+        </div>
+      )}
+    </div>}
 </section>
 </>:null}
 
