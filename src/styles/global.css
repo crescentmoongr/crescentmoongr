@@ -2964,3 +2964,25 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
   .account-top-row{gap:12px}
   .account-logout-form .button{padding:8px 12px}
 }
+
+
+/* v11.79 — moon icons on major sections + pink series title */
+.moon-heading{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+}
+.moon-heading > img{
+  width:24px;
+  height:24px;
+  display:block;
+  flex:0 0 24px;
+  object-fit:contain;
+}
+.manga-head .manga-info > h1{
+  color:#e2529a!important;
+}
+@media(max-width:700px){
+  .moon-heading{gap:8px}
+  .moon-heading > img{width:21px;height:21px;flex-basis:21px}
+}

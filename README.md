@@ -827,3 +827,11 @@ Trang chi tiết truyện:
 - Applied the saved comment-form changes: removed “Chỉ thành viên đã đăng nhập mới có thể bình luận.” and aligned “Gửi bình luận” to the right.
 - Keeps the thinner homepage “Xem tất cả” bubble text from v11.77.
 - No SQL changes; ZIP contains no `.sql` files.
+
+## v11.79 — Moon section icons + pink detail title
+- Added the supplied half-moon icon before homepage headings: Lịch sử đọc gần đây, Mới cập nhật, Manga / Manhwa / Manhua, Novel.
+- Added it before detail headings: Giới thiệu, Mục lục, Bình luận.
+- Added spacing between icon and heading text.
+- Changed the series title on the detail page to the same pink family as the “Ủng hộ tác giả” accent.
+- Keeps the saved comment-footer changes from v11.78.
+- No SQL; ZIP contains no .sql files.
