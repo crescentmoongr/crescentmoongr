@@ -805,3 +805,10 @@ Trang chi tiết truyện:
 - Keeps all v11.74 threaded-reply code and the 10-level limit.
 - Run `supabase-v11-75-threaded-comments-fix.sql` once in Supabase SQL Editor.
 - The ZIP contains only this corrected SQL migration; the broken v11.74 SQL file was removed.
+
+
+## v11.76 — Astro build syntax fix
+- Fixes the Cloudflare/Astro parse error in `src/pages/manga/[slug].astro` around the threaded-comment wrapper style attribute.
+- Replaced the problematic inline template style binding with Astro-compatible object style binding.
+- Keeps all threaded comment/reply logic from v11.75 and the corrected SQL migration.
+- No new SQL changes. The ZIP keeps the same `supabase-v11-75-threaded-comments-fix.sql`; if you already ran it successfully, do not run it again.

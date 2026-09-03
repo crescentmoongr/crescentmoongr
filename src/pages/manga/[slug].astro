@@ -45,7 +45,7 @@ const commentError=Astro.url.searchParams.get('comment_error');
 const commentSuccess=Astro.url.searchParams.get('comment')==='success';
 
 const renderComment=(c:CommentNode)=>(
-  <div class="comment-thread-node" style={`--comment-depth:${Math.min(Number(c.depth||0),9)}`}>
+  <div class="comment-thread-node" style={{"--comment-depth": String(Math.min(Number(c.depth||0),9))}}>
     <article class="comment-item" id={`comment-${c.id}`}>
       <div class="comment-avatar">
         {c.avatar_key
