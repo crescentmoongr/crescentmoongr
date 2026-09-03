@@ -45,6 +45,10 @@ export async function getAdminSeriesById(id:string,token:string){const r=await s
 export async function getChapters(seriesId:string){return supabaseGet<Chapter[]>(`chapters?select=id,series_id,chapter_number,title,access_type,is_published,published_at,sort_order,created_at,updated_at&series_id=eq.${encodeURIComponent(seriesId)}&is_published=eq.true&or=(published_at.is.null,published_at.lte.${encodeURIComponent(new Date().toISOString())})&order=sort_order.desc.nullslast,chapter_number.desc`)}
 export async function getAllPublicChapters(){const now=encodeURIComponent(new Date().toISOString());return supabaseGet<Chapter[]>(`chapters?select=id,series_id,chapter_number,title,access_type,is_published,published_at,sort_order,created_at,updated_at&is_published=eq.true&or=(published_at.is.null,published_at.lte.${now})&order=published_at.desc.nullslast,created_at.desc`)}
 export async function getAdminChapters(seriesId:string,token:string){return supabaseGet<Chapter[]>(`chapters?select=*&series_id=eq.${encodeURIComponent(seriesId)}&order=sort_order.desc.nullslast,chapter_number.desc`,token)}
+export async function getAllAdminChapters(token:string){
+  return supabaseGet<Chapter[]>('chapters?select=id,series_id,chapter_number,is_published,published_at,sort_order,created_at,updated_at',token);
+}
+
 export async function getChapter(seriesId:string,n:string){const now=encodeURIComponent(new Date().toISOString()); const r=await supabaseGet<Chapter[]>(`chapters?select=id,series_id,chapter_number,title,access_type,is_published,published_at,sort_order,content_html,created_at,updated_at&series_id=eq.${encodeURIComponent(seriesId)}&chapter_number=eq.${encodeURIComponent(n)}&is_published=eq.true&or=(published_at.is.null,published_at.lte.${now})&limit=1`);return r[0]??null}
 export async function getAdminChapter(id:string,token:string){const r=await supabaseGet<Chapter[]>(`chapters?select=*&id=eq.${encodeURIComponent(id)}&limit=1`,token);return r[0]??null}
 export async function getPublicChapterById(id:string,token?:string){
@@ -87,6 +91,9 @@ export async function getChapterStats(chapterIds:string[], token?:string){
   if(!chapterIds.length) return [] as ChapterStat[];
   const ids=chapterIds.map(encodeURIComponent).join(',');
   return supabaseGet<ChapterStat[]>(`chapter_stats?select=*&chapter_id=in.(${ids})`,token);
+}
+export async function getAllChapterStats(token?:string){
+  return supabaseGet<ChapterStat[]>('chapter_stats?select=chapter_id,view_count,updated_at',token);
 }
 export function chapterAdminStatus(ch:Chapter){
   if(!ch.is_published) return 'Draft';

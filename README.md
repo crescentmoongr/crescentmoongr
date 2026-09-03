@@ -843,3 +843,12 @@ Trang chi tiết truyện:
 - If upload or DB swap fails, the new revision is cleaned up and the old chapter page rows are restored/kept so the existing chapter remains readable.
 - Chapter metadata, publish state, stats, history, and chapter ID are unchanged.
 - No SQL changes; ZIP contains no `.sql` files.
+
+
+## v11.81 — Admin subrequest optimization
+- Fixes `/admin` blank-page failures caused by Cloudflare `Too many subrequests by single Worker invocation`.
+- Previously the admin dashboard loaded chapters and chapter stats separately for every series (`2 × number of series` extra Supabase requests).
+- The dashboard now loads all series, all chapter metadata, and all chapter stats in three batched requests, then groups/counts them in memory by `series_id`.
+- Admin UI and workflow are unchanged.
+- Existing per-series chapter edit pages still use their normal targeted queries.
+- No SQL changes; ZIP contains no `.sql` files.

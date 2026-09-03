@@ -1,11 +1,40 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getAdminSeriesList, getAdminChapters, getChapterStats, statusLabel, getSiteSetting, getAdminMembers, getAuthors, getGenres, getAdminSeriesComments } from '../../lib/supabase';
+import { getAdminSeriesList, getAllAdminChapters, getAllChapterStats, statusLabel, getSiteSetting, getAdminMembers, getAuthors, getGenres, getAdminSeriesComments } from '../../lib/supabase';
 import { requireAdminSession } from '../../lib/auth';
 export const prerender=false;
 const adminSession=await requireAdminSession(Astro.cookies);if(!adminSession)return Astro.redirect('/login?next=/admin');const token=adminSession.token;const admin=adminSession.user;
 let rows=[];let connected=false;const stats=new Map<string,{chapters:number,views:number}>();
-try{rows=await getAdminSeriesList(token);connected=true;await Promise.all(rows.map(async item=>{const chapters=await getAdminChapters(item.id,token);const cs=await getChapterStats(chapters.map(c=>c.id),token);stats.set(item.id,{chapters:chapters.length,views:cs.reduce((n,x)=>n+Number(x.view_count||0),0)})}))}catch{}
+try{
+  const [seriesRows,allChapters,allChapterStats]=await Promise.all([
+    getAdminSeriesList(token),
+    getAllAdminChapters(token),
+    getAllChapterStats(token)
+  ]);
+  rows=seriesRows;
+  connected=true;
+
+  const chapterCountBySeries=new Map<string,number>();
+  const seriesByChapter=new Map<string,string>();
+  for(const ch of allChapters){
+    chapterCountBySeries.set(ch.series_id,(chapterCountBySeries.get(ch.series_id)||0)+1);
+    seriesByChapter.set(ch.id,ch.series_id);
+  }
+
+  const viewCountBySeries=new Map<string,number>();
+  for(const stat of allChapterStats){
+    const seriesId=seriesByChapter.get(stat.chapter_id);
+    if(!seriesId)continue;
+    viewCountBySeries.set(seriesId,(viewCountBySeries.get(seriesId)||0)+Number(stat.view_count||0));
+  }
+
+  for(const item of rows){
+    stats.set(item.id,{
+      chapters:chapterCountBySeries.get(item.id)||0,
+      views:viewCountBySeries.get(item.id)||0
+    });
+  }
+}catch{}
 const success=Astro.url.searchParams.get('success');const error=Astro.url.searchParams.get('error');
 let adHtml='';
 try{adHtml=(await getSiteSetting('reader_ad_html',token))?.value||''}catch{}
