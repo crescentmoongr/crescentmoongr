@@ -137,7 +137,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
           </ul>
         </div>
 
-        <div class="comment-form-footer"><span class="meta">Chỉ thành viên đã đăng nhập mới có thể bình luận.</span><button class="button" type="submit">Gửi bình luận</button></div>
+        <div class="comment-form-footer"><button class="button" type="submit">Gửi bình luận</button></div>
       </form>
     : <div class="comment-login-note">💬 <a href={`/login?next=${encodeURIComponent(`/manga/${series.slug}#comments`)}`}>Đăng nhập</a> để tham gia bình luận.</div>}
 
