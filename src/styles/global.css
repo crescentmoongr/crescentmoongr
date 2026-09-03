@@ -900,7 +900,7 @@ body:has(.reader-bottom-nav){
   background:#fff;
 }
 .comment-form .field{margin-top:0}
-.comment-form-footer{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.comment-form-footer{display:flex;align-items:center;justify-content:flex-end;gap:14px}
 .comment-login-note{
   padding:16px 18px;
   border:1px solid var(--line);
