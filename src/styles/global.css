@@ -1159,7 +1159,7 @@ body:has(.reader-bottom-nav) .site-notification-toast{bottom:104px}
   background:var(--pink);
   color:#fff;
   font-size:.68rem;
-  font-weight:800;
+  font-weight:600;
   line-height:1;
 }
 .notification-panel{
@@ -1464,7 +1464,7 @@ body:has(.reader-bottom-nav) .site-notification-toast{bottom:104px}
 .genre-admin-row{grid-template-columns:minmax(220px,1fr) auto auto auto}
 
 .advanced-search-head{
-  margin-bottom:0;
+  margin-bottom:28px;
 }
 .advanced-search-head>h1{
   margin:0 0 18px;

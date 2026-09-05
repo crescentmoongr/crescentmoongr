@@ -19,7 +19,6 @@ const user = await getSessionUser(Astro.cookies);
 // v11.33: run the Admin ad code site-wide on public pages.
 // /admin and its sub-routes are intentionally excluded.
 const isAdminPage = Astro.url.pathname === '/admin' || Astro.url.pathname.startsWith('/admin/');
-const isHomePage = Astro.url.pathname === '/' || Astro.url.pathname === '';
 let siteAdHtml = '';
 if (!isAdminPage) {
   try {
@@ -140,8 +139,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
     </a>}
   </div>}
   <div>2024 Crescent Moon Translation</div>
-</footer>
-<script is:inline data-copy-protection>
+</footer><script is:inline data-copy-protection>
 (() => {
   const canEdit = (target) => {
     if (!(target instanceof Element)) return false;
@@ -230,7 +228,6 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   const SEEN_KEY='crescent_seen_chapters_v2';
   let items=[];
-  let notificationIds=[];
 
   const getSeen=()=>{
     try{
@@ -282,7 +279,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   const render=()=>{
     if(!(notifList instanceof HTMLElement))return;
     const seen=getSeen();
-    const unread=(notificationIds.length?notificationIds:items.map(x=>x?.id)).filter(id=>id&&!seen.includes(id)).length;
+    const unread=items.filter(x=>x?.id&&!seen.includes(x.id)).length;
 
     if(badge instanceof HTMLElement){
       badge.textContent=unread>=21?'20+':String(unread);
@@ -349,7 +346,6 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
       .then(r=>r.ok?r.json():null)
       .then(data=>{
         items=Array.isArray(data?.items)?data.items:[];
-        notificationIds=Array.isArray(data?.ids)?data.ids:items.map(x=>x?.id).filter(Boolean);
         render();
       })
       .catch(()=>{
@@ -371,7 +367,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   if(markAll instanceof HTMLButtonElement){
     markAll.addEventListener('click',()=>{
-      saveSeen((notificationIds.length?notificationIds:items.map(x=>x.id)).filter(Boolean));
+      saveSeen(items.map(x=>x.id).filter(Boolean));
       render();
     });
   }
@@ -384,7 +380,6 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   // Load once on page open so the bell badge can show unread updates immediately.
   loadNotifications();
-
 })();
 </script>
 

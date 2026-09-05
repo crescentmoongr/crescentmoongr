@@ -1,13 +1,3 @@
-# Crescent Reader v11.85
-
-- Removed the NOW / TODAY / THIS MONTH / TOTAL site statistics feature.
-- Removed the 60-second online-presence heartbeat and `/api/stats/site` endpoint to avoid unnecessary Workers KV operations.
-- Chapter total view counting remains enabled for existing admin/chapter statistics.
-- Notification badge behavior from v11.82 remains: 1–20 shows the exact number, 21+ shows `20+`.
-- No SQL is required for this update. Existing v11.82 database objects may be left in place; they are no longer used by the removed site-statistics feature.
-
-v11.84 — Move homepage view statistics into footer below social links/copyright. No new SQL required.
-
 # Crescent Reader v5
 
 Có thêm sửa/xóa truyện, quản lý chapter, upload nhiều ảnh chapter vào private R2, Public/Password/Member, sửa/xóa chapter, và reader hiển thị ảnh cho chapter Public.
@@ -863,10 +853,8 @@ Trang chi tiết truyện:
 - Existing per-series chapter edit pages still use their normal targeted queries.
 - No SQL changes; ZIP contains no `.sql` files.
 
-## v11.82
-- Homepage compact view statistics: NOW / TODAY / THIS MONTH / TOTAL.
-- NOW uses a lightweight 3-minute KV presence heartbeat.
-- TODAY / THIS MONTH use daily aggregated view counts in Supabase.
-- TOTAL continues to use existing chapter view totals.
-- Notification badge shows the real number through 20, then `20+` from 21 unread notifications onward; dropdown still renders only the latest 20.
-- Run `supabase-v11-82-site-stats.sql` once before deploying/using the new daily counters.
+
+## v11.81-notification
+- Notification badge: 1–20 shows exact unread count; 21+ shows 20+.
+- Reduced notification badge font weight to 600.
+- No SQL required.
