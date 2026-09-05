@@ -9,8 +9,6 @@ export const POST:APIRoute=async({request,cookies})=>{
   const session=ensureReaderSession(cookies); const key=`view:${session}:${chapterId}`;
   if(await env.SESSION.get(key)) return new Response(null,{status:204});
   await env.SESSION.put(key,'1',{expirationTtl:180});
-  try{await supabaseRpc('record_chapter_view',{p_chapter_id:chapterId})}catch{
-    try{await supabaseRpc('increment_chapter_view',{p_chapter_id:chapterId})}catch{}
-  }
+  try{await supabaseRpc('increment_chapter_view',{p_chapter_id:chapterId})}catch{}
   return new Response(null,{status:204});
 };

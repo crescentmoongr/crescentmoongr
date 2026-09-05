@@ -1,3 +1,11 @@
+# Crescent Reader v11.85
+
+- Removed the NOW / TODAY / THIS MONTH / TOTAL site statistics feature.
+- Removed the 60-second online-presence heartbeat and `/api/stats/site` endpoint to avoid unnecessary Workers KV operations.
+- Chapter total view counting remains enabled for existing admin/chapter statistics.
+- Notification badge behavior from v11.82 remains: 1–20 shows the exact number, 21+ shows `20+`.
+- No SQL is required for this update. Existing v11.82 database objects may be left in place; they are no longer used by the removed site-statistics feature.
+
 v11.84 — Move homepage view statistics into footer below social links/copyright. No new SQL required.
 
 # Crescent Reader v5
