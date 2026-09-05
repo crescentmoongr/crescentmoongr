@@ -61,10 +61,6 @@ if(chapterJump instanceof HTMLSelectElement){
   });
 }
 
-const viewMarker=document.querySelector('[data-reader-view]');
-if(viewMarker instanceof HTMLElement){
-  fetch('/api/stats/view',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({chapter_id:viewMarker.dataset.chapterId})}).catch(()=>{});
-}
 const reader=document.querySelector('[data-protected-reader]');
 const progress=document.querySelector('[data-reading-progress]');
 if(progress instanceof HTMLElement){

@@ -1,38 +1,19 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getAdminSeriesList, getAllAdminChapters, getAllChapterStats, statusLabel, getSiteSetting, getAdminMembers, getAuthors, getGenres, getAdminSeriesComments } from '../../lib/supabase';
+import { getAdminSeriesList, getAllAdminChapters, statusLabel, getSiteSetting, getAdminMembers, getAuthors, getGenres, getAdminSeriesComments } from '../../lib/supabase';
 import { requireAdminSession } from '../../lib/auth';
 export const prerender=false;
 const adminSession=await requireAdminSession(Astro.cookies);if(!adminSession)return Astro.redirect('/login?next=/admin');const token=adminSession.token;const admin=adminSession.user;
-let rows=[];let connected=false;const stats=new Map<string,{chapters:number,views:number}>();
+let rows=[];let connected=false;const chapterCounts=new Map<string,number>();
 try{
-  const [seriesRows,allChapters,allChapterStats]=await Promise.all([
+  const [seriesRows,allChapters]=await Promise.all([
     getAdminSeriesList(token),
-    getAllAdminChapters(token),
-    getAllChapterStats(token)
+    getAllAdminChapters(token)
   ]);
   rows=seriesRows;
   connected=true;
-
-  const chapterCountBySeries=new Map<string,number>();
-  const seriesByChapter=new Map<string,string>();
   for(const ch of allChapters){
-    chapterCountBySeries.set(ch.series_id,(chapterCountBySeries.get(ch.series_id)||0)+1);
-    seriesByChapter.set(ch.id,ch.series_id);
-  }
-
-  const viewCountBySeries=new Map<string,number>();
-  for(const stat of allChapterStats){
-    const seriesId=seriesByChapter.get(stat.chapter_id);
-    if(!seriesId)continue;
-    viewCountBySeries.set(seriesId,(viewCountBySeries.get(seriesId)||0)+Number(stat.view_count||0));
-  }
-
-  for(const item of rows){
-    stats.set(item.id,{
-      chapters:chapterCountBySeries.get(item.id)||0,
-      views:viewCountBySeries.get(item.id)||0
-    });
+    chapterCounts.set(ch.series_id,(chapterCounts.get(ch.series_id)||0)+1);
   }
 }catch{}
 const success=Astro.url.searchParams.get('success');const error=Astro.url.searchParams.get('error');
@@ -141,7 +122,7 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
 </div>
 <label class="field"><span>Ảnh bìa *</span><input name="cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required/><small class="meta">JPG, PNG, WebP hoặc GIF. Tối đa 8 MB.</small></label><label class="check-row"><input name="is_published" type="checkbox" value="true" checked/><span>Đăng công khai ngay</span></label><button class="button" type="submit">Lưu truyện</button></form>
 </section>
-<section class="admin-card admin-wide admin-anchor-section" id="admin-manage-series"><div class="section-title"><h2>Quản lý truyện</h2><span class="meta">{rows.length} truyện</span></div>{rows.length===0?<div class="empty-state">Chưa có truyện nào.</div>:<div class="admin-series-list">{rows.map(item=>{const x=stats.get(item.id)||{chapters:0,views:0};return <div class="admin-series-row"><div class="admin-thumb">{item.cover_key?<img src={`/api/cover/${item.id}`} alt="" loading="lazy"/>:<span>Không bìa</span>}</div><div><strong>{item.title}</strong><div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.access_type==='password'?'🔒 Mật khẩu cả bộ':item.access_type==='member'?'🔒 Thành viên':'Public'} · {item.is_published?'Công khai':'Bản nháp'}</div><div class="admin-statline"><span>{x.chapters} chapter</span><span>{x.views.toLocaleString('vi-VN')} lượt đọc</span></div></div><div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa / Chapters</a>{item.is_published&&<a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div></div>})}</div>}</section>
+<section class="admin-card admin-wide admin-anchor-section" id="admin-manage-series"><div class="section-title"><h2>Quản lý truyện</h2><span class="meta">{rows.length} truyện</span></div>{rows.length===0?<div class="empty-state">Chưa có truyện nào.</div>:<div class="admin-series-list">{rows.map(item=>{const chapterCount=chapterCounts.get(item.id)||0;return <div class="admin-series-row"><div class="admin-thumb">{item.cover_key?<img src={`/api/cover/${item.id}`} alt="" loading="lazy"/>:<span>Không bìa</span>}</div><div><strong>{item.title}</strong><div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.access_type==='password'?'🔒 Mật khẩu cả bộ':item.access_type==='member'?'🔒 Thành viên':'Public'} · {item.is_published?'Công khai':'Bản nháp'}</div><div class="admin-statline"><span>{chapterCount} chapter</span></div></div><div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa / Chapters</a>{item.is_published&&<a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div></div>})}</div>}</section>
 
 
 <section class="admin-card admin-wide admin-anchor-section" id="admin-authors">
