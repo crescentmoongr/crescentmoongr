@@ -40,6 +40,32 @@ const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hia
 ---
 <BaseLayout title="Crescent Moon Translation">
 
+
+
+{error?<div class="notice error">{error}</div>:<>
+
+{recentHistory.length>0&&<>
+<div class="section-title home-section-head home-section-head-first"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Lịch sử đọc gần đây</h2></div>
+<section class="history-cover-grid home-section-content">
+  {recentHistory.map(({item,chapter})=>
+    <a class="history-cover-card" href={chapter?`/read/${item.slug}/${chapter.chapter_number}`:`/manga/${item.slug}`}>
+      <div class="history-cover-image">
+        {item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}
+      </div>
+      <div class="history-cover-body">
+        <h3>{item.title}</h3>
+        <div class="meta">{chapter?`Đang đọc Chapter ${chapter.chapter_number}`:'Đọc tiếp'}</div>
+      </div>
+    </a>
+  )}
+</section>
+</>}
+
+<div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Mới cập nhật</h2><a class="home-more-button" href="/search">Xem tất cả <span aria-hidden="true">→</span></a></div>{recent.length?<section class="grid home-section-content">{recent.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{latestChapter.has(item.id)?`Chap ${latestChapter.get(item.id)} · `:''}{statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện.</div>}
+<div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Manga / Manhwa / Manhua</h2><a class="home-more-button" href="/search">Xem tất cả <span aria-hidden="true">→</span></a></div>{manga.length?<section class="grid home-section-content">{manga.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'Manga'} · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện nhóm Manga.</div>}
+<div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Novel</h2><a class="home-more-button" href="/search?type=Novel">Xem tất cả <span aria-hidden="true">→</span></a></div>{novels.length?<section class="grid home-section-content">{novels.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">Novel · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có Novel.</div>}
+</>}
+
 <section class="site-view-stats" data-site-view-stats aria-label="Thống kê lượt xem">
   <div class="site-view-stat"><span>NOW</span><strong data-stat-now>—</strong></div>
   <div class="site-view-stat"><span>TODAY</span><strong data-stat-today>—</strong></div>
@@ -67,28 +93,4 @@ const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hia
     }).catch(()=>{});
 })();
 </script>
-
-{error?<div class="notice error">{error}</div>:<>
-
-{recentHistory.length>0&&<>
-<div class="section-title home-section-head home-section-head-first"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Lịch sử đọc gần đây</h2></div>
-<section class="history-cover-grid home-section-content">
-  {recentHistory.map(({item,chapter})=>
-    <a class="history-cover-card" href={chapter?`/read/${item.slug}/${chapter.chapter_number}`:`/manga/${item.slug}`}>
-      <div class="history-cover-image">
-        {item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}
-      </div>
-      <div class="history-cover-body">
-        <h3>{item.title}</h3>
-        <div class="meta">{chapter?`Đang đọc Chapter ${chapter.chapter_number}`:'Đọc tiếp'}</div>
-      </div>
-    </a>
-  )}
-</section>
-</>}
-
-<div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Mới cập nhật</h2><a class="home-more-button" href="/search">Xem tất cả <span aria-hidden="true">→</span></a></div>{recent.length?<section class="grid home-section-content">{recent.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{latestChapter.has(item.id)?`Chap ${latestChapter.get(item.id)} · `:''}{statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện.</div>}
-<div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Manga / Manhwa / Manhua</h2><a class="home-more-button" href="/search">Xem tất cả <span aria-hidden="true">→</span></a></div>{manga.length?<section class="grid home-section-content">{manga.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'Manga'} · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện nhóm Manga.</div>}
-<div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Novel</h2><a class="home-more-button" href="/search?type=Novel">Xem tất cả <span aria-hidden="true">→</span></a></div>{novels.length?<section class="grid home-section-content">{novels.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">Novel · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có Novel.</div>}
-</>}
 </BaseLayout>
