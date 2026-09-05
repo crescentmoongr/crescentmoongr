@@ -1,3 +1,5 @@
+v11.84 — Move homepage view statistics into footer below social links/copyright. No new SQL required.
+
 # Crescent Reader v5
 
 Có thêm sửa/xóa truyện, quản lý chapter, upload nhiều ảnh chapter vào private R2, Public/Password/Member, sửa/xóa chapter, và reader hiển thị ảnh cho chapter Public.

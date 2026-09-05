@@ -66,31 +66,4 @@ const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hia
 <div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Novel</h2><a class="home-more-button" href="/search?type=Novel">Xem tất cả <span aria-hidden="true">→</span></a></div>{novels.length?<section class="grid home-section-content">{novels.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">Novel · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có Novel.</div>}
 </>}
 
-<section class="site-view-stats" data-site-view-stats aria-label="Thống kê lượt xem">
-  <div class="site-view-stat"><span>NOW</span><strong data-stat-now>—</strong></div>
-  <div class="site-view-stat"><span>TODAY</span><strong data-stat-today>—</strong></div>
-  <div class="site-view-stat"><span>THIS MONTH</span><strong data-stat-month>—</strong></div>
-  <div class="site-view-stat"><span>TOTAL</span><strong data-stat-total>—</strong></div>
-</section>
-<script is:inline>
-(() => {
-  const box=document.querySelector('[data-site-view-stats]');
-  if(!(box instanceof HTMLElement))return;
-  const fmt=(n)=>{
-    n=Number(n||0);
-    if(n>=1000000)return `${(n/1000000).toFixed(n>=10000000?0:1).replace(/\.0$/,'')}M`;
-    if(n>=1000)return `${(n/1000).toFixed(n>=100000?0:1).replace(/\.0$/,'')}K`;
-    return String(n);
-  };
-  fetch('/api/stats/site',{credentials:'same-origin'})
-    .then(r=>r.ok?r.json():null)
-    .then(data=>{
-      if(!data)return;
-      for(const key of ['now','today','month','total']){
-        const el=box.querySelector(`[data-stat-${key}]`);
-        if(el)el.textContent=fmt(data[key]);
-      }
-    }).catch(()=>{});
-})();
-</script>
 </BaseLayout>

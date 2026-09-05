@@ -1464,7 +1464,7 @@ body:has(.reader-bottom-nav) .site-notification-toast{bottom:104px}
 .genre-admin-row{grid-template-columns:minmax(220px,1fr) auto auto auto}
 
 .advanced-search-head{
-  margin-bottom:28px;
+  margin-bottom:0;
 }
 .advanced-search-head>h1{
   margin:0 0 18px;
@@ -3007,7 +3007,7 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
 .site-view-stats{
   width:max-content;
   max-width:100%;
-  margin:8px auto 34px;
+  margin:18px auto 0;
   padding:12px 16px;
   display:grid;
   grid-template-columns:repeat(4,minmax(74px,1fr));
@@ -3045,9 +3045,21 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
     width:100%;
     grid-template-columns:repeat(4,1fr);
     padding:11px 6px;
-    margin-bottom:28px;
+    margin-bottom:0;
   }
   .site-view-stat{min-width:0;padding:0 6px}
   .site-view-stat span{font-size:.57rem;white-space:nowrap}
   .site-view-stat strong{font-size:.9rem}
+}
+
+
+/* v11.84 — statistics inside footer, below social links and copyright */
+.footer .footer-view-stats{
+  margin-top:18px;
+  margin-bottom:0;
+}
+@media(max-width:520px){
+  .footer .footer-view-stats{
+    margin-top:16px;
+  }
 }
