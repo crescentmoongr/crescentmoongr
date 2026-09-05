@@ -852,3 +852,11 @@ Trang chi tiết truyện:
 - Admin UI and workflow are unchanged.
 - Existing per-series chapter edit pages still use their normal targeted queries.
 - No SQL changes; ZIP contains no `.sql` files.
+
+## v11.82
+- Homepage compact view statistics: NOW / TODAY / THIS MONTH / TOTAL.
+- NOW uses a lightweight 3-minute KV presence heartbeat.
+- TODAY / THIS MONTH use daily aggregated view counts in Supabase.
+- TOTAL continues to use existing chapter view totals.
+- Notification badge shows the real number through 20, then `20+` from 21 unread notifications onward; dropdown still renders only the latest 20.
+- Run `supabase-v11-82-site-stats.sql` once before deploying/using the new daily counters.

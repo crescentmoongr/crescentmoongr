@@ -228,6 +228,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   const SEEN_KEY='crescent_seen_chapters_v2';
   let items=[];
+  let notificationIds=[];
 
   const getSeen=()=>{
     try{
@@ -279,10 +280,10 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   const render=()=>{
     if(!(notifList instanceof HTMLElement))return;
     const seen=getSeen();
-    const unread=items.filter(x=>x?.id&&!seen.includes(x.id)).length;
+    const unread=(notificationIds.length?notificationIds:items.map(x=>x?.id)).filter(id=>id&&!seen.includes(id)).length;
 
     if(badge instanceof HTMLElement){
-      badge.textContent=unread>99?'99+':String(unread);
+      badge.textContent=unread>=21?'20+':String(unread);
       badge.hidden=unread===0;
     }
 
@@ -346,6 +347,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
       .then(r=>r.ok?r.json():null)
       .then(data=>{
         items=Array.isArray(data?.items)?data.items:[];
+        notificationIds=Array.isArray(data?.ids)?data.ids:items.map(x=>x?.id).filter(Boolean);
         render();
       })
       .catch(()=>{
@@ -367,7 +369,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   if(markAll instanceof HTMLButtonElement){
     markAll.addEventListener('click',()=>{
-      saveSeen(items.map(x=>x.id).filter(Boolean));
+      saveSeen((notificationIds.length?notificationIds:items.map(x=>x.id)).filter(Boolean));
       render();
     });
   }
@@ -380,6 +382,11 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   // Load once on page open so the bell badge can show unread updates immediately.
   loadNotifications();
+
+  // Lightweight online-presence heartbeat. One KV key per browser session, expires after 3 minutes.
+  const pingPresence=()=>fetch('/api/stats/site',{method:'POST',credentials:'same-origin'}).catch(()=>{});
+  pingPresence();
+  window.setInterval(pingPresence,60000);
 })();
 </script>
 

@@ -40,6 +40,34 @@ const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hia
 ---
 <BaseLayout title="Crescent Moon Translation">
 
+<section class="site-view-stats" data-site-view-stats aria-label="Thống kê lượt xem">
+  <div class="site-view-stat"><span>NOW</span><strong data-stat-now>—</strong></div>
+  <div class="site-view-stat"><span>TODAY</span><strong data-stat-today>—</strong></div>
+  <div class="site-view-stat"><span>THIS MONTH</span><strong data-stat-month>—</strong></div>
+  <div class="site-view-stat"><span>TOTAL</span><strong data-stat-total>—</strong></div>
+</section>
+<script is:inline>
+(() => {
+  const box=document.querySelector('[data-site-view-stats]');
+  if(!(box instanceof HTMLElement))return;
+  const fmt=(n)=>{
+    n=Number(n||0);
+    if(n>=1000000)return `${(n/1000000).toFixed(n>=10000000?0:1).replace(/\.0$/,'')}M`;
+    if(n>=1000)return `${(n/1000).toFixed(n>=100000?0:1).replace(/\.0$/,'')}K`;
+    return String(n);
+  };
+  fetch('/api/stats/site',{credentials:'same-origin'})
+    .then(r=>r.ok?r.json():null)
+    .then(data=>{
+      if(!data)return;
+      for(const key of ['now','today','month','total']){
+        const el=box.querySelector(`[data-stat-${key}]`);
+        if(el)el.textContent=fmt(data[key]);
+      }
+    }).catch(()=>{});
+})();
+</script>
+
 {error?<div class="notice error">{error}</div>:<>
 
 {recentHistory.length>0&&<>
