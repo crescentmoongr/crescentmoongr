@@ -2,7 +2,6 @@
 import '../styles/global.css';
 import { getSessionUser } from '../lib/auth';
 import { getSiteSettings } from '../lib/supabase';
-import { richTextToHtml } from '../lib/richText';
 export const prerender=false;
 const {
   title = 'Crescent Moon Translation',
@@ -18,17 +17,15 @@ const absoluteImage = new URL(image || '/social-preview.png', Astro.url.origin).
 const user = await getSessionUser(Astro.cookies);
 
 // Public site settings are loaded in one Supabase request to avoid extra subrequests.
-// /admin and its sub-routes intentionally skip public announcement/ads/socials.
+// /admin and its sub-routes intentionally skip public ads/socials.
 const isAdminPage = Astro.url.pathname === '/admin' || Astro.url.pathname.startsWith('/admin/');
 let siteAdHtml = '';
-let siteAnnouncementHtml = '';
 let socialLinks:{facebook?:string;telegram?:string;discord?:string}={};
 if (!isAdminPage) {
   try {
-    const settings=await getSiteSettings(['reader_ad_html','social_links','site_announcement_html']);
+    const settings=await getSiteSettings(['reader_ad_html','social_links']);
     const byKey=new Map(settings.map(item=>[item.key,item.value||'']));
     siteAdHtml=byKey.get('reader_ad_html')||'';
-    siteAnnouncementHtml=richTextToHtml(byKey.get('site_announcement_html')||'');
     const raw=byKey.get('social_links')||'';
     const parsed=raw?JSON.parse(raw):{};
     if(parsed&&typeof parsed==='object') socialLinks=parsed;
@@ -122,12 +119,6 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   </nav>
 </header>
 <main class="shell">
-{siteAnnouncementHtml && (
-  <section class="site-announcement" aria-label="Thông báo chung">
-    <div class="site-announcement-icon" aria-hidden="true">📢</div>
-    <div class="site-announcement-content rich-content" set:html={siteAnnouncementHtml}></div>
-  </section>
-)}
 <slot />
 
 {siteAdHtml && (

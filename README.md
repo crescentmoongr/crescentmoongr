@@ -1,3 +1,5 @@
+v11.84: Fixed Admin announcement persistence/readback and moved announcement to the top of the homepage above reading history. Telegram chapter title format fix retained.
+
 # Crescent Reader v5
 
 Có thêm sửa/xóa truyện, quản lý chapter, upload nhiều ảnh chapter vào private R2, Public/Password/Member, sửa/xóa chapter, và reader hiển thị ảnh cho chapter Public.

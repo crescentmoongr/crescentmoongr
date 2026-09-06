@@ -116,6 +116,19 @@ export async function getSiteSettings(keys:string[], token?:string){
   return supabaseGet<SiteSetting[]>(`site_settings?select=key,value,updated_at&key=in.(${encoded})`,token);
 }
 
+// Server-only helper for protected site settings that should not depend on public/admin RLS.
+export async function getServiceSiteSetting(key:string){
+  const url=String(env.SUPABASE_URL||'').replace(/\/$/,'');
+  const serviceKey=String(env.SUPABASE_SERVICE_ROLE_KEY||'').trim();
+  if(!url||!serviceKey) throw new Error('Thiếu SUPABASE_URL hoặc SUPABASE_SERVICE_ROLE_KEY trên Cloudflare.');
+  const r=await fetch(`${url}/rest/v1/site_settings?select=key,value,updated_at&key=eq.${encodeURIComponent(key)}&limit=1`,{
+    headers:{apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,Accept:'application/json'}
+  });
+  if(!r.ok) throw new Error(`Supabase ${r.status}: ${await r.text()}`);
+  const rows=await r.json() as SiteSetting[];
+  return rows[0]??null;
+}
+
 
 export type AdminMember = {
   user_id:string;

@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getAdminSeriesList, getAllAdminChapters, statusLabel, getSiteSetting, getAdminMembers, getAuthors, getGenres, getAdminSeriesComments } from '../../lib/supabase';
+import { getAdminSeriesList, getAllAdminChapters, statusLabel, getSiteSetting, getAdminMembers, getAuthors, getGenres, getAdminSeriesComments, getServiceSiteSetting } from '../../lib/supabase';
 import { requireAdminSession } from '../../lib/auth';
 export const prerender=false;
 const adminSession=await requireAdminSession(Astro.cookies);if(!adminSession)return Astro.redirect('/login?next=/admin');const token=adminSession.token;const admin=adminSession.user;
@@ -18,7 +18,7 @@ try{
 }catch{}
 const success=Astro.url.searchParams.get('success');const error=Astro.url.searchParams.get('error');
 let announcementHtml='';
-try{announcementHtml=(await getSiteSetting('site_announcement_html',token))?.value||''}catch{}
+try{announcementHtml=(await getServiceSiteSetting('site_announcement_html'))?.value||''}catch{}
 let adHtml='';
 try{adHtml=(await getSiteSetting('reader_ad_html',token))?.value||''}catch{}
 let socialLinks:{facebook?:string;telegram?:string;discord?:string}={};
@@ -81,7 +81,7 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
           <button type="button" data-admin-comment-action="clear" title="Xóa định dạng">Tx</button>
         </div>
         <div class="comment-editor admin-comment-editor" contenteditable="true" data-placeholder="Nhập thông báo chung cho website..." spellcheck="true" set:html={announcementHtml}></div>
-        <textarea class="comment-source admin-comment-source" name="announcement_html" maxlength="20000" hidden></textarea>
+        <textarea class="comment-source admin-comment-source" name="announcement_html" maxlength="20000" hidden>{announcementHtml}</textarea>
       </div>
       <small class="meta">Trình soạn thảo dùng cùng kiểu với phần Giới thiệu truyện.</small>
     </div>
@@ -397,7 +397,16 @@ function setupRichEditors(){
     });
     editor.addEventListener('input',sync);
     editor.addEventListener('blur',sync);
-    editor.closest('form')?.addEventListener('submit',sync);
+    const form=editor.closest('form');
+    form?.addEventListener('submit',sync,{capture:true});
+    // formdata runs while the browser is constructing the POST body, so the latest
+    // contenteditable HTML is guaranteed to be included even if another handler submits the form.
+    form?.addEventListener('formdata',(event)=>{
+      sync();
+      if(event instanceof FormDataEvent && source.name){
+        event.formData.set(source.name,source.value);
+      }
+    });
     sync();
   });
 }
@@ -552,7 +561,16 @@ function setupAdminCommentEditors(){
 
     editor.addEventListener('input',sync);
     editor.addEventListener('blur',sync);
-    editor.closest('form')?.addEventListener('submit',sync);
+    const form=editor.closest('form');
+    form?.addEventListener('submit',sync,{capture:true});
+    // formdata runs while the browser is constructing the POST body, so the latest
+    // contenteditable HTML is guaranteed to be included even if another handler submits the form.
+    form?.addEventListener('formdata',(event)=>{
+      sync();
+      if(event instanceof FormDataEvent && source.name){
+        event.formData.set(source.name,source.value);
+      }
+    });
     sync();
   });
 }

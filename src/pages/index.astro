@@ -1,7 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getSeriesList, getNewestSeries, getAllPublicChapters, statusLabel, getMyHistory } from '../lib/supabase';
+import { getSeriesList, getNewestSeries, getAllPublicChapters, statusLabel, getMyHistory, getServiceSiteSetting } from '../lib/supabase';
 import { getSession } from '../lib/auth';
+import { richTextToHtml } from '../lib/richText';
 export const prerender=false;
 let updated=[]; let newest=[]; let allChapters:any[]=[]; let error='';
 let latestChapter=new Map<string,number>();
@@ -36,9 +37,16 @@ if(session){
 }
 const statusBadgeLabel=(status:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[status]||'';
 const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'} as Record<string,string>)[status]||'';
+let siteAnnouncementHtml='';
+try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_announcement_html'))?.value||'')}catch{}
 
 ---
 <BaseLayout title="Crescent Moon Translation">
+
+{siteAnnouncementHtml&&<section class="site-announcement home-site-announcement" aria-label="Thông báo chung">
+  <div class="site-announcement-icon" aria-hidden="true">📢</div>
+  <div class="site-announcement-content rich-content" set:html={siteAnnouncementHtml}></div>
+</section>}
 
 {error?<div class="notice error">{error}</div>:<>
 
