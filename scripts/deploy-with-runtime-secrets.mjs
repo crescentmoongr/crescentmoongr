@@ -5,6 +5,7 @@ const required = [
   'SUPABASE_SERVICE_ROLE_KEY',
   'DISCORD_WEBHOOK_URL',
   'TELEGRAM_BOT_TOKEN',
+  'TELEGRAM_CHAT_ID',
 ];
 
 const missing = required.filter((name) => !String(process.env[name] || '').trim());

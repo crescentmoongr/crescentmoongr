@@ -37,3 +37,7 @@ After deployment, a publish test should report:
 - `telegramChatId: true`
 
 Then Discord and Telegram are called for real. Scheduled chapters are checked once per minute by the Cron trigger.
+
+
+## 2026-09-06 deploy fix
+Runtime notification values are uploaded with `wrangler deploy --secrets-file` from Cloudflare Build Variables/Secrets. `wrangler.jsonc` intentionally does NOT declare `secrets.required`, because Wrangler validates required secrets before the same deploy can upload them. Keep deploy command as `npm run deploy`. `TELEGRAM_CHAT_ID` is uploaded the same way, so no notification value is committed to GitHub.
