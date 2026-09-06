@@ -1,46 +1,39 @@
 # Discord + Telegram chapter notifications
 
-This build sends chapter notifications without Workers KV.
+This build promotes the three notification credentials from **Cloudflare Build secrets** into encrypted **Worker runtime secrets** during deployment. The values are never committed to GitHub.
 
-## Cloudflare secrets / variables
-Add these under Worker `read` -> Settings -> Variables and Secrets:
+## 1) Cloudflare Build variables/secrets
+In Worker `read` -> Settings -> Build -> Variables and Secrets, keep these exact names:
 
-- `SUPABASE_SERVICE_ROLE_KEY` (Secret)
-- `DISCORD_WEBHOOK_URL` (Secret)
-- `TELEGRAM_BOT_TOKEN` (Secret)
-- `TELEGRAM_CHAT_ID` (Variable or Secret)
+- `SUPABASE_SERVICE_ROLE_KEY` — Secret
+- `DISCORD_WEBHOOK_URL` — Secret
+- `TELEGRAM_BOT_TOKEN` — Secret
 
-Keep existing `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`.
+`TELEGRAM_CHAT_ID` is non-secret and is declared in `wrangler.jsonc`.
 
-Never expose `SUPABASE_SERVICE_ROLE_KEY`, Discord webhook, or Telegram bot token in browser/client code.
+## 2) Change the Deploy command once
+In the Worker Git build settings use:
 
-## Publish behavior
-- Publish now: notification is sent immediately after the chapter is created/saved.
-- Schedule: no notification is sent at upload time. A Cloudflare Cron Trigger checks every minute and sends after `published_at` is due.
-- Draft: no notification.
-- Bulk publish: sends for each published chapter.
+- Build command: `npm run build`
+- Deploy command: `npm run deploy`
 
-## Duplicate prevention
-Delivery state is stored in the existing Supabase `site_settings` row `chapter_notify_state_v1`, not Workers KV.
-The first cron run creates a baseline timestamp so old historical chapters are not backfilled.
+Do not use `npx wrangler deploy` directly for this build, because the custom deploy script is what uploads the Build secrets as Worker runtime secrets.
 
-## Discord layout
-- `@everyone`
-- Story title links to the manga detail page
-- Chapter line
-- "Đọc chap mới tại đây" links to the new chapter
-- Large cover image
+## 3) What the deploy script does
+`scripts/deploy-with-runtime-secrets.mjs` checks the three Build secrets, writes a temporary local JSON file inside the Cloudflare build container, runs:
 
-## Telegram layout
-- Story title links to the manga detail page
-- Chapter line
-- Cover image when available
-- Inline "Đọc chap mới tại đây" button
+`wrangler deploy --secrets-file <temporary file>`
 
-## Cron
-`wrangler.jsonc` contains `* * * * *`, so scheduled chapters are checked once per minute.
+and deletes the temporary file immediately afterward.
 
-## Runtime env compatibility fix
-This build injects the actual Cloudflare Worker handler `env` into the chapter notifier before Astro handles each request. The notifier also falls back to `process.env` under `nodejs_compat`. This prevents newly-added dashboard Variables/Secrets from being missed by the immediate publish hook.
+The temporary file is gitignored and is not part of the repository.
 
-After changing Variables/Secrets in Cloudflare Dashboard, make sure the change is deployed/activated for the current Worker version.
+## 4) Expected notification log
+After deployment, a publish test should report:
+
+- `serviceRoleKey: true`
+- `discordWebhook: true`
+- `telegramBotToken: true`
+- `telegramChatId: true`
+
+Then Discord and Telegram are called for real. Scheduled chapters are checked once per minute by the Cron trigger.

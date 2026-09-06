@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "node scripts/deploy-with-runtime-secrets.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "latest",
