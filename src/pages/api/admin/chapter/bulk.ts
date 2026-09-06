@@ -18,7 +18,8 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
     for(const id of ids){
       if(action==='publish'){
         await supabasePatch(`chapters?id=eq.${encodeURIComponent(id)}&series_id=eq.${encodeURIComponent(sid)}`,session.token,{is_published:true,published_at:new Date().toISOString()});
-        try{await notifyChapterById(env,id)}catch(err){console.error('Notify chapter failed',id,err)}
+        console.info('[Chapter Notify] bulk.ts publish item',{chapterId:id});
+        try{await notifyChapterById(env,id)}catch(err){console.error('[Chapter Notify] bulk.ts notify failed',id,err)}
       }else if(action==='draft'){
         await supabasePatch(`chapters?id=eq.${encodeURIComponent(id)}&series_id=eq.${encodeURIComponent(sid)}`,session.token,{is_published:false});
       }else if(action==='delete'){

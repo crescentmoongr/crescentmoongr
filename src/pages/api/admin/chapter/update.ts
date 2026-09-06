@@ -38,7 +38,8 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
 
     await supabasePatch(`chapters?id=eq.${encodeURIComponent(id)}&series_id=eq.${encodeURIComponent(sid)}`,s.token,patch);
     if(mode==='publish'){
-      try{await notifyChapterById(env,id)}catch(err){console.error('Notify chapter failed',id,err)}
+      console.info('[Chapter Notify] update.ts publish branch',{chapterId:id});
+      try{await notifyChapterById(env,id)}catch(err){console.error('[Chapter Notify] update.ts notify failed',id,err)}
     }
     return redirect(`/admin/series/${sid}?success=`+encodeURIComponent('Đã lưu chapter.'));
   }catch(e:any){

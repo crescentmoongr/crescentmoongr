@@ -78,7 +78,10 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
     }
 
     if(mode==='publish'){
-      try{await notifyChapterById(env,ch.id)}catch(err){console.error('Notify chapter failed',ch.id,err)}
+      console.info('[Chapter Notify] create.ts publish branch',{chapterId:ch.id,seriesId:sid,chapter:n});
+      try{await notifyChapterById(env,ch.id)}catch(err){console.error('[Chapter Notify] create.ts notify failed',ch.id,err)}
+    }else{
+      console.info('[Chapter Notify] create.ts not immediate publish',{chapterId:ch.id,mode,publishedAt});
     }
 
     const label=mode==='draft'?'Draft':mode==='schedule'?'đã lên lịch':'Published';

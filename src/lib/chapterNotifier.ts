@@ -36,6 +36,19 @@ const SITE_ORIGIN='https://crescentmoonmanga.com';
 const clean=(v:any)=>String(v||'').trim();
 const isoNow=()=>new Date().toISOString();
 
+const log=(...args:any[])=>console.info('[Chapter Notify]',...args);
+const logError=(...args:any[])=>console.error('[Chapter Notify]',...args);
+
+function configSummary(env:NotifierEnv){
+  return {
+    supabaseUrl:!!clean(env.SUPABASE_URL),
+    serviceRoleKey:!!clean(env.SUPABASE_SERVICE_ROLE_KEY),
+    discordWebhook:!!clean(env.DISCORD_WEBHOOK_URL),
+    telegramBotToken:!!clean(env.TELEGRAM_BOT_TOKEN),
+    telegramChatId:!!clean(env.TELEGRAM_CHAT_ID)
+  };
+}
+
 function cfg(env:NotifierEnv){
   const url=clean(env.SUPABASE_URL).replace(/\/$/,'');
   const key=clean(env.SUPABASE_SERVICE_ROLE_KEY);
@@ -111,7 +124,8 @@ function links(series:NotifySeries,ch:DueChapter){
 
 async function sendDiscord(env:NotifierEnv,series:NotifySeries,ch:DueChapter){
   const webhook=clean(env.DISCORD_WEBHOOK_URL);
-  if(!webhook)return false;
+  if(!webhook){log('Discord skipped: DISCORD_WEBHOOK_URL missing');return false;}
+  log('Discord sending', {chapterId:ch.id, series:series.title, chapter:ch.chapter_number});
   const {seriesUrl,chapterUrl,coverUrl}=links(series,ch);
   const chapterText=`Chapter ${ch.chapter_number}${ch.title?` — ${ch.title}`:''}`;
   const payload:any={
@@ -130,12 +144,14 @@ async function sendDiscord(env:NotifierEnv,series:NotifySeries,ch:DueChapter){
   if(coverUrl)payload.embeds[0].thumbnail={url:coverUrl};
   const r=await fetch(webhook,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
   if(!r.ok)throw new Error(`Discord ${r.status}: ${await r.text()}`);
+  log('Discord sent', {chapterId:ch.id,status:r.status});
   return true;
 }
 
 async function sendTelegram(env:NotifierEnv,series:NotifySeries,ch:DueChapter){
   const token=clean(env.TELEGRAM_BOT_TOKEN),chatId=clean(env.TELEGRAM_CHAT_ID);
-  if(!token||!chatId)return false;
+  if(!token||!chatId){log('Telegram skipped: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID missing',{botToken:!!token,chatId:!!chatId});return false;}
+  log('Telegram sending', {chapterId:ch.id, series:series.title, chapter:ch.chapter_number});
   const {seriesUrl,coverUrl}=links(series,ch);
   const chapterText=ch.title?.trim()||`Chapter ${ch.chapter_number}`;
   const caption=`📚 <b><a href="${seriesUrl}">${escHtml(series.title)}</a></b>
@@ -156,6 +172,7 @@ async function sendTelegram(env:NotifierEnv,series:NotifySeries,ch:DueChapter){
   }
   const r=await fetch(`${base}/${endpoint}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
   if(!r.ok)throw new Error(`Telegram ${r.status}: ${await r.text()}`);
+  log('Telegram sent', {chapterId:ch.id,status:r.status,endpoint});
   return true;
 }
 
@@ -176,32 +193,59 @@ async function deliver(env:NotifierEnv,state:NotifyState,series:NotifySeries,ch:
   if(!rec.discord&&clean(env.DISCORD_WEBHOOK_URL)){
     try{
       if(await sendDiscord(env,series,ch)){rec.discord=isoNow();changed=true;}
-    }catch(e){console.error('Discord notify failed',ch.id,e)}
+    }catch(e){logError('Discord notify failed',ch.id,e)}
   }
   if(!rec.telegram&&clean(env.TELEGRAM_BOT_TOKEN)&&clean(env.TELEGRAM_CHAT_ID)){
     try{
       if(await sendTelegram(env,series,ch)){rec.telegram=isoNow();changed=true;}
-    }catch(e){console.error('Telegram notify failed',ch.id,e)}
+    }catch(e){logError('Telegram notify failed',ch.id,e)}
   }
   if(changed)state.sent[ch.id]=rec;
   return changed;
 }
 
 export async function notifyChapterById(env:NotifierEnv,chapterId:string){
-  if(!clean(env.DISCORD_WEBHOOK_URL)&&!(clean(env.TELEGRAM_BOT_TOKEN)&&clean(env.TELEGRAM_CHAT_ID)))return;
-  const state=await ensureState(env);
-  const ch=await getChapter(env,chapterId);
-  if(!ch)return;
-  const series=await getSeries(env,ch.series_id);
-  if(!series?.is_published)return;
-  if(await deliver(env,state,series,ch))await saveState(env,state);
+  log('Immediate publish hook started',{chapterId,config:configSummary(env)});
+  if(!clean(env.DISCORD_WEBHOOK_URL)&&!(clean(env.TELEGRAM_BOT_TOKEN)&&clean(env.TELEGRAM_CHAT_ID))){
+    logError('No notification channel configured; skipping',{chapterId,config:configSummary(env)});
+    return;
+  }
+  try{
+    const state=await ensureState(env);
+    log('Notification state ready',{chapterId,enabledAt:state.enabledAt,alreadySent:state.sent[chapterId]||null});
+    const ch=await getChapter(env,chapterId);
+    if(!ch){
+      logError('Chapter not eligible/found. Check is_published and published_at.',{chapterId,now:isoNow()});
+      return;
+    }
+    log('Chapter loaded',{chapterId,seriesId:ch.series_id,chapter:ch.chapter_number,publishedAt:ch.published_at});
+    const series=await getSeries(env,ch.series_id);
+    if(!series){logError('Series not found',{chapterId,seriesId:ch.series_id});return;}
+    if(!series.is_published){logError('Series is not published; skipping',{chapterId,seriesId:ch.series_id,title:series.title});return;}
+    log('Series loaded',{chapterId,seriesId:series.id,title:series.title});
+    const changed=await deliver(env,state,series,ch);
+    if(changed){
+      await saveState(env,state);
+      log('Immediate notification complete',{chapterId,sent:state.sent[chapterId]||null});
+    }else{
+      log('Nothing sent',{chapterId,alreadySent:state.sent[chapterId]||null,config:configSummary(env)});
+    }
+  }catch(e){
+    logError('Immediate notifier crashed',{chapterId},e);
+    throw e;
+  }
 }
 
 export async function processDueChapterNotifications(env:NotifierEnv){
-  if(!clean(env.DISCORD_WEBHOOK_URL)&&!(clean(env.TELEGRAM_BOT_TOKEN)&&clean(env.TELEGRAM_CHAT_ID)))return;
+  log('Cron check started',{config:configSummary(env)});
+  if(!clean(env.DISCORD_WEBHOOK_URL)&&!(clean(env.TELEGRAM_BOT_TOKEN)&&clean(env.TELEGRAM_CHAT_ID))){
+    logError('Cron skipped: no notification channel configured',{config:configSummary(env)});
+    return;
+  }
   const state=await ensureState(env);
   const now=isoNow();
   const rows=await db<DueChapter[]>(env,'GET',`chapters?select=id,series_id,chapter_number,title,is_published,published_at,created_at&is_published=eq.true&published_at=gte.${encodeURIComponent(state.enabledAt)}&published_at=lte.${encodeURIComponent(now)}&order=published_at.desc&limit=50`);
+  log('Cron due chapters found',{count:rows.length,enabledAt:state.enabledAt,now});
   let changed=false;
   const seriesCache=new Map<string,NotifySeries|null>();
   for(const ch of rows){
