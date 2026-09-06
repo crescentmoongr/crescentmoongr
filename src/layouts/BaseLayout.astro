@@ -1,7 +1,8 @@
 ---
 import '../styles/global.css';
 import { getSessionUser } from '../lib/auth';
-import { getSiteSetting } from '../lib/supabase';
+import { getSiteSettings } from '../lib/supabase';
+import { richTextToHtml } from '../lib/richText';
 export const prerender=false;
 const {
   title = 'Crescent Moon Translation',
@@ -16,20 +17,19 @@ const pageUrl = new URL(canonical || Astro.url.pathname, Astro.url.origin).href;
 const absoluteImage = new URL(image || '/social-preview.png', Astro.url.origin).href;
 const user = await getSessionUser(Astro.cookies);
 
-// v11.33: run the Admin ad code site-wide on public pages.
-// /admin and its sub-routes are intentionally excluded.
+// Public site settings are loaded in one Supabase request to avoid extra subrequests.
+// /admin and its sub-routes intentionally skip public announcement/ads/socials.
 const isAdminPage = Astro.url.pathname === '/admin' || Astro.url.pathname.startsWith('/admin/');
 let siteAdHtml = '';
-if (!isAdminPage) {
-  try {
-    siteAdHtml = (await getSiteSetting('reader_ad_html'))?.value || '';
-  } catch {}
-}
-
+let siteAnnouncementHtml = '';
 let socialLinks:{facebook?:string;telegram?:string;discord?:string}={};
 if (!isAdminPage) {
   try {
-    const raw=(await getSiteSetting('social_links'))?.value||'';
+    const settings=await getSiteSettings(['reader_ad_html','social_links','site_announcement_html']);
+    const byKey=new Map(settings.map(item=>[item.key,item.value||'']));
+    siteAdHtml=byKey.get('reader_ad_html')||'';
+    siteAnnouncementHtml=richTextToHtml(byKey.get('site_announcement_html')||'');
+    const raw=byKey.get('social_links')||'';
     const parsed=raw?JSON.parse(raw):{};
     if(parsed&&typeof parsed==='object') socialLinks=parsed;
   } catch {}
@@ -121,7 +121,14 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
     {user?<a href="/account" class={user.role==='admin'?'admin-name-glow':''}>{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
   </nav>
 </header>
-<main class="shell"><slot />
+<main class="shell">
+{siteAnnouncementHtml && (
+  <section class="site-announcement" aria-label="Thông báo chung">
+    <div class="site-announcement-icon" aria-hidden="true">📢</div>
+    <div class="site-announcement-content rich-content" set:html={siteAnnouncementHtml}></div>
+  </section>
+)}
+<slot />
 
 {siteAdHtml && (
   <div class="sitewide-ad-code" aria-label="Quảng cáo" set:html={siteAdHtml}></div>

@@ -3001,3 +3001,44 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
   .chapter-replace-pages-form{padding:11px}
   .chapter-replace-pages-form .button{width:100%;justify-content:center}
 }
+
+
+/* v11.82 — site-wide announcement managed from Admin */
+.site-announcement{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  margin:0 0 24px;
+  padding:14px 16px;
+  border:1px solid rgba(226,170,204,.75);
+  border-radius:16px;
+  background:rgba(255,247,252,.9);
+  box-shadow:0 8px 24px rgba(102,61,88,.055);
+}
+.site-announcement-icon{
+  flex:0 0 auto;
+  padding-top:2px;
+  font-size:1.1rem;
+  line-height:1.4;
+}
+.site-announcement .site-announcement-content.rich-content{
+  flex:1;
+  min-width:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:#725b68;
+  line-height:1.7;
+  box-shadow:none;
+}
+.site-announcement .site-announcement-content>:first-child{margin-top:0}
+.site-announcement .site-announcement-content>:last-child{margin-bottom:0}
+@media(max-width:560px){
+  .site-announcement{
+    gap:9px;
+    margin-bottom:18px;
+    padding:12px 13px;
+    border-radius:14px;
+  }
+}

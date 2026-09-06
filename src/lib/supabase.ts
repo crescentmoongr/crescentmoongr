@@ -109,6 +109,13 @@ export async function getSiteSetting(key:string, token?:string){
   return r[0]??null;
 }
 
+export async function getSiteSettings(keys:string[], token?:string){
+  const clean=keys.map(k=>String(k||'').trim()).filter(Boolean);
+  if(!clean.length) return [] as SiteSetting[];
+  const encoded=clean.map(k=>encodeURIComponent(k)).join(',');
+  return supabaseGet<SiteSetting[]>(`site_settings?select=key,value,updated_at&key=in.(${encoded})`,token);
+}
+
 
 export type AdminMember = {
   user_id:string;
