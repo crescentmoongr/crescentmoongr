@@ -32,26 +32,61 @@ type NotifySeries = {
 
 const STATE_KEY='chapter_notify_state_v1';
 const SITE_ORIGIN='https://crescentmoonmanga.com';
+const RUNTIME_ENV_KEY='__CRESCENT_CHAPTER_NOTIFIER_ENV__';
 
 const clean=(v:any)=>String(v||'').trim();
 const isoNow=()=>new Date().toISOString();
+
+/**
+ * Astro routes can import `env` from cloudflare:workers, but this project also
+ * uses a custom Worker entrypoint for Cron.  Keep the actual `env` object from
+ * the fetch/scheduled handler on globalThis so notification code always sees
+ * the bindings attached to the active Worker version.
+ */
+export function setNotifierRuntimeEnv(runtimeEnv:NotifierEnv){
+  (globalThis as any)[RUNTIME_ENV_KEY]=runtimeEnv;
+}
+
+function resolveEnv(explicit?:NotifierEnv):NotifierEnv{
+  const injected=((globalThis as any)[RUNTIME_ENV_KEY]||{}) as NotifierEnv;
+  let nodeEnv:any={};
+  try{ nodeEnv=(globalThis as any).process?.env||{}; }catch{}
+  const get=(key:keyof NotifierEnv)=>{
+    const a=clean(explicit?.[key]);
+    if(a)return a;
+    const b=clean(injected?.[key]);
+    if(b)return b;
+    const c=clean(nodeEnv?.[key]);
+    return c||undefined;
+  };
+  return {
+    SUPABASE_URL:get('SUPABASE_URL'),
+    SUPABASE_PUBLISHABLE_KEY:get('SUPABASE_PUBLISHABLE_KEY'),
+    SUPABASE_SERVICE_ROLE_KEY:get('SUPABASE_SERVICE_ROLE_KEY'),
+    DISCORD_WEBHOOK_URL:get('DISCORD_WEBHOOK_URL'),
+    TELEGRAM_BOT_TOKEN:get('TELEGRAM_BOT_TOKEN'),
+    TELEGRAM_CHAT_ID:get('TELEGRAM_CHAT_ID')
+  };
+}
 
 const log=(...args:any[])=>console.info('[Chapter Notify]',...args);
 const logError=(...args:any[])=>console.error('[Chapter Notify]',...args);
 
 function configSummary(env:NotifierEnv){
+  const e=resolveEnv(env);
   return {
-    supabaseUrl:!!clean(env.SUPABASE_URL),
-    serviceRoleKey:!!clean(env.SUPABASE_SERVICE_ROLE_KEY),
-    discordWebhook:!!clean(env.DISCORD_WEBHOOK_URL),
-    telegramBotToken:!!clean(env.TELEGRAM_BOT_TOKEN),
-    telegramChatId:!!clean(env.TELEGRAM_CHAT_ID)
+    supabaseUrl:!!clean(e.SUPABASE_URL),
+    serviceRoleKey:!!clean(e.SUPABASE_SERVICE_ROLE_KEY),
+    discordWebhook:!!clean(e.DISCORD_WEBHOOK_URL),
+    telegramBotToken:!!clean(e.TELEGRAM_BOT_TOKEN),
+    telegramChatId:!!clean(e.TELEGRAM_CHAT_ID)
   };
 }
 
 function cfg(env:NotifierEnv){
-  const url=clean(env.SUPABASE_URL).replace(/\/$/,'');
-  const key=clean(env.SUPABASE_SERVICE_ROLE_KEY);
+  const e=resolveEnv(env);
+  const url=clean(e.SUPABASE_URL).replace(/\/$/,'');
+  const key=clean(e.SUPABASE_SERVICE_ROLE_KEY);
   if(!url||!key)throw new Error('Thiếu SUPABASE_URL hoặc SUPABASE_SERVICE_ROLE_KEY.');
   return {url,key};
 }
@@ -123,7 +158,8 @@ function links(series:NotifySeries,ch:DueChapter){
 }
 
 async function sendDiscord(env:NotifierEnv,series:NotifySeries,ch:DueChapter){
-  const webhook=clean(env.DISCORD_WEBHOOK_URL);
+  const e=resolveEnv(env);
+  const webhook=clean(e.DISCORD_WEBHOOK_URL);
   if(!webhook){log('Discord skipped: DISCORD_WEBHOOK_URL missing');return false;}
   log('Discord sending', {chapterId:ch.id, series:series.title, chapter:ch.chapter_number});
   const {seriesUrl,chapterUrl,coverUrl}=links(series,ch);
@@ -149,7 +185,8 @@ async function sendDiscord(env:NotifierEnv,series:NotifySeries,ch:DueChapter){
 }
 
 async function sendTelegram(env:NotifierEnv,series:NotifySeries,ch:DueChapter){
-  const token=clean(env.TELEGRAM_BOT_TOKEN),chatId=clean(env.TELEGRAM_CHAT_ID);
+  const e=resolveEnv(env);
+  const token=clean(e.TELEGRAM_BOT_TOKEN),chatId=clean(e.TELEGRAM_CHAT_ID);
   if(!token||!chatId){log('Telegram skipped: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID missing',{botToken:!!token,chatId:!!chatId});return false;}
   log('Telegram sending', {chapterId:ch.id, series:series.title, chapter:ch.chapter_number});
   const {seriesUrl,coverUrl}=links(series,ch);
@@ -188,14 +225,15 @@ async function getChapter(env:NotifierEnv,id:string){
 }
 
 async function deliver(env:NotifierEnv,state:NotifyState,series:NotifySeries,ch:DueChapter){
+  const e=resolveEnv(env);
   const rec=state.sent[ch.id]||{};
   let changed=false;
-  if(!rec.discord&&clean(env.DISCORD_WEBHOOK_URL)){
+  if(!rec.discord&&clean(e.DISCORD_WEBHOOK_URL)){
     try{
       if(await sendDiscord(env,series,ch)){rec.discord=isoNow();changed=true;}
     }catch(e){logError('Discord notify failed',ch.id,e)}
   }
-  if(!rec.telegram&&clean(env.TELEGRAM_BOT_TOKEN)&&clean(env.TELEGRAM_CHAT_ID)){
+  if(!rec.telegram&&clean(e.TELEGRAM_BOT_TOKEN)&&clean(e.TELEGRAM_CHAT_ID)){
     try{
       if(await sendTelegram(env,series,ch)){rec.telegram=isoNow();changed=true;}
     }catch(e){logError('Telegram notify failed',ch.id,e)}
@@ -205,30 +243,31 @@ async function deliver(env:NotifierEnv,state:NotifyState,series:NotifySeries,ch:
 }
 
 export async function notifyChapterById(env:NotifierEnv,chapterId:string){
-  log('Immediate publish hook started',{chapterId,config:configSummary(env)});
-  if(!clean(env.DISCORD_WEBHOOK_URL)&&!(clean(env.TELEGRAM_BOT_TOKEN)&&clean(env.TELEGRAM_CHAT_ID))){
-    logError('No notification channel configured; skipping',{chapterId,config:configSummary(env)});
+  const e=resolveEnv(env);
+  log('Immediate publish hook started',{chapterId,config:configSummary(e)});
+  if(!clean(e.DISCORD_WEBHOOK_URL)&&!(clean(e.TELEGRAM_BOT_TOKEN)&&clean(e.TELEGRAM_CHAT_ID))){
+    logError('No notification channel configured; skipping',{chapterId,config:configSummary(e)});
     return;
   }
   try{
-    const state=await ensureState(env);
+    const state=await ensureState(e);
     log('Notification state ready',{chapterId,enabledAt:state.enabledAt,alreadySent:state.sent[chapterId]||null});
-    const ch=await getChapter(env,chapterId);
+    const ch=await getChapter(e,chapterId);
     if(!ch){
       logError('Chapter not eligible/found. Check is_published and published_at.',{chapterId,now:isoNow()});
       return;
     }
     log('Chapter loaded',{chapterId,seriesId:ch.series_id,chapter:ch.chapter_number,publishedAt:ch.published_at});
-    const series=await getSeries(env,ch.series_id);
+    const series=await getSeries(e,ch.series_id);
     if(!series){logError('Series not found',{chapterId,seriesId:ch.series_id});return;}
     if(!series.is_published){logError('Series is not published; skipping',{chapterId,seriesId:ch.series_id,title:series.title});return;}
     log('Series loaded',{chapterId,seriesId:series.id,title:series.title});
-    const changed=await deliver(env,state,series,ch);
+    const changed=await deliver(e,state,series,ch);
     if(changed){
-      await saveState(env,state);
+      await saveState(e,state);
       log('Immediate notification complete',{chapterId,sent:state.sent[chapterId]||null});
     }else{
-      log('Nothing sent',{chapterId,alreadySent:state.sent[chapterId]||null,config:configSummary(env)});
+      log('Nothing sent',{chapterId,alreadySent:state.sent[chapterId]||null,config:configSummary(e)});
     }
   }catch(e){
     logError('Immediate notifier crashed',{chapterId},e);
@@ -237,26 +276,27 @@ export async function notifyChapterById(env:NotifierEnv,chapterId:string){
 }
 
 export async function processDueChapterNotifications(env:NotifierEnv){
-  log('Cron check started',{config:configSummary(env)});
-  if(!clean(env.DISCORD_WEBHOOK_URL)&&!(clean(env.TELEGRAM_BOT_TOKEN)&&clean(env.TELEGRAM_CHAT_ID))){
-    logError('Cron skipped: no notification channel configured',{config:configSummary(env)});
+  const e=resolveEnv(env);
+  log('Cron check started',{config:configSummary(e)});
+  if(!clean(e.DISCORD_WEBHOOK_URL)&&!(clean(e.TELEGRAM_BOT_TOKEN)&&clean(e.TELEGRAM_CHAT_ID))){
+    logError('Cron skipped: no notification channel configured',{config:configSummary(e)});
     return;
   }
-  const state=await ensureState(env);
+  const state=await ensureState(e);
   const now=isoNow();
-  const rows=await db<DueChapter[]>(env,'GET',`chapters?select=id,series_id,chapter_number,title,is_published,published_at,created_at&is_published=eq.true&published_at=gte.${encodeURIComponent(state.enabledAt)}&published_at=lte.${encodeURIComponent(now)}&order=published_at.desc&limit=50`);
+  const rows=await db<DueChapter[]>(e,'GET',`chapters?select=id,series_id,chapter_number,title,is_published,published_at,created_at&is_published=eq.true&published_at=gte.${encodeURIComponent(state.enabledAt)}&published_at=lte.${encodeURIComponent(now)}&order=published_at.desc&limit=50`);
   log('Cron due chapters found',{count:rows.length,enabledAt:state.enabledAt,now});
   let changed=false;
   const seriesCache=new Map<string,NotifySeries|null>();
   for(const ch of rows){
     const rec=state.sent[ch.id]||{};
-    const needsDiscord=!!clean(env.DISCORD_WEBHOOK_URL)&&!rec.discord;
-    const needsTelegram=!!clean(env.TELEGRAM_BOT_TOKEN)&&!!clean(env.TELEGRAM_CHAT_ID)&&!rec.telegram;
+    const needsDiscord=!!clean(e.DISCORD_WEBHOOK_URL)&&!rec.discord;
+    const needsTelegram=!!clean(e.TELEGRAM_BOT_TOKEN)&&!!clean(e.TELEGRAM_CHAT_ID)&&!rec.telegram;
     if(!needsDiscord&&!needsTelegram)continue;
     let series=seriesCache.get(ch.series_id);
-    if(series===undefined){series=await getSeries(env,ch.series_id);seriesCache.set(ch.series_id,series)}
+    if(series===undefined){series=await getSeries(e,ch.series_id);seriesCache.set(ch.series_id,series)}
     if(!series?.is_published)continue;
-    if(await deliver(env,state,series,ch))changed=true
+    if(await deliver(e,state,series,ch))changed=true
   }
-  if(changed)await saveState(env,state);
+  if(changed)await saveState(e,state);
 }

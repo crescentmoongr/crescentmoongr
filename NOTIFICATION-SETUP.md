@@ -39,3 +39,8 @@ The first cron run creates a baseline timestamp so old historical chapters are n
 
 ## Cron
 `wrangler.jsonc` contains `* * * * *`, so scheduled chapters are checked once per minute.
+
+## Runtime env compatibility fix
+This build injects the actual Cloudflare Worker handler `env` into the chapter notifier before Astro handles each request. The notifier also falls back to `process.env` under `nodejs_compat`. This prevents newly-added dashboard Variables/Secrets from being missed by the immediate publish hook.
+
+After changing Variables/Secrets in Cloudflare Dashboard, make sure the change is deployed/activated for the current Worker version.
