@@ -871,3 +871,8 @@ Trang chi tiết truyện:
 - Duplicate-delivery state is kept in the existing Supabase `site_settings` row `chapter_notify_state_v1`; Workers KV is not used.
 - Requires Cloudflare secrets: `SUPABASE_SERVICE_ROLE_KEY`, `DISCORD_WEBHOOK_URL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
 - No SQL required; ZIP contains no `.sql` files.
+
+
+## v11.85
+- Thêm nút 🔗 trong mục Thông báo chung để gắn liên kết cho chữ được chọn hoặc chèn URL trực tiếp.
+- Link thông báo chỉ chấp nhận http/https và mở ở tab mới.

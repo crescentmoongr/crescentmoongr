@@ -1,5 +1,5 @@
 const ALLOWED_TAGS = new Set([
-  'p','br','strong','b','em','i','u','h3','h4','ul','ol','li','hr','blockquote'
+  'p','br','strong','b','em','i','u','h3','h4','ul','ol','li','hr','blockquote','a'
 ]);
 
 function escapeHtml(value: string) {
@@ -43,6 +43,14 @@ export function sanitizeRichText(input: string | null | undefined) {
     if (!ALLOWED_TAGS.has(tag)) return '';
     const closing = /^<\//.test(whole);
     if (tag === 'br' || tag === 'hr') return closing ? '' : `<${tag}>`;
+    if (tag === 'a') {
+      if (closing) return '</a>';
+      const hrefMatch = whole.match(/\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+      const href = String(hrefMatch?.[1] || hrefMatch?.[2] || hrefMatch?.[3] || '').trim();
+      if (!/^https?:\/\//i.test(href)) return '';
+      const safeHref = href.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer">`;
+    }
     return closing ? `</${tag}>` : `<${tag}>`;
   });
 

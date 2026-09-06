@@ -78,6 +78,7 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
           <button type="button" data-admin-comment-cmd="insertOrderedList" title="Danh sách số">1. List</button>
           <button type="button" data-admin-comment-block="blockquote" title="Trích dẫn">❞</button>
           <button type="button" data-admin-comment-block="code" title="Code">&lt;/&gt;</button>
+          <button type="button" data-admin-comment-action="link" title="Gắn link liên kết">🔗</button>
           <button type="button" data-admin-comment-action="clear" title="Xóa định dạng">Tx</button>
         </div>
         <div class="comment-editor admin-comment-editor" contenteditable="true" data-placeholder="Nhập thông báo chung cho website..." spellcheck="true" set:html={announcementHtml}></div>
@@ -538,6 +539,32 @@ function setupAdminCommentEditors(){
       btn.addEventListener('click',()=>{
         const action=btn.getAttribute('data-admin-comment-action');
         const range=getSelectedRange();
+
+        if(action==='link'){
+          const selectedText=range?.toString().trim()||'';
+          const raw=window.prompt('Dán link liên kết (https://...):','https://');
+          if(raw===null)return;
+          let url=raw.trim();
+          if(!url)return;
+          if(!/^https?:\/\//i.test(url)) url='https://'+url.replace(/^\/+/, '');
+          try{ new URL(url); }catch{ window.alert('Link không hợp lệ.'); return; }
+          const a=document.createElement('a');
+          a.href=url;
+          a.target='_blank';
+          a.rel='noopener noreferrer';
+          if(range){
+            const frag=range.extractContents();
+            a.appendChild(frag);
+            range.insertNode(a);
+          }else{
+            a.textContent=url;
+            editor.appendChild(a);
+          }
+          window.getSelection()?.removeAllRanges();
+          sync();
+          return;
+        }
+
         if(!range) return;
 
         if(action==='upper'){

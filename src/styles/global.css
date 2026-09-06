@@ -3042,3 +3042,7 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
     border-radius:14px;
   }
 }
+
+/* v11.85 — announcement links */
+.site-announcement-content a{color:#a66bc4;text-decoration:underline;text-underline-offset:2px;font-weight:600}
+.site-announcement-content a:hover{opacity:.8}
