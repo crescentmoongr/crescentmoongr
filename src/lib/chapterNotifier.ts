@@ -190,7 +190,8 @@ async function sendTelegram(env:NotifierEnv,series:NotifySeries,ch:DueChapter){
   if(!token||!chatId){log('Telegram skipped: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID missing',{botToken:!!token,chatId:!!chatId});return false;}
   log('Telegram sending', {chapterId:ch.id, series:series.title, chapter:ch.chapter_number});
   const {seriesUrl,coverUrl}=links(series,ch);
-  const chapterText=ch.title?.trim()||`Chapter ${ch.chapter_number}`;
+  const chapterTitle=ch.title?.trim();
+  const chapterText=`Chapter ${ch.chapter_number}${chapterTitle?` - ${chapterTitle}`:''}`;
   const caption=`📚 <b><a href="${seriesUrl}">${escHtml(series.title)}</a></b>
 
 ✨ <b>${escHtml(chapterText)}</b> đã được cập nhật!
