@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 import { requireAdminSession } from '../../../../lib/auth';
 import { getAdminSeriesById,supabasePatch } from '../../../../lib/supabase';
+import { notifyChapterById } from '../../../../lib/chapterNotifier';
 import { sanitizeNovelRichText } from '../../../../lib/richText';
 
 export const prerender=false;
@@ -35,6 +37,9 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
     }
 
     await supabasePatch(`chapters?id=eq.${encodeURIComponent(id)}&series_id=eq.${encodeURIComponent(sid)}`,s.token,patch);
+    if(mode==='publish'){
+      try{await notifyChapterById(env,id)}catch(err){console.error('Notify chapter failed',id,err)}
+    }
     return redirect(`/admin/series/${sid}?success=`+encodeURIComponent('Đã lưu chapter.'));
   }catch(e:any){
     return redirect(`/admin/series/${sid}?error=`+encodeURIComponent(e?.message||'Không thể lưu chapter.'));

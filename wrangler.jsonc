@@ -2,12 +2,20 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "read",
   "compatibility_date": "2026-08-30",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "keep_vars": true,
   "r2_buckets": [
     {
       "binding": "MANGA_STORAGE",
       "bucket_name": "manga-storage"
     }
-  ]
+  ],
+  "main": "./src/worker.js",
+  "triggers": {
+    "crons": [
+      "* * * * *"
+    ]
+  }
 }

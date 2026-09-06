@@ -858,3 +858,14 @@ Trang chi tiết truyện:
 - Notification badge: 1–20 shows exact unread count; 21+ shows 20+.
 - Reduced notification badge font weight to 600.
 - No SQL required.
+
+## v11.81-notification-no-views-social-alerts
+- Adds automatic new-chapter notifications to Discord and Telegram without Workers KV.
+- Discord: `@everyone`, story title links to the manga page, chapter line, “Đọc chap mới tại đây” chapter link, large cover image.
+- Telegram: story title link, chapter line, cover image, and inline “Đọc chap mới tại đây” button.
+- Publish now sends immediately after a successful chapter save/upload.
+- Scheduled chapters do not notify at upload time. Cloudflare Cron checks once per minute and sends after `published_at` is due.
+- Draft chapters do not notify.
+- Duplicate-delivery state is kept in the existing Supabase `site_settings` row `chapter_notify_state_v1`; Workers KV is not used.
+- Requires Cloudflare secrets: `SUPABASE_SERVICE_ROLE_KEY`, `DISCORD_WEBHOOK_URL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
+- No SQL required; ZIP contains no `.sql` files.
