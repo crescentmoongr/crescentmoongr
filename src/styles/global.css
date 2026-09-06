@@ -3017,9 +3017,13 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
 }
 .site-announcement-icon{
   flex:0 0 auto;
-  padding-top:2px;
-  font-size:1.1rem;
-  line-height:1.4;
+  padding-top:1px;
+  line-height:1;
+}
+.site-announcement-icon img{
+  display:block;
+  width:28px;
+  height:auto;
 }
 .site-announcement .site-announcement-content.rich-content{
   flex:1;
@@ -3046,3 +3050,15 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
 /* v11.85 — announcement links */
 .site-announcement-content a{color:#a66bc4;text-decoration:underline;text-underline-offset:2px;font-weight:600}
 .site-announcement-content a:hover{opacity:.8}
+
+/* v11.86 — make attached links visible inside the Admin rich-text editor */
+.admin-comment-editor a{
+  color:#7d4fa3;
+  text-decoration:underline;
+  text-decoration-thickness:1.5px;
+  text-underline-offset:2px;
+  background:rgba(172,135,197,.12);
+  border-radius:4px;
+  padding:0 2px;
+}
+.admin-comment-editor a:hover{background:rgba(172,135,197,.2)}

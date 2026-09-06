@@ -876,3 +876,9 @@ Trang chi tiết truyện:
 ## v11.85
 - Thêm nút 🔗 trong mục Thông báo chung để gắn liên kết cho chữ được chọn hoặc chèn URL trực tiếp.
 - Link thông báo chỉ chấp nhận http/https và mở ở tab mới.
+
+
+## v11.86
+- Thay icon loa của Thông báo chung bằng icon ảnh người dùng cung cấp.
+- Link trong ô soạn thảo Admin được hiển thị rõ bằng màu tím, gạch chân và nền nhạt để biết đoạn nào đã gắn liên kết.
+- Không cần SQL mới.
