@@ -3084,3 +3084,33 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
   .favorite-ranking-info h3{font-size:.9rem}
   .favorite-ranking-meta{font-size:.78rem}
 }
+
+/* v11.90 — homepage slider from Top yêu thích data (no extra Supabase query) */
+.favorite-hero-slider{position:relative;margin:0 0 28px;overflow:hidden;border:1px solid rgba(234,207,226,.95);border-radius:22px;background:linear-gradient(125deg,rgba(255,247,251,.96),rgba(247,237,252,.94));box-shadow:0 10px 32px rgba(105,64,93,.07)}
+.favorite-hero-track{position:relative;min-height:300px}
+.favorite-hero-slide{position:absolute;inset:0;display:grid;grid-template-columns:minmax(180px,34%) minmax(0,1fr);align-items:center;gap:38px;padding:24px 42px 36px;opacity:0;visibility:hidden;pointer-events:none;transform:translateX(18px);transition:opacity .45s ease,transform .45s ease,visibility .45s ease}
+.favorite-hero-slide.is-active{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0)}
+.favorite-hero-cover{justify-self:center;width:min(190px,100%);aspect-ratio:3/4;border-radius:16px;overflow:hidden;display:grid;place-items:center;background:linear-gradient(145deg,#f4c6dd,#f8e5ef 55%,#e8cde4);box-shadow:0 12px 30px rgba(95,59,84,.13);color:#8b4b70;font-size:.82rem;font-weight:700;text-align:center}
+.favorite-hero-cover img{width:100%;height:100%;display:block;object-fit:cover}
+.favorite-hero-title-wrap{min-width:0;display:flex;align-items:center;height:100%}
+.favorite-hero-title-wrap h2{margin:0;color:#ac87c5;font-size:clamp(1.55rem,3vw,2.55rem);line-height:1.25;font-weight:850;letter-spacing:-.02em;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.favorite-hero-dots{position:absolute;left:50%;bottom:14px;z-index:3;display:flex;align-items:center;gap:8px;transform:translateX(-50%)}
+.favorite-hero-dot{width:8px;height:8px;padding:0;border:0;border-radius:999px;background:rgba(172,135,197,.3);cursor:pointer;transition:width .2s ease,background .2s ease,transform .2s ease}
+.favorite-hero-dot.is-active{width:24px;background:#ac87c5}
+.favorite-hero-dot:focus-visible{outline:2px solid #b76f9e;outline-offset:3px}
+@media(max-width:700px){
+  .favorite-hero-slider{margin-bottom:22px;border-radius:18px}
+  .favorite-hero-track{min-height:220px}
+  .favorite-hero-slide{grid-template-columns:112px minmax(0,1fr);gap:20px;padding:18px 22px 34px}
+  .favorite-hero-cover{width:112px;border-radius:12px}
+  .favorite-hero-title-wrap h2{font-size:clamp(1.15rem,5vw,1.55rem);-webkit-line-clamp:4}
+  .favorite-hero-dots{bottom:11px}
+}
+@media(max-width:430px){
+  .favorite-hero-track{min-height:190px}
+  .favorite-hero-slide{grid-template-columns:92px minmax(0,1fr);gap:15px;padding:16px 16px 32px}
+  .favorite-hero-cover{width:92px;border-radius:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .favorite-hero-slide,.favorite-hero-dot{transition:none}
+}

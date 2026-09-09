@@ -22,6 +22,7 @@ const manga=allSeries.filter(x=>String(x.type||'').toLowerCase()!=='novel').slic
 const novels=allSeries.filter(x=>String(x.type||'').toLowerCase()==='novel').slice(0,12);
 const recent=updated.slice(0,8);
 const favoriteRanking=[...allSeries].filter(x=>Number(x.favorite_count||0)>0).sort((a,b)=>Number(b.favorite_count||0)-Number(a.favorite_count||0)).slice(0,8);
+const favoriteSlides=favoriteRanking.slice(0,5);
 const session=await getSession(Astro.cookies);
 let recentHistory:any[]=[];
 if(session){
@@ -50,6 +51,18 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
 </section>}
 
 {error?<div class="notice error">{error}</div>:<>
+
+{favoriteSlides.length>0&&<section class="favorite-hero-slider" data-favorite-slider aria-label="Truyện được yêu thích">
+  <div class="favorite-hero-track">
+    {favoriteSlides.map((item,index)=><a class={`favorite-hero-slide ${index===0?'is-active':''}`} href={`/manga/${item.slug}`} data-favorite-slide aria-hidden={index===0?'false':'true'}>
+      <div class="favorite-hero-cover">{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading={index===0?'eager':'lazy'} decoding="async"/>:<span>{item.title}</span>}</div>
+      <div class="favorite-hero-title-wrap"><h2>{item.title}</h2></div>
+    </a>)}
+  </div>
+  {favoriteSlides.length>1&&<div class="favorite-hero-dots" aria-label="Chọn slide">
+    {favoriteSlides.map((item,index)=><button type="button" class={`favorite-hero-dot ${index===0?'is-active':''}`} data-favorite-dot data-index={index} aria-label={`Xem ${item.title}`} aria-current={index===0?'true':'false'}></button>)}
+  </div>}
+</section>}
 
 {recentHistory.length>0&&<>
 <div class="section-title home-section-head home-section-head-first"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Lịch sử đọc gần đây</h2></div>
@@ -83,4 +96,43 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
 <div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Manga / Manhwa / Manhua</h2><a class="home-more-button" href="/search">Xem tất cả <span aria-hidden="true">→</span></a></div>{manga.length?<section class="grid home-section-content">{manga.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'Manga'} · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có truyện nhóm Manga.</div>}
 <div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Novel</h2><a class="home-more-button" href="/search?type=Novel">Xem tất cả <span aria-hidden="true">→</span></a></div>{novels.length?<section class="grid home-section-content">{novels.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">Novel · {statusLabel(item.status)}</div></div></a>)}</section>:<div class="empty-state">Chưa có Novel.</div>}
 </>}
+<script>
+  const sliders=document.querySelectorAll('[data-favorite-slider]');
+  sliders.forEach((slider)=>{
+    const slides=Array.from(slider.querySelectorAll('[data-favorite-slide]'));
+    const dots=Array.from(slider.querySelectorAll('[data-favorite-dot]'));
+    if(slides.length<2)return;
+    let active=0;
+    let timer;
+    let touchStartX=0;
+    const show=(next)=>{
+      active=(next+slides.length)%slides.length;
+      slides.forEach((slide,index)=>{
+        const current=index===active;
+        slide.classList.toggle('is-active',current);
+        slide.setAttribute('aria-hidden',current?'false':'true');
+      });
+      dots.forEach((dot,index)=>{
+        const current=index===active;
+        dot.classList.toggle('is-active',current);
+        dot.setAttribute('aria-current',current?'true':'false');
+      });
+    };
+    const stop=()=>{if(timer)window.clearInterval(timer)};
+    const start=()=>{stop();timer=window.setInterval(()=>show(active+1),5000)};
+    dots.forEach((dot)=>dot.addEventListener('click',()=>{show(Number(dot.dataset.index||0));start()}));
+    slider.addEventListener('mouseenter',stop);
+    slider.addEventListener('mouseleave',start);
+    slider.addEventListener('focusin',stop);
+    slider.addEventListener('focusout',start);
+    slider.addEventListener('touchstart',(event)=>{touchStartX=event.touches[0]?.clientX||0;stop()},{passive:true});
+    slider.addEventListener('touchend',(event)=>{
+      const endX=event.changedTouches[0]?.clientX||0;
+      const delta=endX-touchStartX;
+      if(Math.abs(delta)>45)show(active+(delta<0?1:-1));
+      start();
+    },{passive:true});
+    start();
+  });
+</script>
 </BaseLayout>
