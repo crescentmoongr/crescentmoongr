@@ -86,15 +86,13 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
             <input type="hidden" name="series_id" value={series.id}/>
             <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
             <button class={`button favorite-button ${favorited?'is-favorited':''}`} type="submit" aria-pressed={favorited?'true':'false'}>
-              <span class="favorite-heart" aria-hidden="true">{favorited?'♥':'♡'}</span>
               <span>{favorited?'Đã yêu thích':'Yêu thích'}</span>
-              <span class="favorite-count">{favoriteCount}</span>
+              <span class="favorite-count"><span class="favorite-count-heart" aria-hidden="true">♥</span>{favoriteCount}</span>
             </button>
           </form>
         : <a class="button favorite-button" href={`/login?next=${encodeURIComponent(`/manga/${series.slug}`)}`} title="Đăng nhập để yêu thích truyện">
-            <span class="favorite-heart" aria-hidden="true">♡</span>
             <span>Yêu thích</span>
-            <span class="favorite-count">{favoriteCount}</span>
+            <span class="favorite-count"><span class="favorite-count-heart" aria-hidden="true">♥</span>{favoriteCount}</span>
           </a>}
       {continueChapter
         ? <a class="button" href={`/read/${series.slug}/${continueChapter.chapter_number}`}>Đọc tiếp Chapter {continueChapter.chapter_number}</a>
