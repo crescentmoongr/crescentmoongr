@@ -3062,3 +3062,6 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
   padding:0 2px;
 }
 .admin-comment-editor a:hover{background:rgba(172,135,197,.2)}
+
+/* v11.87: member-only series favorites */
+.favorite-button{display:inline-flex!important;align-items:center;gap:7px}.favorite-button .favorite-heart{font-size:1.08em;line-height:1;color:#d85b93}.favorite-button .favorite-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:22px;padding:0 7px;border-radius:999px;background:rgba(216,91,147,.10);font-size:.82rem;font-weight:700;color:#b64f7e}.favorite-button.is-favorited{border-color:#e7a1c1;background:#fff3f8;color:#c84d86}.favorite-button.is-favorited .favorite-heart{color:#e2529a}.favorite-button.is-favorited .favorite-count{background:#f8dce9;color:#a93f70}

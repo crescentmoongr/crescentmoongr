@@ -882,3 +882,12 @@ Trang chi tiết truyện:
 - Thay icon loa của Thông báo chung bằng icon ảnh người dùng cung cấp.
 - Link trong ô soạn thảo Admin được hiển thị rõ bằng màu tím, gạch chân và nền nhạt để biết đoạn nào đã gắn liên kết.
 - Không cần SQL mới.
+
+## v11.87 — Yêu thích truyện (chỉ thành viên)
+- Thêm nút `♡ Yêu thích` / `♥ Đã yêu thích` ở trang chi tiết truyện.
+- Chỉ tài khoản đã đăng nhập mới có thể bấm; khách vẫn xem được tổng lượt yêu thích.
+- Mỗi tài khoản chỉ tính 1 lượt cho mỗi truyện và có thể bấm lại để bỏ yêu thích.
+- Tổng lượt yêu thích lấy trực tiếp từ `series.favorite_count`, nên khách mở trang không phát sinh request riêng để đếm.
+- Với thành viên, trạng thái Bookmark + Yêu thích được gộp trong cùng 1 RPC `get_series_user_state`, thay cho request Bookmark cũ, nên không tăng số request tải trạng thái trên trang chi tiết.
+- Khi bấm Yêu thích/Bỏ yêu thích chỉ phát sinh 1 RPC ghi dữ liệu.
+- Cần chạy `FAVORITES-SETUP.sql` một lần trong Supabase SQL Editor.

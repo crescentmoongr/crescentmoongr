@@ -4,7 +4,7 @@ export type Series = {
   id: string; title: string; slug: string; description: string | null;
   author: string | null; artist: string | null; raw_url?: string | null; cover_key: string | null;
   type: string | null; status: 'ongoing'|'completed'|'hiatus'|'dropped';
-  is_published: boolean; access_type: 'public'|'password'|'member'; genres?: string[]; created_at: string; updated_at: string;
+  is_published: boolean; access_type: 'public'|'password'|'member'; genres?: string[]; favorite_count?: number; created_at: string; updated_at: string;
 };
 export type Chapter = {
   id: string; series_id: string; chapter_number: number; title: string | null;
@@ -71,6 +71,16 @@ export type ChapterRead = { user_id:string; series_id:string; chapter_id:string;
 
 export async function getBookmark(seriesId:string, userId:string, token:string){
   const r=await supabaseGet<Bookmark[]>(`bookmarks?select=*&user_id=eq.${encodeURIComponent(userId)}&series_id=eq.${encodeURIComponent(seriesId)}&limit=1`,token); return r[0]??null;
+}
+
+export type SeriesUserState = { bookmarked:boolean; favorited:boolean; favorite_count:number };
+export async function getSeriesUserState(seriesId:string,token:string){
+  const r=await supabaseRpc<SeriesUserState[]>('get_series_user_state',{p_series_id:seriesId},token);
+  return r?.[0]??{bookmarked:false,favorited:false,favorite_count:0};
+}
+export async function toggleSeriesFavorite(seriesId:string,token:string){
+  const r=await supabaseRpc<{favorited:boolean;favorite_count:number}[]>('toggle_series_favorite',{p_series_id:seriesId},token);
+  return r?.[0]??{favorited:false,favorite_count:0};
 }
 export async function getReadingHistory(seriesId:string,userId:string,token:string){
   const r=await supabaseGet<ReadingHistory[]>(`reading_history?select=*&user_id=eq.${encodeURIComponent(userId)}&series_id=eq.${encodeURIComponent(seriesId)}&limit=1`,token); return r[0]??null;

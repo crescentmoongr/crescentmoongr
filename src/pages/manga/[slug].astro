@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getChapters,getSeriesBySlug,statusLabel,getBookmark,getReadingHistory,getChapterReads,getSeriesComments } from '../../lib/supabase';
+import { getChapters,getSeriesBySlug,statusLabel,getSeriesUserState,getReadingHistory,getChapterReads,getSeriesComments } from '../../lib/supabase';
 import { getSession } from '../../lib/auth';
 import { richTextToHtml,commentRichTextToHtml } from '../../lib/richText';
 import { slugifyTaxonomy } from '../../lib/slug';
@@ -10,10 +10,10 @@ let series=null; let chapters=[]; let error='';
 try{series=await getSeriesBySlug(slug); if(series) chapters=await getChapters(series.id)}catch(e){error=e instanceof Error?e.message:'Không thể tải dữ liệu.'}
 if(!series&&!error) return new Response('Không tìm thấy truyện.',{status:404});
 const session=series?await getSession(Astro.cookies):null;
-let bookmarked=false, history=null, readIds=new Set<string>();
+let bookmarked=false, favorited=false, favoriteCount=Number(series?.favorite_count||0), history=null, readIds=new Set<string>();
 if(series&&session){
-  const [b,h,r]=await Promise.all([getBookmark(series.id,session.user.id,session.token),getReadingHistory(series.id,session.user.id,session.token),getChapterReads(series.id,session.user.id,session.token)]);
-  bookmarked=!!b; history=h; readIds=new Set(r.map(x=>x.chapter_id));
+  const [state,h,r]=await Promise.all([getSeriesUserState(series.id,session.token),getReadingHistory(series.id,session.user.id,session.token),getChapterReads(series.id,session.user.id,session.token)]);
+  bookmarked=!!state.bookmarked; favorited=!!state.favorited; favoriteCount=Number(state.favorite_count||favoriteCount||0); history=h; readIds=new Set(r.map(x=>x.chapter_id));
 }
 const continueChapter=history?chapters.find(c=>c.id===history.chapter_id):null;
 const latest=chapters[0]||null;
@@ -81,6 +81,21 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
         <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
         <button class="button secondary" type="submit">{bookmarked?'★ Đã bookmark':'☆ Bookmark'}</button>
       </form>
+      {session
+        ? <form method="POST" action="/api/library/favorite">
+            <input type="hidden" name="series_id" value={series.id}/>
+            <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
+            <button class={`button favorite-button ${favorited?'is-favorited':''}`} type="submit" aria-pressed={favorited?'true':'false'}>
+              <span class="favorite-heart" aria-hidden="true">{favorited?'♥':'♡'}</span>
+              <span>{favorited?'Đã yêu thích':'Yêu thích'}</span>
+              <span class="favorite-count">{favoriteCount}</span>
+            </button>
+          </form>
+        : <a class="button favorite-button" href={`/login?next=${encodeURIComponent(`/manga/${series.slug}`)}`} title="Đăng nhập để yêu thích truyện">
+            <span class="favorite-heart" aria-hidden="true">♡</span>
+            <span>Yêu thích</span>
+            <span class="favorite-count">{favoriteCount}</span>
+          </a>}
       {continueChapter
         ? <a class="button" href={`/read/${series.slug}/${continueChapter.chapter_number}`}>Đọc tiếp Chapter {continueChapter.chapter_number}</a>
         : latest
