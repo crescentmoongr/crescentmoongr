@@ -895,3 +895,10 @@ Trang chi tiết truyện:
 - Cần chạy `FAVORITES-SETUP.sql` một lần trong Supabase SQL Editor.
 
 - v11.93: Added a subtle dark translucent veil over the pink-purple blurred Favorites hero background so title/author/introduction text has stronger contrast.
+
+
+## v11.95
+- Tablet/mobile favorite hero uses larger covers while preserving the 3:4 ratio.
+- Mobile layout stacks the cover above the text to use empty space more effectively.
+- Hero background continues to use the current cover, with lighter blur plus a subtle dark translucent veil for text readability.
+- No database or SQL changes.
