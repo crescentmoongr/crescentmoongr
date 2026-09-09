@@ -3130,3 +3130,15 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
   .favorite-hero-arrow{width:29px;height:50px;font-size:1.5rem}
 }
 @media(prefers-reduced-motion:reduce){.favorite-hero-slide,.favorite-hero-dot,.favorite-hero-arrow{transition:none}}
+
+/* v11.93 — darker veil over the pink-purple blurred favorite hero for clearer text */
+.favorite-hero-tint{
+  background:
+    linear-gradient(105deg,rgba(255,220,239,.64),rgba(226,201,246,.56) 52%,rgba(255,236,248,.62));
+}
+.favorite-hero-tint::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,rgba(25,15,25,.22),rgba(25,15,25,.34) 48%,rgba(20,12,22,.42));
+}

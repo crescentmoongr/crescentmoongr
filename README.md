@@ -893,3 +893,5 @@ Trang chi tiết truyện:
 - Với thành viên, trạng thái Bookmark + Yêu thích được gộp trong cùng 1 RPC `get_series_user_state`, thay cho request Bookmark cũ, nên không tăng số request tải trạng thái trên trang chi tiết.
 - Khi bấm Yêu thích/Bỏ yêu thích chỉ phát sinh 1 RPC ghi dữ liệu.
 - Cần chạy `FAVORITES-SETUP.sql` một lần trong Supabase SQL Editor.
+
+- v11.93: Added a subtle dark translucent veil over the pink-purple blurred Favorites hero background so title/author/introduction text has stronger contrast.
