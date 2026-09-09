@@ -3065,3 +3065,22 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
 
 /* v11.87: member-only series favorites */
 .favorite-button{display:inline-flex!important;align-items:center;gap:7px}.favorite-button .favorite-heart{font-size:1.08em;line-height:1;color:#d85b93}.favorite-button .favorite-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:22px;padding:0 7px;border-radius:999px;background:rgba(216,91,147,.10);font-size:.82rem;font-weight:700;color:#b64f7e}.favorite-button.is-favorited{border-color:#e7a1c1;background:#fff3f8;color:#c84d86}.favorite-button.is-favorited .favorite-heart{color:#e2529a}.favorite-button.is-favorited .favorite-count{background:#f8dce9;color:#a93f70}
+
+
+/* v11.88 — favorite ranking + chapter-only “Mới cập nhật” ordering */
+.favorite-ranking-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+.favorite-ranking-item{display:grid;grid-template-columns:34px 64px minmax(0,1fr);align-items:center;gap:11px;padding:10px 12px;border:1px solid rgba(239,216,230,.95);border-radius:14px;background:rgba(255,255,255,.78);box-shadow:0 5px 18px rgba(93,53,78,.035);transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.favorite-ranking-item:hover{transform:translateY(-1px);border-color:#dfb6d1;box-shadow:0 8px 22px rgba(93,53,78,.06)}
+.favorite-ranking-number{font-size:1.05rem;font-weight:800;color:#ac87c5;text-align:center}
+.favorite-ranking-cover{width:64px;aspect-ratio:3/4;border-radius:9px;overflow:hidden;display:grid;place-items:center;background:linear-gradient(145deg,#f4c6dd,#f8e5ef 55%,#e8cde4);color:#8b4b70;font-size:.68rem;font-weight:700;text-align:center}
+.favorite-ranking-cover img{width:100%;height:100%;display:block;object-fit:cover}
+.favorite-ranking-info{min-width:0}
+.favorite-ranking-info h3{margin:0 0 6px;color:#ac87c5;font-size:.96rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.favorite-ranking-meta{font-size:.82rem;color:#b64f7e;font-weight:600}
+@media(max-width:620px){
+  .favorite-ranking-grid{grid-template-columns:1fr;gap:9px}
+  .favorite-ranking-item{grid-template-columns:30px 56px minmax(0,1fr);gap:9px;padding:9px 10px}
+  .favorite-ranking-cover{width:56px}
+  .favorite-ranking-info h3{font-size:.9rem}
+  .favorite-ranking-meta{font-size:.78rem}
+}

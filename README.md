@@ -1,3 +1,5 @@
+v11.88: Mới cập nhật chỉ dựa trên chapter đã publish; thêm Top yêu thích 8 truyện trên homepage, 2 cột, bìa nhỏ; không thêm request riêng cho ranking.
+
 v11.84: Fixed Admin announcement persistence/readback and moved announcement to the top of the homepage above reading history. Telegram chapter title format fix retained.
 
 # Crescent Reader v5
