@@ -55,13 +55,18 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
 {favoriteSlides.length>0&&<section class="favorite-hero-slider" data-favorite-slider aria-label="Truyện được yêu thích">
   <div class="favorite-hero-track">
     {favoriteSlides.map((item,index)=><a class={`favorite-hero-slide ${index===0?'is-active':''}`} href={`/manga/${item.slug}`} data-favorite-slide aria-hidden={index===0?'false':'true'}>
+      {item.cover_key&&<div class="favorite-hero-bg" aria-hidden="true"><img src={`/api/cover/${item.id}`} alt="" loading={index===0?'eager':'lazy'} decoding="async"/></div>}
+      <div class="favorite-hero-tint" aria-hidden="true"></div>
       <div class="favorite-hero-cover">{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading={index===0?'eager':'lazy'} decoding="async"/>:<span>{item.title}</span>}</div>
       <div class="favorite-hero-title-wrap"><h2>{item.title}</h2></div>
     </a>)}
   </div>
-  {favoriteSlides.length>1&&<div class="favorite-hero-dots" aria-label="Chọn slide">
+  {favoriteSlides.length>1&&<>
+  <button type="button" class="favorite-hero-arrow favorite-hero-prev" data-favorite-prev aria-label="Truyện trước">‹</button>
+  <button type="button" class="favorite-hero-arrow favorite-hero-next" data-favorite-next aria-label="Truyện tiếp theo">›</button>
+  <div class="favorite-hero-dots" aria-label="Chọn slide">
     {favoriteSlides.map((item,index)=><button type="button" class={`favorite-hero-dot ${index===0?'is-active':''}`} data-favorite-dot data-index={index} aria-label={`Xem ${item.title}`} aria-current={index===0?'true':'false'}></button>)}
-  </div>}
+  </div></>}
 </section>}
 
 {recentHistory.length>0&&<>
@@ -101,6 +106,8 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
   sliders.forEach((slider)=>{
     const slides=Array.from(slider.querySelectorAll('[data-favorite-slide]'));
     const dots=Array.from(slider.querySelectorAll('[data-favorite-dot]'));
+    const prev=slider.querySelector('[data-favorite-prev]');
+    const next=slider.querySelector('[data-favorite-next]');
     if(slides.length<2)return;
     let active=0;
     let timer;
@@ -121,6 +128,8 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
     const stop=()=>{if(timer)window.clearInterval(timer)};
     const start=()=>{stop();timer=window.setInterval(()=>show(active+1),5000)};
     dots.forEach((dot)=>dot.addEventListener('click',()=>{show(Number(dot.dataset.index||0));start()}));
+    prev?.addEventListener('click',(event)=>{event.preventDefault();show(active-1);start()});
+    next?.addEventListener('click',(event)=>{event.preventDefault();show(active+1);start()});
     slider.addEventListener('mouseenter',stop);
     slider.addEventListener('mouseleave',start);
     slider.addEventListener('focusin',stop);
