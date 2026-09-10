@@ -908,3 +908,10 @@ Trang chi tiết truyện:
 - Restores the site's standard 3:4 cover ratio on tablet/mobile.
 - Uses `width:100%; height:100%; object-fit:cover` so the image fully fills its frame and no background/mat shows through at the top edge.
 - No database/SQL changes.
+
+
+## v11.99
+- Mobile favorite hero cover keeps the same 3:4 aspect ratio used by site cover cards.
+- Crops built-in top blank/mat in some source covers so artwork fills the frame.
+- Mobile-only; desktop/tablet unchanged.
+- No SQL required.

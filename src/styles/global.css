@@ -3311,3 +3311,23 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
     bottom:16px;
   }
 }
+
+/* v11.99 — mobile-only: match the site's standard 3:4 cover frame and crop built-in top blank/mat so the artwork fills the slide cover */
+@media(max-width:560px){
+  .favorite-hero-cover{
+    width:min(300px,82vw);
+    max-width:calc(100% - 28px);
+    aspect-ratio:3 / 4;
+    overflow:hidden;
+    background:transparent;
+  }
+  .favorite-hero-cover img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+    object-position:center center;
+    transform:translateY(-3.5%) scale(1.11);
+    transform-origin:center center;
+  }
+}
