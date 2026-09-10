@@ -21,9 +21,13 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   try {
     const existing = await findServiceProfileByUsername(username);
     if (existing) return redirect('/register?error=' + encodeURIComponent('Username này đã được sử dụng. Hãy chọn username khác.') + suffix);
-    const data = await signUpWithPassword(email, password);
+    const data = await signUpWithPassword(email, password, username);
     const userId = String(data?.user?.id || '');
-    if (userId) await setServiceProfileUsername(userId, username);
+    if (!userId) throw new Error('Supabase không trả về ID tài khoản mới.');
+    const savedProfile = await setServiceProfileUsername(userId, username);
+    if (String(savedProfile?.username || '').toLowerCase() !== username) {
+      throw new Error('Đã tạo tài khoản nhưng Username chưa được lưu. Vui lòng thử lại.');
+    }
     if (data.access_token && data.refresh_token) {
       await setAuthCookies(cookies, data);
       return redirect(next || '/account?success=' + encodeURIComponent('Đăng ký thành công.'));

@@ -164,18 +164,32 @@ export async function findServiceProfileByUsername(username:string){
 
 export async function setServiceProfileUsername(userId:string,username:string){
   const {url,serviceKey}=serviceConfig();
-  const now=new Date().toISOString();
-  const r=await fetch(`${url}/rest/v1/profiles?on_conflict=id`,{
-    method:'POST',
-    headers:{
-      apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,'Content-Type':'application/json',Accept:'application/json',
-      Prefer:'resolution=merge-duplicates,return=representation'
-    },
-    body:JSON.stringify({id:userId,username,updated_at:now})
-  });
-  if(!r.ok) throw new Error(`Supabase ${r.status}: ${await r.text()}`);
-  const rows=await r.json() as ServiceProfileIdentity[];
-  return rows[0]??null;
+  const cleanId=String(userId||'').trim();
+  const cleanUsername=String(username||'').trim().toLowerCase();
+  if(!cleanId||!cleanUsername) throw new Error('Thiếu user id hoặc username.');
+
+  const headers={
+    apikey:serviceKey,
+    Authorization:`Bearer ${serviceKey}`,
+    'Content-Type':'application/json',
+    Accept:'application/json',
+    Prefer:'return=representation'
+  };
+
+  // Profile được trigger tạo cùng lúc với auth user. PATCH đúng row đã có thay vì
+  // upsert một row profile rút gọn; cách này tránh username bị trigger/default ghi đè.
+  for(let attempt=0;attempt<4;attempt++){
+    const now=new Date().toISOString();
+    const r=await fetch(`${url}/rest/v1/profiles?id=eq.${encodeURIComponent(cleanId)}`,{
+      method:'PATCH',headers,body:JSON.stringify({username:cleanUsername,updated_at:now})
+    });
+    if(!r.ok) throw new Error(`Supabase ${r.status}: ${await r.text()}`);
+    const rows=await r.json() as ServiceProfileIdentity[];
+    if(rows[0]?.username?.toLowerCase()===cleanUsername) return rows[0];
+    if(attempt<3) await new Promise(resolve=>setTimeout(resolve,150*(attempt+1)));
+  }
+
+  throw new Error('Đã tạo tài khoản nhưng chưa lưu được Username. Vui lòng thử lại.');
 }
 
 export type AdminMember = {

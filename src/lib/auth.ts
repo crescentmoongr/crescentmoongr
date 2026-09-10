@@ -105,9 +105,14 @@ export async function signInWithPassword(email: string, password: string) {
   return data;
 }
 
-export async function signUpWithPassword(email: string, password: string) {
+export async function signUpWithPassword(email: string, password: string, username?: string) {
+  const cleanUsername = String(username || '').trim().toLowerCase();
   const res = await authRequest('/auth/v1/signup', {
-    method: 'POST', body: JSON.stringify({ email, password }),
+    method: 'POST', body: JSON.stringify({
+      email,
+      password,
+      ...(cleanUsername ? { data: { username: cleanUsername } } : {}),
+    }),
   });
   const data: any = await res.json();
   if (!res.ok) throw new Error(data?.error_description || data?.msg || data?.message || 'Không thể đăng ký tài khoản.');

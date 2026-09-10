@@ -930,3 +930,9 @@ Trang chi tiết truyện:
 - Username duplication is checked server-side with the Worker service-role key.
 - Comment submission/reply requires a username; comment display continues to prefer display name, then username, then “Thành viên”.
 - No SQL migration is required.
+
+## v12.02 — Fix lưu Username khi đăng ký
+- Signup gửi `username` vào Auth metadata và sau khi tạo user sẽ PATCH trực tiếp row `profiles` do trigger tạo.
+- Có retry ngắn + xác minh lại giá trị username trước khi coi đăng ký là hoàn tất.
+- Tránh cách upsert profile rút gọn có thể làm username không tồn tại đúng sau signup.
+- Không cần SQL mới nếu `service_role` đã có SELECT, INSERT, UPDATE trên `public.profiles` như bước cấu hình v12.01.
