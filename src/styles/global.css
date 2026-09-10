@@ -3255,3 +3255,59 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
     object-fit:cover;
   }
 }
+
+/* v11.98 — mobile-only favorite hero refinements: larger cover, centered title/author, taller slide, crop any exposed cover mat */
+@media(max-width:560px){
+  .favorite-hero-track{
+    min-height:620px;
+  }
+  .favorite-hero-slide{
+    gap:16px;
+    padding:18px 24px 56px;
+  }
+  .favorite-hero-cover{
+    width:min(300px,82vw);
+    max-width:calc(100% - 28px);
+    aspect-ratio:3 / 4;
+    border-radius:18px;
+    overflow:hidden;
+  }
+  .favorite-hero-cover img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+    object-position:center center;
+    transform:scale(1.045);
+    transform-origin:center center;
+  }
+  .favorite-hero-info{
+    width:100%;
+    padding:0 6px;
+  }
+  .favorite-hero-info h2{
+    text-align:center;
+    margin:0 0 8px;
+    font-size:1.24rem;
+    line-height:1.25;
+    -webkit-line-clamp:2;
+  }
+  .favorite-hero-author{
+    text-align:center;
+    margin:0 0 10px;
+    font-size:.82rem;
+    -webkit-line-clamp:1;
+  }
+  .favorite-hero-intro{
+    text-align:left;
+    font-size:.79rem;
+    line-height:1.5;
+    -webkit-line-clamp:3;
+  }
+  .favorite-hero-arrow{
+    top:40%;
+  }
+  .favorite-hero-dots{
+    bottom:16px;
+  }
+}

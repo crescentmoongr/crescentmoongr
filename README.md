@@ -903,7 +903,7 @@ Trang chi tiết truyện:
 - Hero background continues to use the current cover, with lighter blur plus a subtle dark translucent veil for text readability.
 - No database or SQL changes.
 
-## v11.97 — Mobile/tablet favorite hero cover ratio fix
+## v11.98 — Mobile/tablet favorite hero cover ratio fix
 - Keeps the larger responsive hero cover size from v11.96.
 - Restores the site's standard 3:4 cover ratio on tablet/mobile.
 - Uses `width:100%; height:100%; object-fit:cover` so the image fully fills its frame and no background/mat shows through at the top edge.
