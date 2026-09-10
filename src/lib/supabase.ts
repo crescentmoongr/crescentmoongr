@@ -140,6 +140,44 @@ export async function getServiceSiteSetting(key:string){
 }
 
 
+
+export type ServiceProfileIdentity = { id:string; username:string | null; display_name?:string | null };
+
+function serviceConfig(){
+  const url=String(env.SUPABASE_URL||'').replace(/\/$/,'');
+  const serviceKey=String(env.SUPABASE_SERVICE_ROLE_KEY||'').trim();
+  if(!url||!serviceKey) throw new Error('Thiếu SUPABASE_URL hoặc SUPABASE_SERVICE_ROLE_KEY trên Cloudflare.');
+  return {url,serviceKey};
+}
+
+export async function findServiceProfileByUsername(username:string){
+  const {url,serviceKey}=serviceConfig();
+  const clean=String(username||'').trim().toLowerCase();
+  if(!clean) return null;
+  const r=await fetch(`${url}/rest/v1/profiles?select=id,username,display_name&username=ilike.${encodeURIComponent(clean)}&limit=1`,{
+    headers:{apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,Accept:'application/json'}
+  });
+  if(!r.ok) throw new Error(`Supabase ${r.status}: ${await r.text()}`);
+  const rows=await r.json() as ServiceProfileIdentity[];
+  return rows[0]??null;
+}
+
+export async function setServiceProfileUsername(userId:string,username:string){
+  const {url,serviceKey}=serviceConfig();
+  const now=new Date().toISOString();
+  const r=await fetch(`${url}/rest/v1/profiles?on_conflict=id`,{
+    method:'POST',
+    headers:{
+      apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,'Content-Type':'application/json',Accept:'application/json',
+      Prefer:'resolution=merge-duplicates,return=representation'
+    },
+    body:JSON.stringify({id:userId,username,updated_at:now})
+  });
+  if(!r.ok) throw new Error(`Supabase ${r.status}: ${await r.text()}`);
+  const rows=await r.json() as ServiceProfileIdentity[];
+  return rows[0]??null;
+}
+
 export type AdminMember = {
   user_id:string;
   email:string | null;

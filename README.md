@@ -921,3 +921,12 @@ Trang chi tiết truyện:
 - Thêm badge số bình luận đang chờ duyệt ngay cạnh mục **Bình luận** trong sidebar Admin.
 - Badge chỉ xuất hiện khi có bình luận `pending`, tự giảm/biến mất sau khi duyệt hoặc xóa vì trang Admin tải lại dữ liệu hiện có.
 - Không thêm polling, request nền, KV hay SQL mới.
+
+
+## v12.01 — Required username + comment identity
+- New registrations must provide a username.
+- Legacy accounts without a username are sent to the homepage after login and see a blocking modal linking to Account.
+- Account profile requires a 3–40 character username using letters, numbers, dot, underscore, or hyphen.
+- Username duplication is checked server-side with the Worker service-role key.
+- Comment submission/reply requires a username; comment display continues to prefer display name, then username, then “Thành viên”.
+- No SQL migration is required.

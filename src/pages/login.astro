@@ -4,7 +4,7 @@ import { getSession } from '../lib/auth';
 export const prerender=false;
 const current=await getSession(Astro.cookies);
 const next=Astro.url.searchParams.get('next')||'';
-if(current) return Astro.redirect(next.startsWith('/')&&!next.startsWith('//')?next:(current.user.role==='admin'?'/admin':'/account'));
+if(current) return Astro.redirect(!String(current.user.username||'').trim()?'/' : (next.startsWith('/')&&!next.startsWith('//')?next:(current.user.role==='admin'?'/admin':'/account')));
 const error=Astro.url.searchParams.get('error'); const success=Astro.url.searchParams.get('success');
 ---
 <BaseLayout title="Đăng nhập — Crescent Reader">

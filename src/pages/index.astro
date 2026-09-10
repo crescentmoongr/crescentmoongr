@@ -46,6 +46,16 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
 ---
 <BaseLayout title="Crescent Moon Translation">
 
+{session&&!String(session.user.username||'').trim()&&<div class="username-required-overlay" role="dialog" aria-modal="true" aria-labelledby="username-required-title">
+  <div class="username-required-modal">
+    <div class="username-required-icon" aria-hidden="true">@</div>
+    <h2 id="username-required-title">Bổ sung Username</h2>
+    <p>Tài khoản của bạn chưa có Username. Vui lòng bổ sung Username để tiếp tục sử dụng website và hiển thị đúng tên khi bình luận.</p>
+    <a class="button username-required-action" href="/account?username_required=1#profile">Đi đến Account</a>
+  </div>
+</div>}
+
+
 {siteAnnouncementHtml&&<section class="site-announcement home-site-announcement" aria-label="Thông báo chung">
   <div class="site-announcement-icon" aria-hidden="true"><img src="/announcement-icon.png" alt="" loading="eager" decoding="async"/></div>
   <div class="site-announcement-content rich-content" set:html={siteAnnouncementHtml}></div>

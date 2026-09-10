@@ -15,6 +15,9 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
   const parentRaw=clean(form.get('parent_id'));
   const parentId=parentRaw?Number(parentRaw):null;
   if(!session)return redirect('/login?next='+encodeURIComponent(returnTo));
+  if(!String(session.user.username||'').trim()){
+    return redirect('/account?username_required=1#profile');
+  }
   try{
     const rawBody=clean(form.get('body'));
     const body=sanitizeCommentRichText(rawBody);

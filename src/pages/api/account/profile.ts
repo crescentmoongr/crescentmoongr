@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSession } from '../../../lib/auth';
-import { supabasePatch } from '../../../lib/supabase';
+import { supabasePatch, findServiceProfileByUsername } from '../../../lib/supabase';
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
@@ -9,8 +9,15 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const form = await request.formData();
   const displayName = String(form.get('display_name') || '').trim().slice(0,80);
   const usernameRaw = String(form.get('username') || '').trim().toLowerCase();
-  const username = usernameRaw ? usernameRaw.replace(/[^a-z0-9_.-]/g,'').slice(0,40) : null;
+  const username = usernameRaw.replace(/[^a-z0-9_.-]/g,'').slice(0,40);
+  if(!username || username.length<3 || username!==usernameRaw){
+    return redirect('/account?error=' + encodeURIComponent('Username là bắt buộc, cần 3–40 ký tự và chỉ dùng chữ cái, số, dấu chấm, gạch dưới hoặc gạch ngang.'));
+  }
   try {
+    const existing=await findServiceProfileByUsername(username);
+    if(existing && existing.id!==session.user.id){
+      return redirect('/account?error=' + encodeURIComponent('Username này đã được sử dụng. Hãy chọn username khác.'));
+    }
     await supabasePatch(`profiles?id=eq.${encodeURIComponent(session.user.id)}`, session.token, {
       display_name: displayName || null,
       username,

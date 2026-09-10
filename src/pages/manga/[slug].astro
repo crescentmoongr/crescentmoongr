@@ -118,7 +118,9 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
   {commentSuccess&&<div class="notice success">Đã gửi bình luận.</div>}
   {commentError&&<div class="notice error">{commentError}</div>}
 
-  {session
+  {session && !String(session.user.username||'').trim()
+    ? <div class="comment-login-note">💬 Vui lòng <a href="/account?username_required=1#profile">bổ sung Username</a> trước khi bình luận.</div>
+    : session
     ? <form method="POST" action="/api/comments/create" class="comment-form" data-comment-form>
         <input type="hidden" name="series_id" value={series.id}/>
         <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
@@ -179,11 +181,11 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
                   </form>}
               </div>
               <div class="comment-body" set:html={commentRichTextToHtml(c.body)}></div>
-              {session && Number(c.depth||0)<9 &&
+              {session && String(session.user.username||'').trim() && Number(c.depth||0)<9 &&
                 <div class="comment-reply-actions">
                   <button type="button" class="comment-reply-toggle" data-reply-toggle={`reply-${c.id}`}>↩ Trả lời</button>
                 </div>}
-              {session && Number(c.depth||0)<9 &&
+              {session && String(session.user.username||'').trim() && Number(c.depth||0)<9 &&
                 <form method="POST" action="/api/comments/create" class="comment-form comment-reply-form" data-comment-form id={`reply-${c.id}`} hidden>
                   <input type="hidden" name="series_id" value={series.id}/>
                   <input type="hidden" name="parent_id" value={c.id}/>

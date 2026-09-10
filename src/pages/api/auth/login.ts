@@ -17,6 +17,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     await setAuthCookies(cookies, auth);
     const session = await getSession(cookies);
     if (!session) throw new Error('Không thể tạo phiên đăng nhập.');
+    if (!String(session.user.username||'').trim()) return redirect('/');
     return redirect(next || (session.user.role === 'admin' ? '/admin' : '/account'));
   } catch (error: any) {
     return redirect('/login?error=' + encodeURIComponent(error?.message || 'Đăng nhập thất bại.') + (next ? `&next=${encodeURIComponent(next)}` : ''));
