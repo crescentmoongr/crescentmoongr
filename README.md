@@ -915,3 +915,9 @@ Trang chi tiết truyện:
 - Crops built-in top blank/mat in some source covers so artwork fills the frame.
 - Mobile-only; desktop/tablet unchanged.
 - No SQL required.
+
+
+## v12.00
+- Thêm badge số bình luận đang chờ duyệt ngay cạnh mục **Bình luận** trong sidebar Admin.
+- Badge chỉ xuất hiện khi có bình luận `pending`, tự giảm/biến mất sau khi duyệt hoặc xóa vì trang Admin tải lại dữ liệu hiện có.
+- Không thêm polling, request nền, KV hay SQL mới.

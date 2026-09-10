@@ -3331,3 +3331,32 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
     transform-origin:center center;
   }
 }
+
+
+/* v12.00 — Admin sidebar pending comment badge */
+.wp-admin-layout .admin-section-menu a.admin-comments-nav-link{
+  justify-content:space-between;
+  gap:10px;
+}
+.wp-admin-layout .admin-section-menu a.admin-comments-nav-link > span:first-child{
+  min-width:0;
+}
+.admin-nav-count{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  min-width:22px;
+  height:22px;
+  padding:0 7px;
+  border-radius:999px;
+  background:#e2529a;
+  color:#fff;
+  font-size:.75rem;
+  line-height:1;
+  font-weight:700;
+  box-shadow:0 3px 10px rgba(226,82,154,.24);
+}
+@media (max-width: 780px){
+  .admin-nav-count{min-width:21px;height:21px;padding:0 6px;font-size:.72rem}
+}

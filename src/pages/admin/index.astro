@@ -50,7 +50,10 @@ try{[authors,genresManaged]=await Promise.all([getAuthors(),getGenres()])}catch{
   <a href="#admin-ads">📢 Quảng cáo</a>
   <a href="#admin-add-series">➕ Thêm truyện</a>
   <a href="#admin-manage-series">📚 Quản lý truyện</a>
-  <a href="#admin-comments">💬 Bình luận</a>
+  <a href="#admin-comments" class="admin-comments-nav-link">
+    <span>💬 Bình luận</span>
+    {pendingComments.length>0&&<span class="admin-nav-count" aria-label={`${pendingComments.length} bình luận chờ duyệt`}>{pendingComments.length>99?'99+':pendingComments.length}</span>}
+  </a>
   <a href="#admin-members">👥 Thành viên</a>
   <a href="#admin-authors">✍️ Tác giả</a>
   <a href="#admin-genres">🏷️ Thể loại</a>
