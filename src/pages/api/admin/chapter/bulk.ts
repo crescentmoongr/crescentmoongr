@@ -1,8 +1,7 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { requireAdminSession } from '../../../../lib/auth';
-import { getAdminChapterPages,supabaseDelete,supabasePatch } from '../../../../lib/supabase';
-import { notifyChapterById } from '../../../../lib/chapterNotifier';
+import { getAdminChapter,getAdminChapterPages,supabaseDelete,supabasePatch } from '../../../../lib/supabase';
 
 export const prerender=false;
 
@@ -17,9 +16,13 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
   try{
     for(const id of ids){
       if(action==='publish'){
-        await supabasePatch(`chapters?id=eq.${encodeURIComponent(id)}&series_id=eq.${encodeURIComponent(sid)}`,session.token,{is_published:true,published_at:new Date().toISOString()});
-        console.info('[Chapter Notify] bulk.ts publish item',{chapterId:id});
-        try{await notifyChapterById(env,id)}catch(err){console.error('[Chapter Notify] bulk.ts notify failed',id,err)}
+        const existing=await getAdminChapter(id,session.token);
+        if(!existing||existing.series_id!==sid)throw new Error('Không tìm thấy chapter.');
+        const oldPublishedMs=existing.published_at?Date.parse(existing.published_at):NaN;
+        const wasLive=!!existing.is_published && (!existing.published_at || (Number.isFinite(oldPublishedMs) && oldPublishedMs<=Date.now()));
+        const publishedAt=wasLive?(existing.published_at||existing.created_at):new Date().toISOString();
+        await supabasePatch(`chapters?id=eq.${encodeURIComponent(id)}&series_id=eq.${encodeURIComponent(sid)}`,session.token,{is_published:true,published_at:publishedAt});
+        console.info('[Chapter Notify] bulk.ts publish item queued for Cron',{chapterId:id,wasLive,publishedAt});
       }else if(action==='draft'){
         await supabasePatch(`chapters?id=eq.${encodeURIComponent(id)}&series_id=eq.${encodeURIComponent(sid)}`,session.token,{is_published:false});
       }else if(action==='delete'){

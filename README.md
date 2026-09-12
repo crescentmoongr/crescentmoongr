@@ -936,3 +936,9 @@ Trang chi tiết truyện:
 - Có retry ngắn + xác minh lại giá trị username trước khi coi đăng ký là hoàn tất.
 - Tránh cách upsert profile rút gọn có thể làm username không tồn tại đúng sau signup.
 - Không cần SQL mới nếu `service_role` đã có SELECT, INSERT, UPDATE trên `public.profiles` như bước cấu hình v12.01.
+
+## v12.03 notification duplicate/update fix
+- Chapter notifications now have one delivery path only: the scheduled Worker (Cron). The create/update/bulk admin routes no longer send directly, which removes the race that could send the same chapter twice on Discord and Telegram.
+- Editing an already-published chapter preserves its original `published_at`, so changing title/content does not make the chapter look newly published and does not trigger a new notification.
+- Publishing a draft or a future-scheduled chapter immediately still sets `published_at` to now, so Cron will send the notification on the next run.
+- Cron persists notification state after each delivered chapter to reduce duplicate risk if a run is interrupted.

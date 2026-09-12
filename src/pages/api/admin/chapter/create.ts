@@ -3,7 +3,6 @@ import { env } from 'cloudflare:workers';
 import { requireAdminSession } from '../../../../lib/auth';
 import { getAdminChapters,getAdminSeriesById,supabasePost,supabaseDelete,type Chapter,type ChapterPage } from '../../../../lib/supabase';
 import { sanitizeNovelRichText } from '../../../../lib/richText';
-import { notifyChapterById } from '../../../../lib/chapterNotifier';
 
 export const prerender=false;
 const mime:Record<string,string>={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
@@ -77,12 +76,10 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
       if(pageRows.length)await supabasePost<ChapterPage[]>('chapter_pages',token,pageRows);
     }
 
-    if(mode==='publish'){
-      console.info('[Chapter Notify] create.ts publish branch',{chapterId:ch.id,seriesId:sid,chapter:n});
-      try{await notifyChapterById(env,ch.id)}catch(err){console.error('[Chapter Notify] create.ts notify failed',ch.id,err)}
-    }else{
-      console.info('[Chapter Notify] create.ts not immediate publish',{chapterId:ch.id,mode,publishedAt});
-    }
+    // Notification is intentionally handled only by the scheduled worker.
+    // Using a single delivery path prevents the create request and Cron from
+    // racing each other and sending the same chapter twice.
+    console.info('[Chapter Notify] create.ts queued for Cron',{chapterId:ch.id,mode,publishedAt});
 
     const label=mode==='draft'?'Draft':mode==='schedule'?'đã lên lịch':'Published';
     return redirect(`/admin/series/${sid}?success=`+encodeURIComponent(`Đã tạo chapter ${n} · ${label}.`));

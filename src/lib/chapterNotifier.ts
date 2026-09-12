@@ -287,7 +287,6 @@ export async function processDueChapterNotifications(env:NotifierEnv){
   const now=isoNow();
   const rows=await db<DueChapter[]>(e,'GET',`chapters?select=id,series_id,chapter_number,title,is_published,published_at,created_at&is_published=eq.true&published_at=gte.${encodeURIComponent(state.enabledAt)}&published_at=lte.${encodeURIComponent(now)}&order=published_at.desc&limit=50`);
   log('Cron due chapters found',{count:rows.length,enabledAt:state.enabledAt,now});
-  let changed=false;
   const seriesCache=new Map<string,NotifySeries|null>();
   for(const ch of rows){
     const rec=state.sent[ch.id]||{};
@@ -297,7 +296,9 @@ export async function processDueChapterNotifications(env:NotifierEnv){
     let series=seriesCache.get(ch.series_id);
     if(series===undefined){series=await getSeries(e,ch.series_id);seriesCache.set(ch.series_id,series)}
     if(!series?.is_published)continue;
-    if(await deliver(e,state,series,ch))changed=true
+    // Persist immediately after each delivered chapter instead of waiting for
+    // the whole Cron batch. This narrows the duplicate window if an invocation
+    // is interrupted after an external service has accepted a message.
+    if(await deliver(e,state,series,ch))await saveState(e,state);
   }
-  if(changed)await saveState(e,state);
 }
