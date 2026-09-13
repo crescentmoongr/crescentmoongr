@@ -23,8 +23,8 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
     },session.token);
 
     const message=action==='approve'?'Đã duyệt bình luận.':'Đã xóa bình luận.';
-    return redirect('/admin?success='+encodeURIComponent(message)+'#admin-comments');
+    return redirect('/admin/comments?success='+encodeURIComponent(message)+'');
   }catch(e:any){
-    return redirect('/admin?error='+encodeURIComponent(e?.message||'Không thể xử lý bình luận.')+'#admin-comments');
+    return redirect('/admin/comments?error='+encodeURIComponent(e?.message||'Không thể xử lý bình luận.')+'');
   }
 };

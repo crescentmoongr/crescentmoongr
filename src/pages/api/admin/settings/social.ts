@@ -47,8 +47,8 @@ export const POST:APIRoute=async({request,cookies})=>{
       );
     }
 
-    return Response.redirect(new URL('/admin?success='+encodeURIComponent('Đã lưu link mạng xã hội.')+'#admin-social',request.url),303);
+    return Response.redirect(new URL('/admin/social?success='+encodeURIComponent('Đã lưu link mạng xã hội.')+'',request.url),303);
   }catch(e:any){
-    return Response.redirect(new URL('/admin?error='+encodeURIComponent(e?.message||'Không thể lưu link mạng xã hội.')+'#admin-social',request.url),303);
+    return Response.redirect(new URL('/admin/social?error='+encodeURIComponent(e?.message||'Không thể lưu link mạng xã hội.')+'',request.url),303);
   }
 };

@@ -3386,3 +3386,13 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
   .username-required-modal p{font-size:.94rem}
   .username-required-action{width:100%}
 }
+
+/* v12.04: Admin routes + series search */
+.wp-admin-layout .admin-section-menu a.is-active{
+  background:linear-gradient(135deg,rgba(222,183,243,.48),rgba(246,214,234,.62));
+  color:#8f5da9;
+  font-weight:800;
+}
+.admin-series-search{max-width:520px;margin:0 0 18px}
+.admin-series-search input[type="search"]{width:100%}
+.admin-series-row[hidden]{display:none!important}

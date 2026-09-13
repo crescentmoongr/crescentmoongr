@@ -21,8 +21,8 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
       p_is_active:isActive,
       p_can_comment:canComment
     },session.token);
-    return redirect('/admin?success='+encodeURIComponent('Đã cập nhật thành viên.')+'#admin-members');
+    return redirect('/admin/members?success='+encodeURIComponent('Đã cập nhật thành viên.')+'');
   }catch(e:any){
-    return redirect('/admin?error='+encodeURIComponent(e?.message||'Không thể cập nhật thành viên.')+'#admin-members');
+    return redirect('/admin/members?error='+encodeURIComponent(e?.message||'Không thể cập nhật thành viên.')+'');
   }
 };

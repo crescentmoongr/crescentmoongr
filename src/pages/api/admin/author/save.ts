@@ -10,6 +10,6 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
   try{
     const name=clean(f.get('name'));if(!name)throw new Error('Tên tác giả là bắt buộc.');
     await supabaseRpc('admin_save_author',{p_id:clean(f.get('id'))||null,p_name:name,p_x_url:safeUrl(clean(f.get('x_url')))},session.token);
-    return redirect('/admin?success='+encodeURIComponent('Đã lưu tác giả.')+'#admin-authors');
-  }catch(e:any){return redirect('/admin?error='+encodeURIComponent(e?.message||'Không thể lưu tác giả.')+'#admin-authors')}
+    return redirect('/admin/authors?success='+encodeURIComponent('Đã lưu tác giả.')+'');
+  }catch(e:any){return redirect('/admin/authors?error='+encodeURIComponent(e?.message||'Không thể lưu tác giả.')+'')}
 };

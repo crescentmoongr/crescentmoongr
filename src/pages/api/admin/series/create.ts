@@ -35,6 +35,6 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
     const rows=await supabasePost<Series[]>('series',token,{title,slug,description:sanitizeRichText(clean(f.get('description')))||null,author:authorName||null,artist:clean(f.get('artist'))||null,raw_url:rawUrl,genres:selectedGenres,cover_key:coverKey,type:clean(f.get('type'))||null,status,is_published:f.get('is_published')==='true',access_type:access});
     const s=rows[0]; if(!s) throw new Error('Không tạo được truyện.'); seriesId=s.id;
     if(access==='password') await supabaseRpc('admin_set_series_password',{p_series_id:s.id,p_password:password},token);
-    return redirect('/admin?success='+encodeURIComponent(`Đã thêm truyện "${title}".`));
-  }catch(e:any){ if(seriesId) try{await supabaseDelete(`series?id=eq.${encodeURIComponent(seriesId)}`,token)}catch{} if(coverKey) try{await env.MANGA_STORAGE.delete(coverKey)}catch{} return redirect('/admin?error='+encodeURIComponent(e?.message||'Không thể thêm truyện.')); }
+    return redirect('/admin/series?success='+encodeURIComponent(`Đã thêm truyện "${title}".`));
+  }catch(e:any){ if(seriesId) try{await supabaseDelete(`series?id=eq.${encodeURIComponent(seriesId)}`,token)}catch{} if(coverKey) try{await env.MANGA_STORAGE.delete(coverKey)}catch{} return redirect('/admin/add-series?error='+encodeURIComponent(e?.message||'Không thể thêm truyện.')); }
 };

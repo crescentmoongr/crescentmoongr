@@ -30,5 +30,5 @@ export const POST:APIRoute=async({request,cookies})=>{
     );
   }
 
-  return Response.redirect(new URL('/admin?success='+encodeURIComponent('Đã lưu mã quảng cáo.'),request.url),303);
+  return Response.redirect(new URL('/admin/ads?success='+encodeURIComponent('Đã lưu mã quảng cáo.'),request.url),303);
 };

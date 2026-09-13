@@ -942,3 +942,11 @@ Trang chi tiết truyện:
 - Editing an already-published chapter preserves its original `published_at`, so changing title/content does not make the chapter look newly published and does not trigger a new notification.
 - Publishing a draft or a future-scheduled chapter immediately still sets `published_at` to now, so Cron will send the notification on the next run.
 - Cron persists notification state after each delivered chapter to reduce duplicate risk if a run is interrupted.
+
+## v12.04 Admin navigation + series search
+- Tách từng mục Admin thành URL riêng: /admin/announcement, /admin/social, /admin/ads, /admin/add-series, /admin/series, /admin/comments, /admin/members, /admin/authors, /admin/genres.
+- /admin tự chuyển tới /admin/series.
+- Mỗi trang chỉ tải dataset cần cho mục đang mở (ngoài badge số bình luận chờ duyệt ở sidebar).
+- Quản lý truyện có ô tìm kiếm theo tên/slug, lọc ngay trên trình duyệt, không phát sinh request khi gõ.
+- Danh sách truyện sắp theo mốc chapter publish mới nhất; nếu chưa có chapter publish thì theo created_at của truyện. Sửa metadata/chap cũ không làm nhảy lên đầu khi published_at không đổi.
+- Giữ toàn bộ fix notification chống gửi trùng của v12.03 và username của v12.02.

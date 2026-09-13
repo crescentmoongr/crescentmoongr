@@ -1,0 +1,39 @@
+---
+const { active = '', pendingCount = 0 } = Astro.props;
+const items = [
+  ['announcement','📣 Thông báo chung','/admin/announcement'],
+  ['social','🌐 Mạng xã hội','/admin/social'],
+  ['ads','📢 Quảng cáo','/admin/ads'],
+  ['add-series','➕ Thêm truyện','/admin/add-series'],
+  ['series','📚 Quản lý truyện','/admin/series'],
+  ['comments','💬 Bình luận','/admin/comments'],
+  ['members','👥 Thành viên','/admin/members'],
+  ['authors','✍️ Tác giả','/admin/authors'],
+  ['genres','🏷️ Thể loại','/admin/genres'],
+];
+---
+<aside class="admin-sidebar" data-admin-sidebar>
+  <button class="admin-mobile-menu-toggle" type="button" aria-expanded="false" data-admin-menu-toggle>☰ Menu quản trị</button>
+  <div class="admin-sidebar-title">Quản lý</div>
+  <nav class="admin-section-menu" aria-label="Menu quản trị" data-admin-section-menu>
+    {items.map(([key,label,href]) =>
+      <a href={href} class:list={[key===active && 'is-active', key==='comments' && 'admin-comments-nav-link']}>
+        <span>{label}</span>
+        {key==='comments' && pendingCount>0 && <span class="admin-nav-count" aria-label={`${pendingCount} bình luận chờ duyệt`}>{pendingCount>99?'99+':pendingCount}</span>}
+      </a>
+    )}
+  </nav>
+</aside>
+<script>
+(() => {
+  const sidebar=document.querySelector('[data-admin-sidebar]');
+  const toggle=document.querySelector('[data-admin-menu-toggle]');
+  const menu=document.querySelector('[data-admin-section-menu]');
+  if(!(sidebar instanceof HTMLElement)||!(toggle instanceof HTMLButtonElement)||!(menu instanceof HTMLElement))return;
+  const mobile=()=>window.matchMedia('(max-width:900px)').matches;
+  const close=()=>{sidebar.classList.remove('mobile-menu-open');toggle.setAttribute('aria-expanded','false');};
+  toggle.addEventListener('click',()=>{if(!mobile())return;const open=sidebar.classList.toggle('mobile-menu-open');toggle.setAttribute('aria-expanded',String(open));});
+  menu.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{if(mobile())close();}));
+  window.addEventListener('resize',()=>{if(!mobile())close();});
+})();
+</script>

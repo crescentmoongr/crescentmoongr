@@ -1,0 +1,139 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdminSidebar from '../../components/AdminSidebar.astro';
+import { getAdminSeriesList, getAllAdminChapters, statusLabel, getSiteSetting, getAdminMembers, getAuthors, getGenres, getAdminSeriesComments, getServiceSiteSetting } from '../../lib/supabase';
+import { requireAdminSession } from '../../lib/auth';
+export const prerender=false;
+
+const allowed=['announcement','social','ads','add-series','series','comments','members','authors','genres'];
+const section=String(Astro.params.section||'series');
+if(!allowed.includes(section)) return Astro.redirect('/admin/series');
+const adminSession=await requireAdminSession(Astro.cookies);
+if(!adminSession)return Astro.redirect(`/login?next=${encodeURIComponent(`/admin/${section}`)}`);
+const token=adminSession.token;const admin=adminSession.user;
+const success=Astro.url.searchParams.get('success');const error=Astro.url.searchParams.get('error');
+
+// Giữ badge bình luận ở sidebar, nhưng không tải các dataset Admin khác ngoài tab hiện tại.
+let pendingCount=0;
+let prefetchedComments:any[]|null=null;
+try{
+  const comments=await getAdminSeriesComments(token);
+  pendingCount=comments.filter(c=>c.moderation_status==='pending').length;
+  if(section==='comments') prefetchedComments=comments;
+}catch{}
+
+let rows:any[]=[]; const chapterCounts=new Map<string,number>(); const latestChapterAt=new Map<string,number>();
+let announcementHtml=''; let adHtml=''; let socialLinks:any={}; let members:any[]=[]; let membersError=''; let adminComments:any[]=[]; let commentsError=''; let authors:any[]=[]; let genresManaged:any[]=[];
+
+try{
+  if(section==='series'){
+    const [seriesRows,allChapters]=await Promise.all([getAdminSeriesList(token),getAllAdminChapters(token)]);
+    for(const ch of allChapters){
+      chapterCounts.set(ch.series_id,(chapterCounts.get(ch.series_id)||0)+1);
+      const published=ch.is_published && (!ch.published_at || new Date(ch.published_at).getTime()<=Date.now());
+      if(published){
+        const t=new Date(ch.published_at||ch.created_at).getTime();
+        if(Number.isFinite(t)) latestChapterAt.set(ch.series_id,Math.max(latestChapterAt.get(ch.series_id)||0,t));
+      }
+    }
+    rows=seriesRows.sort((a,b)=>{
+      const aKey=latestChapterAt.get(a.id) || new Date(a.created_at).getTime() || 0;
+      const bKey=latestChapterAt.get(b.id) || new Date(b.created_at).getTime() || 0;
+      return bKey-aKey;
+    });
+  }
+  if(section==='announcement') announcementHtml=(await getServiceSiteSetting('site_announcement_html'))?.value||'';
+  if(section==='ads') adHtml=(await getSiteSetting('reader_ad_html',token))?.value||'';
+  if(section==='social'){
+    const raw=(await getSiteSetting('social_links',token))?.value||''; const parsed=raw?JSON.parse(raw):{}; if(parsed&&typeof parsed==='object')socialLinks=parsed;
+  }
+  if(section==='members'){try{members=await getAdminMembers(token)}catch(e){membersError=e instanceof Error?e.message:'Không tải được thành viên.'}}
+  if(section==='comments'){try{adminComments=prefetchedComments||await getAdminSeriesComments(token)}catch(e){commentsError=e instanceof Error?e.message:'Không tải được bình luận.'}}
+  if(section==='authors') authors=await getAuthors();
+  if(section==='genres') genresManaged=await getGenres();
+  if(section==='add-series') [authors,genresManaged]=await Promise.all([getAuthors(),getGenres()]);
+}catch{}
+const pendingComments=section==='comments'?adminComments.filter(c=>c.moderation_status==='pending'):[];
+const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội',ads:'Quảng cáo','add-series':'Thêm truyện',series:'Quản lý truyện',comments:'Quản lý bình luận',members:'Quản lý thành viên',authors:'Quản lý tác giả',genres:'Quản lý thể loại'};
+---
+<BaseLayout title={`${pageTitles[section]} — Admin — Crescent Moon Translation`}>
+<section class="admin-card admin-wide"><div class="admin-top"><div><h1>Admin</h1><p class="meta">Đăng nhập: {admin.email}</p></div></div>
+{success&&<div class="notice success top-gap">{success}</div>}{error&&<div class="notice error top-gap">{error}</div>}
+</section>
+<div class="admin-dashboard-layout wp-admin-layout">
+  <AdminSidebar active={section} pendingCount={pendingCount}/>
+  <div class="admin-dashboard-content">
+
+{section==='announcement' && <section class="admin-card admin-wide admin-anchor-section">
+  <div class="section-title"><div><h2>Thông báo chung</h2><p class="meta">Nội dung sẽ hiển thị ở đầu các trang ngoài website. Để trống rồi lưu nếu muốn ẩn thông báo.</p></div></div>
+  <form method="POST" action="/api/admin/settings/announcement" class="admin-form">
+    <div class="field rich-field"><span>Nội dung thông báo</span><div class="comment-editor-shell admin-comment-editor-shell" data-admin-rich-editor>
+      <div class="comment-toolbar" role="toolbar" aria-label="Định dạng thông báo">
+        <button type="button" data-admin-comment-cmd="bold"><strong>B</strong></button><button type="button" data-admin-comment-cmd="italic"><em>I</em></button><button type="button" data-admin-comment-cmd="underline"><u>U</u></button><button type="button" data-admin-comment-cmd="strikeThrough"><s>S</s></button><button type="button" data-admin-comment-action="upper">AA</button><button type="button" data-admin-comment-cmd="insertUnorderedList">• List</button><button type="button" data-admin-comment-cmd="insertOrderedList">1. List</button><button type="button" data-admin-comment-block="blockquote">❞</button><button type="button" data-admin-comment-block="code">&lt;/&gt;</button><button type="button" data-admin-comment-action="link">🔗</button><button type="button" data-admin-comment-action="clear">Tx</button>
+      </div>
+      <div class="comment-editor admin-comment-editor" contenteditable="true" data-placeholder="Nhập thông báo chung cho website..." spellcheck="true" set:html={announcementHtml}></div>
+      <textarea class="comment-source admin-comment-source" name="announcement_html" maxlength="20000" hidden>{announcementHtml}</textarea>
+    </div><small class="meta">Trình soạn thảo dùng cùng kiểu với phần Giới thiệu truyện.</small></div>
+    <button class="button" type="submit">Lưu thông báo</button>
+  </form>
+</section>}
+
+{section==='social' && <section class="admin-card admin-wide admin-anchor-section">
+  <div class="section-title"><div><h2>Mạng xã hội</h2><p class="meta">Các link đã nhập sẽ hiển thị bằng icon ở chính giữa cuối website.</p></div></div>
+  <form method="POST" action="/api/admin/settings/social" class="admin-form"><div class="form-grid">
+    <label class="field"><span>Facebook</span><input name="facebook" type="url" maxlength="1000" value={socialLinks.facebook||''} placeholder="https://facebook.com/..."/></label>
+    <label class="field"><span>Telegram</span><input name="telegram" type="url" maxlength="1000" value={socialLinks.telegram||''} placeholder="https://t.me/..."/></label>
+    <label class="field"><span>Discord</span><input name="discord" type="url" maxlength="1000" value={socialLinks.discord||''} placeholder="https://discord.gg/..."/></label>
+  </div><button class="button" type="submit">Lưu mạng xã hội</button></form>
+</section>}
+
+{section==='ads' && <section class="admin-card admin-wide admin-anchor-section">
+  <div class="section-title"><h2>Quảng cáo</h2></div><form method="POST" action="/api/admin/settings/ads" class="admin-form"><label class="field"><span>HTML / Script quảng cáo</span><textarea name="ad_html" rows="12" maxlength="100000" placeholder="Dán nguyên code HTML / script của bên quảng cáo vào đây...">{adHtml}</textarea></label><p class="meta">Mã này được chạy trên toàn bộ website, trừ trang Admin.</p><button class="button" type="submit">Lưu quảng cáo</button></form>
+</section>}
+
+{section==='add-series' && <section class="admin-card admin-wide admin-anchor-section">
+  <div class="section-title"><h2>Thêm truyện</h2></div>
+  <form method="POST" action="/api/admin/series/create" enctype="multipart/form-data" class="admin-form"><div class="form-grid">
+    <label class="field"><span>Tên truyện *</span><input id="title" name="title" required maxlength="200"/></label><label class="field"><span>Slug *</span><input id="slug" name="slug" required maxlength="200" placeholder="ten-truyen"/></label>
+    <label class="field"><span>Tác giả</span><input name="author" maxlength="500" list="author-suggestions"/><datalist id="author-suggestions">{authors.map(a=><option value={a.name}/>)}</datalist></label>
+    <div class="field genre-picker-field"><span>Thể loại</span><div class="genre-bubble-picker" data-genre-picker>{genresManaged.map(g=><label class="genre-bubble"><input type="checkbox" name="genres" value={g.name}/><span>{g.name}</span></label>)}</div></div>
+    <label class="field"><span>Link mua raw</span><input name="raw_url" type="url" maxlength="1000" placeholder="https://..."/></label><label class="field"><span>Loại truyện</span><select name="type"><option value="">— Chưa chọn —</option><option value="Manga">Manga</option><option value="Manhwa">Manhwa</option><option value="Manhua">Manhua</option><option value="Novel">Novel</option><option value="Other">Khác</option></select></label>
+    <label class="field"><span>Trạng thái *</span><select name="status" required><option value="ongoing">Đang tiến hành</option><option value="completed">Hoàn thành</option><option value="hiatus">Tạm ngưng</option><option value="dropped">Drop</option></select></label><label class="field"><span>Quyền đọc *</span><select name="access_type" id="new_access_type" required><option value="public">Public</option><option value="password">Khóa mật khẩu cả bộ</option><option value="member">Thành viên</option></select></label><label class="field" id="new_series_password_field" hidden><span>Mật khẩu truyện *</span><input name="series_password" type="password" minlength="4" autocomplete="new-password"/></label>
+  </div>
+  <div class="field rich-field"><span>Giới thiệu</span><div class="comment-editor-shell admin-comment-editor-shell" data-admin-rich-editor><div class="comment-toolbar"><button type="button" data-admin-comment-cmd="bold"><strong>B</strong></button><button type="button" data-admin-comment-cmd="italic"><em>I</em></button><button type="button" data-admin-comment-cmd="underline"><u>U</u></button><button type="button" data-admin-comment-cmd="strikeThrough"><s>S</s></button><button type="button" data-admin-comment-action="upper">AA</button><button type="button" data-admin-comment-cmd="insertUnorderedList">• List</button><button type="button" data-admin-comment-cmd="insertOrderedList">1. List</button><button type="button" data-admin-comment-block="blockquote">❞</button><button type="button" data-admin-comment-block="code">&lt;/&gt;</button><button type="button" data-admin-comment-action="clear">Tx</button></div><div class="comment-editor admin-comment-editor" contenteditable="true" data-placeholder="Nhập phần giới thiệu..." spellcheck="true"></div><textarea class="comment-source admin-comment-source" name="description" maxlength="20000" hidden></textarea></div></div>
+  <label class="field"><span>Ảnh bìa *</span><input name="cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required/></label><label class="check-row"><input name="is_published" type="checkbox" value="true" checked/><span>Đăng công khai ngay</span></label><button class="button" type="submit">Lưu truyện</button></form>
+</section>}
+
+{section==='series' && <section class="admin-card admin-wide admin-anchor-section">
+  <div class="section-title"><div><h2>Quản lý truyện</h2><p class="meta">Truyện có chapter mới được publish sẽ lên đầu; các truyện còn lại xếp theo ngày tạo.</p></div><span class="meta" data-series-visible-count>{rows.length} truyện</span></div>
+  <label class="field admin-series-search"><span>Tìm truyện</span><input type="search" placeholder="Gõ tên truyện..." autocomplete="off" data-admin-series-search/></label>
+  {rows.length===0?<div class="empty-state">Chưa có truyện nào.</div>:<div class="admin-series-list" data-admin-series-list>{rows.map(item=>{const chapterCount=chapterCounts.get(item.id)||0;return <div class="admin-series-row" data-series-row data-series-search-text={`${item.title} ${item.slug}`}><div class="admin-thumb">{item.cover_key?<img src={`/api/cover/${item.id}`} alt="" loading="lazy"/>:<span>Không bìa</span>}</div><div><strong>{item.title}</strong><div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.access_type==='password'?'🔒 Mật khẩu cả bộ':item.access_type==='member'?'🔒 Thành viên':'Public'} · {item.is_published?'Công khai':'Bản nháp'}</div><div class="admin-statline"><span>{chapterCount} chapter</span></div></div><div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa / Chapters</a>{item.is_published&&<a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div></div>})}</div>}
+  <div class="empty-state" hidden data-admin-series-no-results>Không tìm thấy truyện phù hợp.</div>
+</section>}
+
+{section==='comments' && <section class="admin-card admin-wide admin-anchor-section"><div class="section-title"><div><h2>Quản lý bình luận</h2><p class="meta">Bình luận mới phải được Admin duyệt trước khi hiển thị ngoài website.</p></div><span class="comment-pending-count">{pendingComments.length} chờ duyệt · {adminComments.length} tổng</span></div>
+{commentsError?<div class="notice error">{commentsError}</div>:adminComments.length===0?<div class="empty-state">Chưa có bình luận nào.</div>:<div class="admin-comment-list">{adminComments.map(comment=><article class={`admin-comment-row ${comment.moderation_status==='pending'?'is-pending':'is-approved'}`}><div class="admin-comment-main"><div class="admin-comment-headline"><strong class={comment.role==='admin'?'admin-name-glow':''}>{comment.display_name||comment.username||'Thành viên'}</strong><span class={`comment-status-badge ${comment.moderation_status}`}>{comment.moderation_status==='pending'?'Chờ duyệt':'Đã duyệt'}</span></div><div class="meta">{comment.series_title||'Truyện'} · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(comment.created_at))}</div><div class="admin-comment-preview" set:html={comment.body}></div></div><div class="admin-comment-actions">{comment.series_slug&&<a class="button secondary small-button" href={`/manga/${comment.series_slug}#comments`} target="_blank">Xem truyện</a>}{comment.moderation_status==='pending'&&<form method="POST" action="/api/admin/comment/moderate"><input type="hidden" name="id" value={comment.id}/><input type="hidden" name="action" value="approve"/><button class="button small-button" type="submit">Duyệt</button></form>}<form method="POST" action="/api/admin/comment/moderate" onsubmit="return confirm('Xóa bình luận này?');"><input type="hidden" name="id" value={comment.id}/><input type="hidden" name="action" value="delete"/><button class="danger-button small-danger" type="submit">Xóa</button></form></div></article>)}</div>}
+</section>}
+
+{section==='members' && <section class="admin-card admin-wide admin-anchor-section"><div class="section-title"><div><h2>Quản lý thành viên</h2><p class="meta">Khóa tài khoản, bật/tắt quyền bình luận hoặc thay đổi vai trò.</p></div><span class="meta">{members.length} tài khoản</span></div>{membersError?<div class="notice error">{membersError}</div>:members.length===0?<div class="empty-state">Chưa có thành viên.</div>:<div class="admin-member-list">{members.map(member=><form method="POST" action="/api/admin/member/update" class="admin-member-row"><input type="hidden" name="user_id" value={member.user_id}/><div class="admin-member-main"><strong class={member.role==='admin'?'member-name admin-name-glow':'member-name'}>{member.display_name||member.username||member.email||'Thành viên'}</strong><span class="meta">{member.email||member.user_id}</span><span class="meta">Tham gia: {member.created_at?new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(member.created_at)):'—'}</span></div><label class="member-control"><span>Vai trò</span><select name="role"><option value="member" selected={member.role==='member'}>Member</option><option value="admin" selected={member.role==='admin'}>Admin</option></select></label><label class="member-check"><input type="checkbox" name="is_active" value="true" checked={member.is_active}/><span>Hoạt động</span></label><label class="member-check"><input type="checkbox" name="can_comment" value="true" checked={member.can_comment}/><span>Được bình luận</span></label><button class="button secondary small-button" type="submit">Lưu</button></form>)}</div>}</section>}
+
+{section==='authors' && <section class="admin-card admin-wide admin-anchor-section"><div class="section-title"><div><h2>Quản lý tác giả</h2><p class="meta">Mỗi tác giả có trang riêng và có thể gắn tài khoản X.</p></div><span class="meta">{authors.length} tác giả</span></div><form method="POST" action="/api/admin/author/save" class="admin-form taxonomy-create-form"><div class="form-grid"><label class="field"><span>Tên tác giả *</span><input name="name" required maxlength="200"/></label><label class="field"><span>Link tài khoản X</span><input name="x_url" type="url" maxlength="1000" placeholder="https://x.com/..."/></label></div><button class="button" type="submit">Thêm tác giả</button></form>{authors.length?<div class="taxonomy-admin-list">{authors.map(a=><form method="POST" action="/api/admin/author/save" class="taxonomy-admin-row"><input type="hidden" name="id" value={a.id}/><label><span>Tên</span><input name="name" value={a.name} required maxlength="200"/></label><label><span>X</span><input name="x_url" type="url" value={a.x_url||''} maxlength="1000"/></label><a class="button secondary small-button" href={`/author/${a.slug}`}>Xem trang</a><button class="button secondary small-button" type="submit">Lưu</button><button class="danger-button small-danger" type="submit" formaction="/api/admin/author/delete" onclick="return confirm('Xóa tác giả này khỏi danh mục?');">Xóa</button></form>)}</div>:<div class="empty-state">Chưa có tác giả.</div>}</section>}
+
+{section==='genres' && <section class="admin-card admin-wide admin-anchor-section"><div class="section-title"><div><h2>Quản lý thể loại</h2><p class="meta">Mỗi thể loại có trang riêng liệt kê các truyện tương ứng.</p></div><span class="meta">{genresManaged.length} thể loại</span></div><form method="POST" action="/api/admin/genre/save" class="admin-form taxonomy-create-form"><div class="form-grid"><label class="field"><span>Tên thể loại *</span><input name="name" required maxlength="2000" placeholder="Romance, Comedy, Drama"/></label></div><button class="button" type="submit">Thêm thể loại</button></form>{genresManaged.length?<div class="taxonomy-admin-list">{genresManaged.map(g=><form method="POST" action="/api/admin/genre/save" class="taxonomy-admin-row genre-admin-row"><input type="hidden" name="id" value={g.id}/><label><span>Tên</span><input name="name" value={g.name} required maxlength="120"/></label><a class="button secondary small-button" href={`/genre/${g.slug}`}>Xem trang</a><button class="button secondary small-button" type="submit">Lưu</button><button class="danger-button small-danger" type="submit" formaction="/api/admin/genre/delete" onclick="return confirm('Xóa thể loại này khỏi danh mục?');">Xóa</button></form>)}</div>:<div class="empty-state">Chưa có thể loại.</div>}</section>}
+
+  </div>
+</div>
+
+<script>
+const title=document.querySelector('#title'),slug=document.querySelector('#slug');let slugTouched=false;slug?.addEventListener('input',()=>slugTouched=true);title?.addEventListener('input',()=>{if(slugTouched||!(slug instanceof HTMLInputElement)||!(title instanceof HTMLInputElement))return;slug.value=title.value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')});const access=document.querySelector('#new_access_type'),passwordField=document.querySelector('#new_series_password_field');const toggle=()=>{if(access instanceof HTMLSelectElement&&passwordField instanceof HTMLElement)passwordField.hidden=access.value!=='password'};access?.addEventListener('change',toggle);toggle();
+
+const search=document.querySelector('[data-admin-series-search]');const rowsEls=[...document.querySelectorAll('[data-series-row]')];const count=document.querySelector('[data-series-visible-count]');const noResults=document.querySelector('[data-admin-series-no-results]');
+const normalizeSearch=(value)=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLocaleLowerCase('vi').trim();
+if(search instanceof HTMLInputElement){search.addEventListener('input',()=>{const q=normalizeSearch(search.value);let visible=0;rowsEls.forEach(row=>{if(!(row instanceof HTMLElement))return;const haystack=normalizeSearch(row.dataset.seriesSearchText||'');const show=!q||haystack.includes(q);row.hidden=!show;if(show)visible++;});if(count)count.textContent=`${visible} truyện`;if(noResults instanceof HTMLElement)noResults.hidden=visible!==0;});}
+</script>
+
+<script>
+function setupAdminCommentEditors(){document.querySelectorAll('[data-admin-rich-editor]').forEach(shell=>{if(!(shell instanceof HTMLElement)||shell.dataset.ready==='1')return;shell.dataset.ready='1';const editor=shell.querySelector('.admin-comment-editor'),source=shell.querySelector('.admin-comment-source');if(!(editor instanceof HTMLElement)||!(source instanceof HTMLTextAreaElement))return;const normalizeHtml=()=>{const clone=editor.cloneNode(true);if(!(clone instanceof HTMLElement))return editor.innerHTML.trim();clone.querySelectorAll('div').forEach(div=>{const p=document.createElement('p');while(div.firstChild)p.appendChild(div.firstChild);div.replaceWith(p)});return clone.innerHTML.trim()};const sync=()=>{source.value=normalizeHtml()};const getSelectedRange=()=>{const sel=window.getSelection();if(!sel||!sel.rangeCount||sel.isCollapsed)return null;const range=sel.getRangeAt(0);if(!editor.contains(range.commonAncestorContainer))return null;return range};const wrapSelection=(tag)=>{const range=getSelectedRange();if(!range)return;const node=document.createElement(tag);try{range.surroundContents(node)}catch{const frag=range.extractContents();node.appendChild(frag);range.insertNode(node)}window.getSelection()?.removeAllRanges();sync()};shell.querySelectorAll('[data-admin-comment-cmd]').forEach(btn=>{btn.addEventListener('mousedown',e=>e.preventDefault());btn.addEventListener('click',()=>{const cmd=btn.getAttribute('data-admin-comment-cmd')||'';if(cmd==='bold')return wrapSelection('strong');if(cmd==='italic')return wrapSelection('em');if(cmd==='underline')return wrapSelection('u');if(cmd==='strikeThrough')return wrapSelection('s');editor.focus();document.execCommand(cmd,false);sync()})});shell.querySelectorAll('[data-admin-comment-block]').forEach(btn=>{btn.addEventListener('mousedown',e=>e.preventDefault());btn.addEventListener('click',()=>{const block=btn.getAttribute('data-admin-comment-block')||'p';const range=getSelectedRange();if(!range)return;if(block==='code')wrapSelection('code');else{const node=document.createElement(block);try{range.surroundContents(node)}catch{const frag=range.extractContents();node.appendChild(frag);range.insertNode(node)}window.getSelection()?.removeAllRanges();sync()}})});shell.querySelectorAll('[data-admin-comment-action]').forEach(btn=>{btn.addEventListener('mousedown',e=>e.preventDefault());btn.addEventListener('click',()=>{const action=btn.getAttribute('data-admin-comment-action'),range=getSelectedRange();if(action==='link'){const raw=window.prompt('Dán link liên kết (https://...):','https://');if(raw===null)return;let url=raw.trim();if(!url)return;if(!/^https?:\/\//i.test(url))url='https://'+url.replace(/^\/+/, '');try{new URL(url)}catch{window.alert('Link không hợp lệ.');return}const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';if(range){const frag=range.extractContents();a.appendChild(frag);range.insertNode(a)}else{a.textContent=url;editor.appendChild(a)}window.getSelection()?.removeAllRanges();sync();return}if(!range)return;if(action==='upper'){const text=range.toString();range.deleteContents();range.insertNode(document.createTextNode(text.toUpperCase()))}if(action==='clear'){const text=range.toString();range.deleteContents();range.insertNode(document.createTextNode(text))}window.getSelection()?.removeAllRanges();sync()})});editor.addEventListener('input',sync);editor.addEventListener('blur',sync);const form=editor.closest('form');form?.addEventListener('submit',sync,{capture:true});form?.addEventListener('formdata',(event)=>{sync();if(event instanceof FormDataEvent&&source.name)event.formData.set(source.name,source.value)});sync()})}
+setupAdminCommentEditors();
+</script>
+</BaseLayout>

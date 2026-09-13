@@ -36,8 +36,8 @@ export const POST:APIRoute=async({request,cookies})=>{
     const form=await request.formData();
     const html=sanitizeRichText(String(form.get('announcement_html')||''));
     await saveAnnouncement(html);
-    return Response.redirect(new URL('/admin?success='+encodeURIComponent('Đã lưu thông báo chung.')+'#admin-announcement',request.url),303);
+    return Response.redirect(new URL('/admin/announcement?success='+encodeURIComponent('Đã lưu thông báo chung.')+'',request.url),303);
   }catch(e:any){
-    return Response.redirect(new URL('/admin?error='+encodeURIComponent(e?.message||'Không thể lưu thông báo chung.')+'#admin-announcement',request.url),303);
+    return Response.redirect(new URL('/admin/announcement?error='+encodeURIComponent(e?.message||'Không thể lưu thông báo chung.')+'',request.url),303);
   }
 };

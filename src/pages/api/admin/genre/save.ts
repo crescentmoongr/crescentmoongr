@@ -18,7 +18,7 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
     // Editing an existing genre remains a single-item save.
     if(id){
       await supabaseRpc('admin_save_genre',{p_id:id,p_name:rawName},session.token);
-      return redirect('/admin?success='+encodeURIComponent('Đã lưu thể loại.')+'#admin-genres');
+      return redirect('/admin/genres?success='+encodeURIComponent('Đã lưu thể loại.')+'');
     }
 
     // Creating genres supports comma-separated batch input.
@@ -55,8 +55,8 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
       ? `Đã thêm ${saved} thể loại; ${errors.length} mục được bỏ qua.`
       : `Đã thêm ${saved} thể loại.`;
 
-    return redirect('/admin?success='+encodeURIComponent(message)+'#admin-genres');
+    return redirect('/admin/genres?success='+encodeURIComponent(message)+'');
   }catch(e:any){
-    return redirect('/admin?error='+encodeURIComponent(e?.message||'Không thể lưu thể loại.')+'#admin-genres');
+    return redirect('/admin/genres?error='+encodeURIComponent(e?.message||'Không thể lưu thể loại.')+'');
   }
 };
