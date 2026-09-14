@@ -3396,3 +3396,34 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
 .admin-series-search{max-width:520px;margin:0 0 18px}
 .admin-series-search input[type="search"]{width:100%}
 .admin-series-row[hidden]{display:none!important}
+
+
+/* =========================================================
+   v12.05 — Account mobile overflow fix + responsive hardening
+   ========================================================= */
+.account-page-grid,.account-page-wide{min-width:0;max-width:100%}
+.account-page-grid>*{min-width:0}
+.account-card{min-width:0;max-width:100%}
+.account-head{min-width:0}
+.account-head>div:last-child{min-width:0}
+.account-head h1,.account-head .meta{overflow-wrap:anywhere;word-break:break-word}
+.account-card input,.account-card select,.account-card textarea{min-width:0;max-width:100%}
+.account-card input[type=file]{display:block;width:100%;max-width:100%;min-width:0;overflow:hidden}
+@media(max-width:700px){
+  .account-page-grid{width:100%;overflow:clip}
+  .account-card{width:100%;padding:20px}
+  .account-top-row{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+  .account-head{width:100%;gap:12px;align-items:center}
+  .account-head>div:last-child{min-width:0;max-width:100%}
+  .account-head h1{font-size:clamp(1.65rem,8vw,2.2rem);line-height:1.08}
+  .account-logout-form{margin:0;justify-self:start}
+  .account-card .field{min-width:0}
+  .account-card .field>span,.account-card .field small{overflow-wrap:anywhere}
+  .account-page-wide{width:100%;margin-left:0;margin-right:0}
+}
+@media(max-width:430px){
+  .account-card{padding:18px 16px}
+  .avatar-box{width:72px;height:72px}
+  .account-head{gap:10px}
+  .account-logout-form .button{padding:9px 13px}
+}

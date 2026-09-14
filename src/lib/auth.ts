@@ -6,6 +6,7 @@ const DEADLINE_COOKIE = 'cm_session_deadline';
 const SESSION_DAYS = 30;
 const SESSION_SECONDS = SESSION_DAYS * 24 * 60 * 60;
 let deadlineKey: CryptoKey | null = null;
+let legacyDeadlineKey: CryptoKey | null = null;
 
 function config() {
   const url = String(env.SUPABASE_URL || '').replace(/\/$/, '');
@@ -20,44 +21,76 @@ function b64url(bytes: Uint8Array) {
   return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-async function getDeadlineKey() {
-  if (deadlineKey) return deadlineKey;
-  let raw = await env.SESSION.get('security:auth-deadline-key-v1');
-  if (!raw) {
-    const bytes = new Uint8Array(32);
-    crypto.getRandomValues(bytes);
-    raw = b64url(bytes);
-    await env.SESSION.put('security:auth-deadline-key-v1', raw);
-  }
-  deadlineKey = await crypto.subtle.importKey(
+async function importHmac(raw: string) {
+  return crypto.subtle.importKey(
     'raw', new TextEncoder().encode(raw),
     { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']
   );
+}
+
+// v12.05: derive the auth-cookie signing key from an existing runtime secret.
+// This removes a Workers KV read from normal page/session checks.
+async function getDeadlineKey() {
+  if (deadlineKey) return deadlineKey;
+  const seed = String(env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || '');
+  if (!seed) throw new Error('Thiếu khóa ký session.');
+  deadlineKey = await importHmac(`crescent-auth-deadline-v2:${seed}`);
   return deadlineKey;
+}
+
+// Only used while migrating cookies created before v12.05. Once a legacy cookie
+// is verified it is immediately re-signed as v2, so future requests use no KV.
+async function getLegacyDeadlineKey() {
+  if (legacyDeadlineKey) return legacyDeadlineKey;
+  const raw = await env.SESSION.get('security:auth-deadline-key-v1');
+  if (!raw) return null;
+  legacyDeadlineKey = await importHmac(raw);
+  return legacyDeadlineKey;
 }
 
 async function signDeadline(deadline: number) {
   const sig = new Uint8Array(await crypto.subtle.sign(
     'HMAC', await getDeadlineKey(), new TextEncoder().encode(String(deadline))
   ));
-  return `${deadline}.${b64url(sig)}`;
+  return `v2.${deadline}.${b64url(sig)}`;
+}
+
+function decodeSignature(sig: string) {
+  const normalized = sig.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4);
+  const bin = atob(padded);
+  return Uint8Array.from(bin, ch => ch.charCodeAt(0));
+}
+
+async function verifyDeadline(deadline: number, sig: string, key: CryptoKey) {
+  try {
+    return await crypto.subtle.verify(
+      'HMAC', key, decodeSignature(sig), new TextEncoder().encode(String(deadline))
+    );
+  } catch { return false; }
 }
 
 async function readDeadline(cookies: any) {
   const raw = cookies.get(DEADLINE_COOKIE)?.value || '';
+  const now = Math.floor(Date.now()/1000);
+
+  if (raw.startsWith('v2.')) {
+    const [, ts, sig] = raw.split('.');
+    const deadline = Number(ts || '0');
+    if (!Number.isFinite(deadline) || !sig || deadline <= now) return 0;
+    return await verifyDeadline(deadline, sig, await getDeadlineKey()) ? deadline : 0;
+  }
+
+  // Legacy format: <deadline>.<signature>. Read KV only for this migration path.
   const [ts, sig] = raw.split('.');
   const deadline = Number(ts || '0');
-  if (!Number.isFinite(deadline) || !sig || deadline <= Math.floor(Date.now()/1000)) return 0;
-  const normalized = sig.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4);
-  try {
-    const bin = atob(padded);
-    const bytes = Uint8Array.from(bin, ch => ch.charCodeAt(0));
-    const ok = await crypto.subtle.verify(
-      'HMAC', await getDeadlineKey(), bytes, new TextEncoder().encode(String(deadline))
-    );
-    return ok ? deadline : 0;
-  } catch { return 0; }
+  if (!Number.isFinite(deadline) || !sig || deadline <= now) return 0;
+  const legacyKey = await getLegacyDeadlineKey();
+  if (!legacyKey || !(await verifyDeadline(deadline, sig, legacyKey))) return 0;
+
+  const remaining = Math.max(1, deadline - now);
+  cookies.set(DEADLINE_COOKIE, await signDeadline(deadline), cookieOptions(remaining));
+  return deadline;
 }
 
 function cookieOptions(maxAge: number) {

@@ -13,11 +13,12 @@ function randomToken(bytes = 24) {
 }
 async function signingKey() {
   if (cachedKey) return cachedKey;
-  let raw = await env.SESSION.get('security:page-signing-key-v1');
-  if (!raw) {
-    raw = randomToken(32);
-    await env.SESSION.put('security:page-signing-key-v1', raw);
-  }
+  // v12.05: signed page URLs no longer read/write KV just to obtain a key.
+  // They are short-lived (5 minutes), so deriving from the existing server secret
+  // is both cheaper and sufficient for these anti-hotlink signatures.
+  const seed = String(env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || '');
+  if (!seed) throw new Error('Thiếu khóa ký trang đọc.');
+  const raw = `crescent-reader-page-v2:${seed}`;
   cachedKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(raw), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign','verify']);
   return cachedKey;
 }

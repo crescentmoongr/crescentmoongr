@@ -950,3 +950,10 @@ Trang chi tiết truyện:
 - Quản lý truyện có ô tìm kiếm theo tên/slug, lọc ngay trên trình duyệt, không phát sinh request khi gõ.
 - Danh sách truyện sắp theo mốc chapter publish mới nhất; nếu chưa có chapter publish thì theo created_at của truyện. Sửa metadata/chap cũ không làm nhảy lên đầu khi published_at không đổi.
 - Giữ toàn bộ fix notification chống gửi trùng của v12.03 và username của v12.02.
+
+
+## v12.05
+- Fix mobile `/account` horizontal overflow (file input/profile header/cards stay inside viewport).
+- Reduce Workers KV usage: auth deadline signatures and reader page signatures now use deterministic HMAC keys derived from an existing runtime secret instead of reading KV on normal requests.
+- Existing auth deadline cookies migrate once from the old KV key to v2; after migration, normal session checks no longer read KV for the signing key.
+- Password/unlock state and anti-bruteforce counters still use KV intentionally.
