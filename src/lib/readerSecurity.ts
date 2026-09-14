@@ -26,7 +26,7 @@ export function ensureReaderSession(cookies: any) {
   let id = cookies.get(COOKIE)?.value || '';
   if (!/^[A-Za-z0-9_-]{20,80}$/.test(id)) {
     id = randomToken(24);
-    cookies.set(COOKIE, id, { httpOnly: true, secure: true, sameSite: 'lax', path: '/', maxAge: 86400 });
+    cookies.set(COOKIE, id, { httpOnly: true, secure: true, sameSite: 'lax', path: '/', maxAge: 48 * 60 * 60 });
   }
   return id;
 }
@@ -35,7 +35,7 @@ export function getReaderSession(cookies: any) {
   return /^[A-Za-z0-9_-]{20,80}$/.test(id) ? id : '';
 }
 export async function markSeriesUnlocked(sessionId: string, seriesId: string) {
-  await env.SESSION.put(`unlock:${sessionId}:${seriesId}`, '1', { expirationTtl: 12 * 60 * 60 });
+  await env.SESSION.put(`unlock:${sessionId}:${seriesId}`, '1', { expirationTtl: 48 * 60 * 60 });
 }
 export async function isSeriesUnlocked(sessionId: string, seriesId: string) {
   if (!sessionId) return false;

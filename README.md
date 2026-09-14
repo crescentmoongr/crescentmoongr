@@ -20,7 +20,7 @@ Trước khi deploy v6, chạy `supabase-v6-series-lock.sql` một lần trong S
 - Quyền đọc được đặt ở cấp **truyện**: Public / Password / Member.
 - Password áp dụng cho toàn bộ chapter; không cần nhập lại khi tạo từng chapter.
 - Mật khẩu được lưu bằng bcrypt (`pgcrypto`) trong bảng riêng `series_passwords`, không lộ qua public API.
-- Nhập đúng mật khẩu mở cả bộ trong 12 giờ cho reader session hiện tại.
+- Nhập đúng mật khẩu mở cả bộ trong 48 giờ cho reader session hiện tại.
 - R2 vẫn private.
 - Ảnh chapter dùng URL HMAC hết hạn sau 5 phút, gắn với reader session và chapter.
 - Endpoint ảnh kiểm tra same-origin/same-site, referer, token, expiry và có throttle in-memory chống request dồn dập.
@@ -957,3 +957,8 @@ Trang chi tiết truyện:
 - Reduce Workers KV usage: auth deadline signatures and reader page signatures now use deterministic HMAC keys derived from an existing runtime secret instead of reading KV on normal requests.
 - Existing auth deadline cookies migrate once from the old KV key to v2; after migration, normal session checks no longer read KV for the signing key.
 - Password/unlock state and anti-bruteforce counters still use KV intentionally.
+
+
+## v12.06
+- Thời gian mở khóa truyện bằng mật khẩu tăng từ 12 giờ lên 48 giờ.
+- Cookie reader session được giữ 48 giờ để trạng thái unlock không mất sớm hơn TTL KV.
