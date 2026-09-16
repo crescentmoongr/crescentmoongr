@@ -9,7 +9,7 @@ const {slug,chapter}=Astro.params; if(!slug||!chapter) return Astro.redirect('/'
 const series=await getSeriesBySlug(slug); const current=series?await getChapter(series.id,chapter):null; if(!series||!current) return new Response('Không tìm thấy chapter.',{status:404});
 const readerSession=ensureReaderSession(Astro.cookies);
 let allowed=series.access_type==='public';
-if(series.access_type==='password') allowed=await isSeriesUnlocked(readerSession,series.id);
+if(series.access_type==='password') allowed=await isSeriesUnlocked(Astro.cookies,series.id);
 const accountUser=await getSessionUser(Astro.cookies);
 if(series.access_type==='member') allowed=!!accountUser;
 const isNovel=String(series.type||'').toLowerCase()==='novel';

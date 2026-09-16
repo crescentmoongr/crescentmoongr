@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { getSeriesBySlug, supabaseRpc } from '../../lib/supabase';
-import { ensureReaderSession, markSeriesUnlocked } from '../../lib/readerSecurity';
+import { markSeriesUnlocked } from '../../lib/readerSecurity';
 export const prerender=false;
 
 async function fingerprint(request:Request){
@@ -26,7 +26,8 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
   if(count>=10) return redirect(`${returnTo}?unlock_error=${encodeURIComponent('Bạn đã thử quá nhiều lần. Vui lòng thử lại sau ít phút.')}`);
   const ok=await supabaseRpc<boolean>('verify_series_password',{p_series_id:series.id,p_password:password});
   if(!ok){await env.SESSION.put(key,String(count+1),{expirationTtl:600}); return redirect(`${returnTo}?unlock_error=${encodeURIComponent('Mật khẩu không đúng.')}`)}
-  await env.SESSION.delete(key);
-  const sid=ensureReaderSession(cookies); await markSeriesUnlocked(sid,series.id);
+  // Keep KV only for failed-password rate limiting. Avoid a delete operation on every successful unlock.
+  if(count>0) await env.SESSION.delete(key);
+  await markSeriesUnlocked(cookies,series.id);
   return redirect(returnTo);
 };

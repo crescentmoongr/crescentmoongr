@@ -962,3 +962,12 @@ Trang chi tiết truyện:
 ## v12.06
 - Thời gian mở khóa truyện bằng mật khẩu tăng từ 12 giờ lên 48 giờ.
 - Cookie reader session được giữ 48 giờ để trạng thái unlock không mất sớm hơn TTL KV.
+
+## v12.07 — Signed-cookie unlock + further KV reduction
+- Trạng thái mở khóa truyện có mật khẩu được chuyển khỏi Workers KV sang signed HttpOnly cookie, hiệu lực 48 giờ.
+- Mỗi lần mở/chuyển chapter của truyện đã unlock không còn `SESSION.get()` để kiểm tra unlock.
+- Cookie unlock được ký HMAC từ runtime secret; sửa giả nội dung cookie sẽ không vượt qua kiểm tra chữ ký.
+- Unlock vẫn theo từng trình duyệt/thiết bị; xóa cookie/ẩn danh sẽ cần nhập lại mật khẩu.
+- Workers KV chỉ còn dùng cho rate-limit khi nhập sai mật khẩu và migration cookie auth legacy trước v12.05.
+- Không `SESSION.delete()` ở lần unlock thành công nếu trước đó không có lần nhập sai, giảm delete operations không cần thiết.
+- Không thay đổi thời hạn unlock: vẫn 48 giờ. Không cần SQL mới.
