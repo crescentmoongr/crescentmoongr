@@ -40,6 +40,15 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width" />
 
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PD10P16FDD"></script>
+  <script is:inline>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-PD10P16FDD');
+  </script>
+
   <title>{title}</title>
   <meta name="description" content={description} />
   <meta name="robots" content="index,follow,max-image-preview:large" />
