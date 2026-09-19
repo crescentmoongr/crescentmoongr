@@ -3490,3 +3490,20 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
   .footer-stat-main b{font-size:16px}
   .footer-stat-label{font-size:6.8px;margin-left:21px}
 }
+
+/* v12.14 — homepage 32 updates + bottom action + random recommendations */
+.home-more-bottom{
+  display:flex;
+  justify-content:center;
+  margin:22px 0 4px;
+}
+.recommendations-section{
+  margin-top:58px;
+}
+.recommendations-grid{
+  margin-top:16px;
+}
+@media(max-width:700px){
+  .home-more-bottom{margin-top:18px;}
+  .recommendations-section{margin-top:44px;}
+}

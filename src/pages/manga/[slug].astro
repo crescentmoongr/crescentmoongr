@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getChapters,getSeriesBySlug,statusLabel,getSeriesUserState,getReadingHistory,getChapterReads,getSeriesComments,getChapterStats } from '../../lib/supabase';
+import { getChapters,getSeriesBySlug,statusLabel,getSeriesUserState,getReadingHistory,getChapterReads,getSeriesComments,getChapterStats,getSeriesList } from '../../lib/supabase';
 import { getSession } from '../../lib/auth';
 import { richTextToHtml,commentRichTextToHtml } from '../../lib/richText';
 import { slugifyTaxonomy } from '../../lib/slug';
@@ -23,14 +23,17 @@ const fmt=(v?:string|null)=>v?new Intl.DateTimeFormat('vi-VN',{day:'2-digit',mon
 const introHtml=series?richTextToHtml(series.description):'';
 const seriesAuthors=series?.author?series.author.split(',').map(x=>x.trim()).filter(Boolean):[];
 let comments:any[]=[];
+let recommendations:any[]=[];
 let totalSeriesViews=0;
 if(series){
   try{
-    const [loadedComments,stats]=await Promise.all([getSeriesComments(series.id),getChapterStats(chapters.map(c=>c.id))]);
+    const [loadedComments,stats,allSeries]=await Promise.all([getSeriesComments(series.id),getChapterStats(chapters.map(c=>c.id)),getSeriesList()]);
     comments=loadedComments;
     totalSeriesViews=stats.reduce((sum,stat)=>sum+(Number(stat.view_count)||0),0);
+    recommendations=allSeries.filter((item:any)=>item.id!==series.id).sort(()=>Math.random()-.5).slice(0,8);
   }catch{
     try{comments=await getSeriesComments(series.id)}catch{}
+    try{recommendations=(await getSeriesList()).filter((item:any)=>item.id!==series.id).sort(()=>Math.random()-.5).slice(0,8)}catch{}
   }
 }
 
@@ -228,6 +231,16 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
       )}
     </div>}
 </section>
+
+{recommendations.length>0&&<section class="recommendations-section">
+  <div class="section-title"><h2 class="major-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Đề xuất truyện</h2></div>
+  <div class="grid recommendations-grid">
+    {recommendations.map((item:any)=><a class="card" href={`/manga/${item.slug}`}>
+      <div class="cover card-cover">{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div>
+      <div class="card-body"><h3>{item.title}</h3><div class="meta">{item.type||'Truyện'} · {statusLabel(item.status)}</div></div>
+    </a>)}
+  </div>
+</section>}
 </>:null}
 
 <script>
