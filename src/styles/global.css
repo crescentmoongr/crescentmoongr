@@ -3502,8 +3502,32 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
 }
 .recommendations-grid{
   margin-top:16px;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:14px;
+}
+.recommendations-grid .card{
+  border-radius:15px;
+}
+.recommendations-grid .card-body{
+  padding:10px 11px;
+}
+.recommendations-grid .card h3{
+  font-size:.9rem;
+  margin-bottom:5px;
+}
+.recommendations-grid .meta{
+  font-size:.78rem;
+}
+@media(max-width:850px){
+  .recommendations-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
 }
 @media(max-width:700px){
   .home-more-bottom{margin-top:18px;}
   .recommendations-section{margin-top:44px;}
+}
+@media(max-width:560px){
+  .recommendations-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;}
+  .recommendations-grid .card-body{padding:9px;}
+  .recommendations-grid .card h3{font-size:.84rem;}
+  .recommendations-grid .meta{font-size:.72rem;}
 }

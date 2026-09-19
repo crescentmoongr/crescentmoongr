@@ -30,10 +30,10 @@ if(series){
     const [loadedComments,stats,allSeries]=await Promise.all([getSeriesComments(series.id),getChapterStats(chapters.map(c=>c.id)),getSeriesList()]);
     comments=loadedComments;
     totalSeriesViews=stats.reduce((sum,stat)=>sum+(Number(stat.view_count)||0),0);
-    recommendations=allSeries.filter((item:any)=>item.id!==series.id).sort(()=>Math.random()-.5).slice(0,8);
+    recommendations=allSeries.filter((item:any)=>item.id!==series.id).sort(()=>Math.random()-.5).slice(0,5);
   }catch{
     try{comments=await getSeriesComments(series.id)}catch{}
-    try{recommendations=(await getSeriesList()).filter((item:any)=>item.id!==series.id).sort(()=>Math.random()-.5).slice(0,8)}catch{}
+    try{recommendations=(await getSeriesList()).filter((item:any)=>item.id!==series.id).sort(()=>Math.random()-.5).slice(0,5)}catch{}
   }
 }
 
