@@ -79,7 +79,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
         <div class="series-info-row"><span class="series-info-icon">▤</span><span><b>Số chapter:</b> {chapters.length}</span></div>
         <div class="series-info-row"><span class="series-info-icon">▦</span><span><b>Cập nhật:</b> {fmt(updated)}</span></div>
         <div class="series-info-row"><span class="series-info-icon">♙</span><span><b>Quyền đọc:</b> {accessText}</span></div>
-        <div class="series-info-row"><span class="series-info-icon">◉</span><span><b>Lượt xem:</b> {new Intl.NumberFormat('vi-VN').format(totalSeriesViews)}</span></div>
+        <div class="series-info-row series-views-row"><span class="series-info-icon">◉</span><span><b>Lượt xem:</b> {new Intl.NumberFormat('vi-VN').format(totalSeriesViews)}</span></div>
       {series.raw_url&&<div class="series-info-row series-raw-row"><span class="series-info-icon">🛒</span><span><b>Mua raw:</b> <a class="series-raw-link" href={series.raw_url} target="_blank" rel="noopener noreferrer nofollow sponsored">Ủng hộ tác giả ↗</a></span></div>}
     </div>
 
@@ -326,5 +326,7 @@ document.querySelectorAll('[data-reply-toggle]').forEach(btn=>{
   .series-info-list .series-info-row:nth-child(4){grid-column:2!important;grid-row:2!important}
   .series-info-list .series-info-row:nth-child(5){grid-column:1!important;grid-row:3!important}
   .series-info-list .series-info-row:nth-child(6){grid-column:2!important;grid-row:3!important}
+  .series-info-list .series-views-row{grid-column:2!important;grid-row:4!important}
+  .series-info-list .series-raw-row{grid-column:1!important;grid-row:4!important}
 }
 </style>

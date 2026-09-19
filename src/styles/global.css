@@ -3429,29 +3429,45 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
 }
 
 /* =========================================================
-   v12.10 — Compact pink footer traffic stats
+   v12.11 — Compact ombre footer traffic pill
    ========================================================= */
 .footer-traffic{
   display:flex;
   align-items:center;
   justify-content:center;
   flex-wrap:wrap;
-  gap:6px 9px;
+  gap:5px 8px;
+  width:fit-content;
+  max-width:calc(100vw - 32px);
   margin-top:-2px;
-  color:#9a7d91;
+  padding:7px 13px;
+  border:1px solid rgba(226,82,154,.20);
+  border-radius:999px;
+  background:linear-gradient(105deg,rgba(255,241,248,.86),rgba(247,238,255,.82),rgba(255,245,250,.88));
+  box-shadow:0 5px 16px rgba(172,135,197,.08);
+  color:#927789;
   font-size:12.5px;
-  line-height:1.4;
+  line-height:1.35;
+  backdrop-filter:blur(6px);
 }
-.footer-traffic span{white-space:nowrap}
+.footer-traffic span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.footer-traffic em{
+  color:#e2529a;
+  font-size:13px;
+  font-style:normal;
+  line-height:1;
+}
 .footer-traffic b{
-  color:#d95d9f;
+  color:#d94f99;
   font-weight:750;
   letter-spacing:.01em;
 }
 .footer-traffic i{
-  color:rgba(172,135,197,.55);
+  color:rgba(172,135,197,.58);
   font-style:normal;
 }
 @media(max-width:560px){
-  .footer-traffic{font-size:11.5px;gap:5px 7px;max-width:100%}
+  .footer-traffic{font-size:11.5px;gap:4px 6px;padding:7px 10px;border-radius:18px}
+  .footer-traffic em{font-size:12px}
 }
+
