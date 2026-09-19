@@ -145,8 +145,44 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 5.34A16.2 16.2 0 0 0 15.45 4l-.5 1.04a15.1 15.1 0 0 0-5.9 0L8.55 4A16.3 16.3 0 0 0 4.5 5.35C1.94 9.14 1.25 12.84 1.6 16.5A16.5 16.5 0 0 0 6.57 19l1.2-1.64a10.7 10.7 0 0 1-1.88-.9l.46-.35c3.62 1.68 7.55 1.68 11.13 0l.46.35c-.6.36-1.23.66-1.88.9L17.26 19a16.5 16.5 0 0 0 4.96-2.5c.42-4.24-.72-7.9-2.72-11.16ZM8.15 14.28c-1.08 0-1.97-.99-1.97-2.2 0-1.22.87-2.2 1.97-2.2 1.1 0 1.99.99 1.97 2.2 0 1.21-.87 2.2-1.97 2.2Zm7.7 0c-1.08 0-1.97-.99-1.97-2.2 0-1.22.87-2.2 1.97-2.2 1.1 0 1.99.99 1.97 2.2 0 1.21-.87 2.2-1.97 2.2Z"/></svg>
     </a>}
   </div>}
+  {!isAdminPage&&<div class="footer-traffic" data-site-traffic aria-label="Thống kê lượt xem">
+    <span><b data-site-today>—</b> hôm nay</span><i aria-hidden="true">·</i>
+    <span><b data-site-month>—</b> tháng này</span><i aria-hidden="true">·</i>
+    <span><b data-site-total>—</b> tổng lượt xem</span>
+  </div>}
   <div>2024 Crescent Moon Translation</div>
-</footer><script is:inline data-copy-protection>
+</footer><script is:inline data-site-traffic-script>
+(() => {
+  const root=document.querySelector('[data-site-traffic]');
+  if(!(root instanceof HTMLElement)) return;
+  const compact=(value)=>{
+    const n=Number(value)||0;
+    if(n<1000) return new Intl.NumberFormat('vi-VN').format(n);
+    if(n<1_000_000) return `${(n/1000).toFixed(n>=100_000?0:1).replace('.0','')}K`;
+    return `${(n/1_000_000).toFixed(n>=100_000_000?0:1).replace('.0','')}M`;
+  };
+  const paint=(data)=>{
+    const a=root.querySelector('[data-site-today]');
+    const b=root.querySelector('[data-site-month]');
+    const c=root.querySelector('[data-site-total]');
+    if(a)a.textContent=compact(data.today);
+    if(b)b.textContent=compact(data.month);
+    if(c)c.textContent=compact(data.total);
+  };
+  const path=location.pathname.replace(/\/+$/,'')||'/';
+  const key=`cm:site-view:${path}`;
+  const now=Date.now();
+  let shouldCount=true;
+  try{shouldCount=now-Number(localStorage.getItem(key)||0)>=60_000}catch{}
+  if(shouldCount){try{localStorage.setItem(key,String(now))}catch{} }
+  fetch('/api/stats/site',{
+    method:shouldCount?'POST':'GET',
+    credentials:'same-origin',
+    keepalive:shouldCount,
+    headers:{Accept:'application/json'}
+  }).then(async r=>{if(!r.ok)throw new Error('stats');paint(await r.json())}).catch(()=>{if(shouldCount){try{localStorage.removeItem(key)}catch{}}});
+})();
+</script><script is:inline data-copy-protection>
 (() => {
   const canEdit = (target) => {
     if (!(target instanceof Element)) return false;
