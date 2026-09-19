@@ -62,6 +62,27 @@ if(chapterJump instanceof HTMLSelectElement){
 }
 
 const reader=document.querySelector('[data-protected-reader]');
+const viewMarker=document.querySelector('[data-reader-view]');
+if(viewMarker instanceof HTMLElement){
+  const chapterId=viewMarker.dataset.chapterId||'';
+  if(chapterId){
+    try{
+      const key=`cm:view:${chapterId}`;
+      const now=Date.now();
+      const last=Number(localStorage.getItem(key)||0);
+      // Gần kiểu page-view của Analytics, nhưng chặn F5/spam cùng chapter trong 60 giây.
+      if(!Number.isFinite(last)||now-last>=60_000){
+        // Ghi dấu trước để nhiều tab/reload sát nhau không bắn nhiều request.
+        localStorage.setItem(key,String(now));
+        fetch('/api/stats/view',{
+          method:'POST',credentials:'same-origin',keepalive:true,
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({chapter_id:chapterId})
+        }).then(r=>{if(!r.ok)localStorage.removeItem(key)}).catch(()=>localStorage.removeItem(key));
+      }
+    }catch{}
+  }
+}
 const progress=document.querySelector('[data-reading-progress]');
 if(progress instanceof HTMLElement){
   fetch('/api/library/progress',{
