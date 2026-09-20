@@ -28,7 +28,13 @@ const recentMore=updated.slice(32).map(item=>({
   latest_chapter:latestChapter.has(item.id)?latestChapter.get(item.id):null
 }));
 const favoriteRanking=[...allSeries].filter(x=>Number(x.favorite_count||0)>0).sort((a,b)=>Number(b.favorite_count||0)-Number(a.favorite_count||0)).slice(0,8);
-const favoriteSlides=favoriteRanking.slice(0,5);
+// v12.18: the homepage hero is discovery-focused: choose 5 random public series with covers on each page request.
+const randomSlidePool=[...allSeries].filter(item=>Boolean(item.cover_key));
+for(let i=randomSlidePool.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));
+  [randomSlidePool[i],randomSlidePool[j]]=[randomSlidePool[j],randomSlidePool[i]];
+}
+const favoriteSlides=randomSlidePool.slice(0,5);
 const plainIntro=(value:any)=>String(value||'').replace(/<[^>]*>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'\"').replace(/&#39;/g,"'").replace(/\s+/g,' ').trim();
 const session=await getSession(Astro.cookies);
 let recentHistory:any[]=[];
@@ -69,7 +75,7 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
 
 {error?<div class="notice error">{error}</div>:<>
 
-{favoriteSlides.length>0&&<section class="favorite-hero-slider" data-favorite-slider aria-label="Truyện được yêu thích">
+{favoriteSlides.length>0&&<section class="favorite-hero-slider" data-favorite-slider aria-label="Truyện ngẫu nhiên">
   <div class="favorite-hero-track">
     {favoriteSlides.map((item,index)=><a class={`favorite-hero-slide ${index===0?'is-active':''}`} href={`/manga/${item.slug}`} data-favorite-slide aria-hidden={index===0?'false':'true'}>
       {item.cover_key&&<div class="favorite-hero-bg" aria-hidden="true"><img src={`/api/cover/${item.id}`} alt="" loading={index===0?'eager':'lazy'} decoding="async"/></div>}
