@@ -3543,3 +3543,12 @@ content:"";position:absolute;left:-14px;top:0;bottom:0;width:2px;border-radius:9
 .favorite-ranking-medal{display:block;width:32px;height:32px;object-fit:contain}
 .favorite-ranking-top-1 .favorite-ranking-medal{width:35px;height:35px;filter:drop-shadow(0 3px 5px rgba(187,117,125,.18))}
 @media(max-width:620px){.favorite-ranking-medal{width:29px;height:29px}.favorite-ranking-top-1 .favorite-ranking-medal{width:31px;height:31px}}
+
+/* v12.17 — inline homepage load-more */
+button.home-more-button{
+  appearance:none;
+  -webkit-appearance:none;
+  font-family:inherit;
+  cursor:pointer;
+}
+button.home-more-button:hover span{transform:translateY(2px);}

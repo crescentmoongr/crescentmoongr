@@ -19,6 +19,14 @@ try{
   updated=[...seriesRows].filter(x=>lastPublished.has(x.id)).sort((a,b)=>(lastPublished.get(b.id)||0)-(lastPublished.get(a.id)||0));
 }catch(e){error=e instanceof Error?e.message:'Không thể tải dữ liệu.'}
 const recent=updated.slice(0,32);
+const recentMore=updated.slice(32).map(item=>({
+  id:item.id,
+  slug:item.slug,
+  title:item.title,
+  cover_key:item.cover_key,
+  status:item.status,
+  latest_chapter:latestChapter.has(item.id)?latestChapter.get(item.id):null
+}));
 const favoriteRanking=[...allSeries].filter(x=>Number(x.favorite_count||0)>0).sort((a,b)=>Number(b.favorite_count||0)-Number(a.favorite_count||0)).slice(0,8);
 const favoriteSlides=favoriteRanking.slice(0,5);
 const plainIntro=(value:any)=>String(value||'').replace(/<[^>]*>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'\"').replace(/&#39;/g,"'").replace(/\s+/g,' ').trim();
@@ -112,8 +120,9 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
 
 <div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Mới cập nhật</h2></div>
 {recent.length?<>
-<section class="grid home-section-content">{recent.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{latestChapter.has(item.id)?`Chap ${latestChapter.get(item.id)} · `:''}{statusLabel(item.status)}</div></div></a>)}</section>
-<div class="home-more-bottom"><a class="home-more-button" href="/search">Xem thêm <span aria-hidden="true">→</span></a></div>
+<section class="grid home-section-content" data-recent-grid>{recent.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{latestChapter.has(item.id)?`Chap ${latestChapter.get(item.id)} · `:''}{statusLabel(item.status)}</div></div></a>)}</section>
+{recentMore.length>0&&<div class="home-more-bottom"><button class="home-more-button" type="button" data-home-load-more>Xem thêm <span aria-hidden="true">↓</span></button></div>}
+<script type="application/json" id="recent-more-data" set:html={JSON.stringify(recentMore).replace(/</g,'\\u003c')}></script>
 </>:<div class="empty-state">Chưa có truyện.</div>}
 </>}
 <script>
@@ -158,5 +167,37 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
     },{passive:true});
     start();
   });
+
+  const loadMoreButton=document.querySelector('[data-home-load-more]');
+  const recentGrid=document.querySelector('[data-recent-grid]');
+  const recentDataNode=document.getElementById('recent-more-data');
+  if(loadMoreButton&&recentGrid&&recentDataNode){
+    let remaining=[];
+    try{remaining=JSON.parse(recentDataNode.textContent||'[]')}catch{}
+    let offset=0;
+    const batchSize=32;
+    const statusText={completed:'Hoàn thành',ongoing:'Đang tiến hành',hiatus:'Tạm ngưng',dropped:'Đã drop'};
+    const badgeText={completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'};
+    const badgeClass={completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'};
+    const esc=(value)=>String(value??'').replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    loadMoreButton.addEventListener('click',()=>{
+      const batch=remaining.slice(offset,offset+batchSize);
+      if(!batch.length){loadMoreButton.closest('.home-more-bottom')?.remove();return}
+      const fragment=document.createDocumentFragment();
+      batch.forEach((item)=>{
+        const link=document.createElement('a');
+        link.className='card';
+        link.href=`/manga/${encodeURIComponent(item.slug)}`;
+        const badge=badgeText[item.status]?`<span class="cover-badge ${badgeClass[item.status]||''}">${badgeText[item.status]}</span>`:'';
+        const cover=item.cover_key?`<img src="/api/cover/${encodeURIComponent(item.id)}" alt="Bìa ${esc(item.title)}" loading="lazy" decoding="async">`:`<span>${esc(item.title)}</span>`;
+        const latest=item.latest_chapter!==null&&item.latest_chapter!==undefined?`Chap ${esc(item.latest_chapter)} · `:'';
+        link.innerHTML=`<div class="cover card-cover">${badge}${cover}</div><div class="card-body"><h3>${esc(item.title)}</h3><div class="meta">${latest}${esc(statusText[item.status]||item.status||'')}</div></div>`;
+        fragment.appendChild(link);
+      });
+      recentGrid.appendChild(fragment);
+      offset+=batch.length;
+      if(offset>=remaining.length)loadMoreButton.closest('.home-more-bottom')?.remove();
+    });
+  }
 </script>
 </BaseLayout>
