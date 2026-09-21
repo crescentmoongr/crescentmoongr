@@ -28,6 +28,8 @@ type NotifySeries = {
   slug:string;
   cover_key:string|null;
   is_published:boolean;
+  notify_discord:boolean;
+  notify_telegram:boolean;
 };
 
 const STATE_KEY='chapter_notify_state_v1';
@@ -215,7 +217,7 @@ async function sendTelegram(env:NotifierEnv,series:NotifySeries,ch:DueChapter){
 }
 
 async function getSeries(env:NotifierEnv,id:string){
-  const rows=await db<NotifySeries[]>(env,'GET',`series?select=id,title,slug,cover_key,is_published&id=eq.${encodeURIComponent(id)}&limit=1`);
+  const rows=await db<NotifySeries[]>(env,'GET',`series?select=id,title,slug,cover_key,is_published,notify_discord,notify_telegram&id=eq.${encodeURIComponent(id)}&limit=1`);
   return rows[0]||null;
 }
 
@@ -229,15 +231,21 @@ async function deliver(env:NotifierEnv,state:NotifyState,series:NotifySeries,ch:
   const e=resolveEnv(env);
   const rec=state.sent[ch.id]||{};
   let changed=false;
-  if(!rec.discord&&clean(e.DISCORD_WEBHOOK_URL)){
-    try{
-      if(await sendDiscord(env,series,ch)){rec.discord=isoNow();changed=true;}
-    }catch(e){logError('Discord notify failed',ch.id,e)}
+  if(!rec.discord){
+    if(series.notify_discord===false){rec.discord=`disabled:${isoNow()}`;changed=true;}
+    else if(clean(e.DISCORD_WEBHOOK_URL)){
+      try{
+        if(await sendDiscord(env,series,ch)){rec.discord=isoNow();changed=true;}
+      }catch(e){logError('Discord notify failed',ch.id,e)}
+    }
   }
-  if(!rec.telegram&&clean(e.TELEGRAM_BOT_TOKEN)&&clean(e.TELEGRAM_CHAT_ID)){
-    try{
-      if(await sendTelegram(env,series,ch)){rec.telegram=isoNow();changed=true;}
-    }catch(e){logError('Telegram notify failed',ch.id,e)}
+  if(!rec.telegram){
+    if(series.notify_telegram===false){rec.telegram=`disabled:${isoNow()}`;changed=true;}
+    else if(clean(e.TELEGRAM_BOT_TOKEN)&&clean(e.TELEGRAM_CHAT_ID)){
+      try{
+        if(await sendTelegram(env,series,ch)){rec.telegram=isoNow();changed=true;}
+      }catch(e){logError('Telegram notify failed',ch.id,e)}
+    }
   }
   if(changed)state.sent[ch.id]=rec;
   return changed;

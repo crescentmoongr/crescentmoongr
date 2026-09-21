@@ -30,7 +30,7 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
       }
     }
     if(access==='password'&&password) await supabaseRpc('admin_set_series_password',{p_series_id:id,p_password:password},token);
-    await supabasePatch(`series?id=eq.${encodeURIComponent(id)}`,token,{title,slug,description:sanitizeRichText(clean(f.get('description')))||null,author:authorName||null,artist:clean(f.get('artist'))||null,raw_url:rawUrl,genres:selectedGenres,type:clean(f.get('type'))||null,status:clean(f.get('status')),is_published:f.get('is_published')==='true',cover_key:coverKey,access_type:access});
+    await supabasePatch(`series?id=eq.${encodeURIComponent(id)}`,token,{title,slug,description:sanitizeRichText(clean(f.get('description')))||null,author:authorName||null,artist:clean(f.get('artist'))||null,raw_url:rawUrl,genres:selectedGenres,type:clean(f.get('type'))||null,status:clean(f.get('status')),is_published:f.get('is_published')==='true',cover_key:coverKey,access_type:access,notify_discord:f.get('notify_discord')==='true',notify_telegram:f.get('notify_telegram')==='true'});
     if(access!=='password') await supabaseRpc('admin_clear_series_password',{p_series_id:id},token);
     if(newCover&&old.cover_key) await env.MANGA_STORAGE.delete(old.cover_key);
     return redirect(`/admin/series/${id}?success=`+encodeURIComponent('Đã lưu thay đổi.'));
