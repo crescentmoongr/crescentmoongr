@@ -13,14 +13,6 @@ if(!adminSession)return Astro.redirect(`/login?next=${encodeURIComponent(`/admin
 const token=adminSession.token;const admin=adminSession.user;
 const success=Astro.url.searchParams.get('success');const error=Astro.url.searchParams.get('error');
 
-// Giữ badge bình luận ở sidebar, nhưng không tải các dataset Admin khác ngoài tab hiện tại.
-let pendingCount=0;
-let prefetchedComments:any[]|null=null;
-try{
-  const comments=await getAdminSeriesComments(token);
-  pendingCount=comments.filter(c=>c.moderation_status==='pending').length;
-  if(section==='comments') prefetchedComments=comments;
-}catch{}
 
 let rows:any[]=[]; const chapterCounts=new Map<string,number>(); const latestChapterAt=new Map<string,number>(); const seriesViews=new Map<string,number>();
 let announcementHtml=''; let adHtml=''; let socialLinks:any={}; let members:any[]=[]; let membersError=''; let adminComments:any[]=[]; let commentsError=''; let authors:any[]=[]; let genresManaged:any[]=[];
@@ -50,12 +42,11 @@ try{
     const raw=(await getSiteSetting('social_links',token))?.value||''; const parsed=raw?JSON.parse(raw):{}; if(parsed&&typeof parsed==='object')socialLinks=parsed;
   }
   if(section==='members'){try{members=await getAdminMembers(token)}catch(e){membersError=e instanceof Error?e.message:'Không tải được thành viên.'}}
-  if(section==='comments'){try{adminComments=prefetchedComments||await getAdminSeriesComments(token)}catch(e){commentsError=e instanceof Error?e.message:'Không tải được bình luận.'}}
+  if(section==='comments'){try{adminComments=await getAdminSeriesComments(token)}catch(e){commentsError=e instanceof Error?e.message:'Không tải được bình luận.'}}
   if(section==='authors') authors=await getAuthors();
   if(section==='genres') genresManaged=await getGenres();
   if(section==='add-series') [authors,genresManaged]=await Promise.all([getAuthors(),getGenres()]);
 }catch{}
-const pendingComments=section==='comments'?adminComments.filter(c=>c.moderation_status==='pending'):[];
 const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội',ads:'Quảng cáo','add-series':'Thêm truyện',series:'Quản lý truyện',comments:'Quản lý bình luận',members:'Quản lý thành viên',authors:'Quản lý tác giả',genres:'Quản lý thể loại'};
 ---
 <BaseLayout title={`${pageTitles[section]} — Admin — Crescent Moon Translation`}>
@@ -63,7 +54,7 @@ const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội'
 {success&&<div class="notice success top-gap">{success}</div>}{error&&<div class="notice error top-gap">{error}</div>}
 </section>
 <div class="admin-dashboard-layout wp-admin-layout">
-  <AdminSidebar active={section} pendingCount={pendingCount}/>
+  <AdminSidebar active={section}/>
   <div class="admin-dashboard-content">
 
 {section==='announcement' && <section class="admin-card admin-wide admin-anchor-section">
@@ -113,8 +104,8 @@ const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội'
   <div class="empty-state" hidden data-admin-series-no-results>Không tìm thấy truyện phù hợp.</div>
 </section>}
 
-{section==='comments' && <section class="admin-card admin-wide admin-anchor-section"><div class="section-title"><div><h2>Quản lý bình luận</h2><p class="meta">Bình luận mới phải được Admin duyệt trước khi hiển thị ngoài website.</p></div><span class="comment-pending-count">{pendingComments.length} chờ duyệt · {adminComments.length} tổng</span></div>
-{commentsError?<div class="notice error">{commentsError}</div>:adminComments.length===0?<div class="empty-state">Chưa có bình luận nào.</div>:<div class="admin-comment-list">{adminComments.map(comment=><article class={`admin-comment-row ${comment.moderation_status==='pending'?'is-pending':'is-approved'}`}><div class="admin-comment-main"><div class="admin-comment-headline"><strong class={comment.role==='admin'?'admin-name-glow':''}>{comment.display_name||comment.username||'Thành viên'}</strong><span class={`comment-status-badge ${comment.moderation_status}`}>{comment.moderation_status==='pending'?'Chờ duyệt':'Đã duyệt'}</span></div><div class="meta">{comment.series_title||'Truyện'} · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(comment.created_at))}</div><div class="admin-comment-preview" set:html={comment.body}></div></div><div class="admin-comment-actions">{comment.series_slug&&<a class="button secondary small-button" href={`/manga/${comment.series_slug}#comments`} target="_blank">Xem truyện</a>}{comment.moderation_status==='pending'&&<form method="POST" action="/api/admin/comment/moderate"><input type="hidden" name="id" value={comment.id}/><input type="hidden" name="action" value="approve"/><button class="button small-button" type="submit">Duyệt</button></form>}<form method="POST" action="/api/admin/comment/moderate" onsubmit="return confirm('Xóa bình luận này?');"><input type="hidden" name="id" value={comment.id}/><input type="hidden" name="action" value="delete"/><button class="danger-button small-danger" type="submit">Xóa</button></form></div></article>)}</div>}
+{section==='comments' && <section class="admin-card admin-wide admin-anchor-section"><div class="section-title"><div><h2>Quản lý bình luận</h2><p class="meta">Bình luận của thành viên hiển thị ngay sau khi đăng. Admin vẫn có thể xem và xóa nội dung khi cần.</p></div><span class="meta">{adminComments.length} bình luận</span></div>
+{commentsError?<div class="notice error">{commentsError}</div>:adminComments.length===0?<div class="empty-state">Chưa có bình luận nào.</div>:<div class="admin-comment-list">{adminComments.map(comment=><article class="admin-comment-row"><div class="admin-comment-main"><div class="admin-comment-headline"><strong class={comment.role==='admin'?'admin-name-glow':''}>{comment.display_name||comment.username||'Thành viên'}</strong></div><div class="meta">{comment.series_title||'Truyện'} · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(comment.created_at))}</div><div class="admin-comment-preview" set:html={comment.body}></div></div><div class="admin-comment-actions">{comment.series_slug&&<a class="button secondary small-button" href={`/manga/${comment.series_slug}#comments`} target="_blank">Xem truyện</a>}<form method="POST" action="/api/admin/comment/moderate" onsubmit="return confirm('Xóa bình luận này?');"><input type="hidden" name="id" value={comment.id}/><input type="hidden" name="action" value="delete"/><button class="danger-button small-danger" type="submit">Xóa</button></form></div></article>)}</div>}
 </section>}
 
 {section==='members' && <section class="admin-card admin-wide admin-anchor-section"><div class="section-title"><div><h2>Quản lý thành viên</h2><p class="meta">Khóa tài khoản, bật/tắt quyền bình luận hoặc thay đổi vai trò.</p></div><span class="meta">{members.length} tài khoản</span></div>{membersError?<div class="notice error">{membersError}</div>:members.length===0?<div class="empty-state">Chưa có thành viên.</div>:<div class="admin-member-list">{members.map(member=><form method="POST" action="/api/admin/member/update" class="admin-member-row"><input type="hidden" name="user_id" value={member.user_id}/><div class="admin-member-main"><strong class={member.role==='admin'?'member-name admin-name-glow':'member-name'}>{member.display_name||member.username||member.email||'Thành viên'}</strong><span class="meta">{member.email||member.user_id}</span><span class="meta">Tham gia: {member.created_at?new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(member.created_at)):'—'}</span></div><label class="member-control"><span>Vai trò</span><select name="role"><option value="member" selected={member.role==='member'}>Member</option><option value="admin" selected={member.role==='admin'}>Admin</option></select></label><label class="member-check"><input type="checkbox" name="is_active" value="true" checked={member.is_active}/><span>Hoạt động</span></label><label class="member-check"><input type="checkbox" name="can_comment" value="true" checked={member.can_comment}/><span>Được bình luận</span></label><button class="button secondary small-button" type="submit">Lưu</button></form>)}</div>}</section>}

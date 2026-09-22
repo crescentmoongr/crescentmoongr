@@ -15,14 +15,14 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
 
   try{
     if(!Number.isFinite(id)||id<=0)throw new Error('Bình luận không hợp lệ.');
-    if(!['approve','delete'].includes(action))throw new Error('Thao tác không hợp lệ.');
+    if(action!=='delete')throw new Error('Thao tác không hợp lệ.');
 
     await supabaseRpc('admin_moderate_comment',{
       p_id:id,
       p_action:action
     },session.token);
 
-    const message=action==='approve'?'Đã duyệt bình luận.':'Đã xóa bình luận.';
+    const message='Đã xóa bình luận.';
     return redirect('/admin/comments?success='+encodeURIComponent(message)+'');
   }catch(e:any){
     return redirect('/admin/comments?error='+encodeURIComponent(e?.message||'Không thể xử lý bình luận.')+'');

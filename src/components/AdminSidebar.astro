@@ -1,5 +1,5 @@
 ---
-const { active = '', pendingCount = 0 } = Astro.props;
+const { active = '' } = Astro.props;
 const items = [
   ['announcement','📣 Thông báo chung','/admin/announcement'],
   ['social','🌐 Mạng xã hội','/admin/social'],
@@ -17,9 +17,8 @@ const items = [
   <div class="admin-sidebar-title">Quản lý</div>
   <nav class="admin-section-menu" aria-label="Menu quản trị" data-admin-section-menu>
     {items.map(([key,label,href]) =>
-      <a href={href} class:list={[key===active && 'is-active', key==='comments' && 'admin-comments-nav-link']}>
+      <a href={href} class:list={[key===active && 'is-active']}>
         <span>{label}</span>
-        {key==='comments' && pendingCount>0 && <span class="admin-nav-count" aria-label={`${pendingCount} bình luận chờ duyệt`}>{pendingCount>99?'99+':pendingCount}</span>}
       </a>
     )}
   </nav>
