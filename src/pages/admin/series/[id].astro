@@ -71,7 +71,7 @@ const formatViews=(n:number)=>new Intl.NumberFormat('vi-VN').format(n);
 
 <section class="admin-card admin-wide"><div class="section-title"><div><h2>Chapters</h2><p class="meta">Kéo thả để đổi thứ tự hiển thị. Preview dùng được cả Draft và chapter đã lên lịch.</p></div><span class="meta">{chapters.length} chapter</span></div>
 <form id="bulkForm" method="POST" action="/api/admin/chapter/bulk" class="bulk-bar"><input type="hidden" name="series_id" value={series.id}/><select name="bulk_action" required><option value="">Sửa hàng loạt...</option><option value="publish">Publish ngay</option><option value="draft">Chuyển Draft</option><option value="delete">Xóa</option></select><button class="button secondary small-button" type="submit" data-bulk-submit>Áp dụng</button><button class="button secondary small-button" type="button" id="saveOrder">Lưu thứ tự kéo thả</button><span class="meta" id="orderStatus"></span></form>
-{chapters.length===0?<div class="empty-state">Chưa có chapter nào.</div>:<div class="chapter-admin-list sortable-list" id="chapterSortable">{chapters.map(ch=>{const st=chapterAdminStatus(ch);return <details class="chapter-admin-item sortable-item" data-chapter-id={ch.id} draggable="true"><summary><span class="drag-handle" title="Kéo để đổi thứ tự">☰</span><input class="bulk-check" type="checkbox" name="chapter_ids" value={ch.id} form="bulkForm" onclick="event.stopPropagation()"/><strong>Chapter {ch.chapter_number}</strong>{ch.title&&<span> — {ch.title}</span>}<span class="meta chapter-view-count">👁 {formatViews(viewByChapter.get(ch.id)||0)}</span><span class={`status-chip ${st==='Draft'?'draft':st==='Đã lên lịch'?'scheduled':'published'}`}>{st}</span></summary>
+{chapters.length===0?<div class="empty-state">Chưa có chapter nào.</div>:<div class="chapter-admin-list sortable-list" id="chapterSortable">{chapters.map(ch=>{const st=chapterAdminStatus(ch);return <details class="chapter-admin-item sortable-item" data-chapter-id={ch.id}><summary><span class="drag-handle" title="Kéo để đổi thứ tự">☰</span><input class="bulk-check" type="checkbox" name="chapter_ids" value={ch.id} form="bulkForm" onclick="event.stopPropagation()"/><strong>Chapter {ch.chapter_number}</strong>{ch.title&&<span> — {ch.title}</span>}<span class="meta chapter-view-count">👁 {formatViews(viewByChapter.get(ch.id)||0)}</span><span class={`status-chip ${st==='Draft'?'draft':st==='Đã lên lịch'?'scheduled':'published'}`}>{st}</span></summary>
 <form method="POST" action="/api/admin/chapter/update" class="chapter-edit-form schedule-form"><input type="hidden" name="id" value={ch.id}/><input type="hidden" name="series_id" value={series.id}/><div class="form-grid"><label class="field"><span>Số chap</span><input name="chapter_number" type="number" step="0.01" value={ch.chapter_number} required/></label><label class="field"><span>Tiêu đề</span><input name="title" value={ch.title||''}/></label><label class="field"><span>Trạng thái đăng</span><select name="publish_mode" class="publish-mode"><option value="publish" selected={st==='Published'}>Published</option><option value="schedule" selected={st==='Đã lên lịch'}>Lên lịch</option><option value="draft" selected={st==='Draft'}>Draft</option></select></label><label class="field schedule-field" hidden><span>Ngày giờ publish</span><input type="datetime-local" class="publish-local" data-iso={ch.published_at||''}/><input type="hidden" name="published_at" class="publish-iso" value={ch.published_at||''}/></label></div>{isNovel&&<div class="field rich-field novel-editor-field"><span>Nội dung chapter</span><div class="comment-editor-shell admin-comment-editor-shell novel-comment-editor-shell" data-admin-rich-editor>
   <div class="comment-toolbar" role="toolbar" aria-label="Định dạng văn bản">
     <button type="button" data-admin-comment-cmd="bold" title="In đậm"><strong>B</strong></button>
@@ -104,7 +104,45 @@ const formatViews=(n:number)=>new Intl.NumberFormat('vi-VN').format(n);
 const a=document.querySelector('#series_access_type'),f=document.querySelector('#series_password_field');function toggleSeries(){if(a instanceof HTMLSelectElement&&f instanceof HTMLElement)f.hidden=a.value!=='password'}a?.addEventListener('change',toggleSeries);toggleSeries();
 function localValue(iso){if(!iso)return'';const d=new Date(iso);if(!Number.isFinite(d.getTime()))return'';const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`}
 for(const form of document.querySelectorAll('.schedule-form')){if(!(form instanceof HTMLFormElement))continue;const mode=form.querySelector('.publish-mode'),field=form.querySelector('.schedule-field'),local=form.querySelector('.publish-local'),hidden=form.querySelector('.publish-iso');if(local instanceof HTMLInputElement&&local.dataset.iso)local.value=localValue(local.dataset.iso);const sync=()=>{if(mode instanceof HTMLSelectElement&&field instanceof HTMLElement)field.hidden=mode.value!=='schedule'};mode?.addEventListener('change',sync);sync();form.addEventListener('submit',e=>{if(mode instanceof HTMLSelectElement&&mode.value==='schedule'&&local instanceof HTMLInputElement&&hidden instanceof HTMLInputElement){if(!local.value){e.preventDefault();alert('Chọn ngày giờ publish.');return}hidden.value=new Date(local.value).toISOString()}})}
-const list=document.querySelector('#chapterSortable');let dragging=null;if(list instanceof HTMLElement){for(const item of list.querySelectorAll('.sortable-item')){item.addEventListener('dragstart',()=>{dragging=item;item.classList.add('dragging')});item.addEventListener('dragend',()=>{item.classList.remove('dragging');dragging=null})}list.addEventListener('dragover',e=>{e.preventDefault();if(!(dragging instanceof HTMLElement))return;const after=[...list.querySelectorAll('.sortable-item:not(.dragging)')].find(el=>{const r=el.getBoundingClientRect();return e.clientY<r.top+r.height/2});if(after)list.insertBefore(dragging,after);else list.appendChild(dragging)})}
+const list=document.querySelector('#chapterSortable');
+let dragging=null,dragPointerId=null;
+if(list instanceof HTMLElement){
+  const moveItem=(clientY)=>{
+    if(!(dragging instanceof HTMLElement))return;
+    const items=[...list.querySelectorAll('.sortable-item:not(.dragging)')];
+    const after=items.find(el=>{const r=el.getBoundingClientRect();return clientY<r.top+r.height/2});
+    if(after)list.insertBefore(dragging,after);else list.appendChild(dragging);
+  };
+  for(const handle of list.querySelectorAll('.drag-handle')){
+    if(!(handle instanceof HTMLElement))continue;
+    handle.setAttribute('role','button');
+    handle.setAttribute('aria-label','Kéo để đổi thứ tự chapter');
+    handle.addEventListener('pointerdown',e=>{
+      if(e.button!==undefined&&e.button!==0)return;
+      const item=handle.closest('.sortable-item');
+      if(!(item instanceof HTMLElement))return;
+      e.preventDefault();e.stopPropagation();
+      dragging=item;dragPointerId=e.pointerId;
+      item.classList.add('dragging');list.classList.add('is-sorting');
+      handle.setPointerCapture?.(e.pointerId);
+    });
+    handle.addEventListener('pointermove',e=>{
+      if(!(dragging instanceof HTMLElement)||e.pointerId!==dragPointerId)return;
+      e.preventDefault();moveItem(e.clientY);
+      const edge=70;
+      if(e.clientY<edge)window.scrollBy(0,-14);
+      else if(e.clientY>window.innerHeight-edge)window.scrollBy(0,14);
+    });
+    const finish=e=>{
+      if(e.pointerId!==dragPointerId)return;
+      dragging?.classList.remove('dragging');list.classList.remove('is-sorting');
+      dragging=null;dragPointerId=null;
+      try{handle.releasePointerCapture?.(e.pointerId)}catch{}
+    };
+    handle.addEventListener('pointerup',finish);
+    handle.addEventListener('pointercancel',finish);
+  }
+}
 document.querySelector('#saveOrder')?.addEventListener('click',async()=>{if(!(list instanceof HTMLElement))return;const ids=[...list.querySelectorAll('.sortable-item')].map(x=>x.getAttribute('data-chapter-id')).filter(Boolean);const st=document.querySelector('#orderStatus');if(st)st.textContent='Đang lưu...';const sidInput=document.querySelector('#bulkForm input[name=series_id]');const sidValue=sidInput instanceof HTMLInputElement?sidInput.value:'';const r=await fetch('/api/admin/chapter/reorder',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({series_id:sidValue,ids})});if(st)st.textContent=r.ok?'Đã lưu thứ tự ✓':'Lưu thất bại';});
 document.querySelector('[data-bulk-submit]')?.addEventListener('click',e=>{const select=document.querySelector('#bulkForm select');if(select instanceof HTMLSelectElement&&select.value==='delete'&&!confirm('Xóa tất cả chapter đã chọn và ảnh của chúng?'))e.preventDefault()});
 </script>

@@ -3560,3 +3560,9 @@ button.home-more-button:hover span{transform:translateY(2px);}
 
 /* v12.20 reader chapter subtitle */
 .reader-chapter-title{margin:-10px 0 18px;color:#8f6d82;font-size:clamp(.95rem,2vw,1.08rem);font-weight:600;line-height:1.45}
+
+/* Chapter reorder: pointer-based drag works with mouse and touch. */
+.drag-handle{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;padding:6px 4px;margin:-6px 4px -6px -4px}
+.is-sorting,.is-sorting *{cursor:grabbing!important}
+.is-sorting{user-select:none;-webkit-user-select:none}
+.sortable-item.dragging{opacity:.5;transform:scale(.995);box-shadow:0 8px 24px rgba(172,135,197,.18)}
