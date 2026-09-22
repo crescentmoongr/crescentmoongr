@@ -4,7 +4,7 @@ import { requireAdminSession } from '../../../../lib/auth';
 import { sanitizeRichText } from '../../../../lib/richText';
 import { supabasePost, supabaseDelete, supabaseRpc, getAuthors, type Series } from '../../../../lib/supabase';
 export const prerender=false;
-const validStatus=new Set(['ongoing','completed','hiatus','dropped']);
+const validStatus=new Set(['ongoing','completed','hiatus','dropped','upcoming']);
 const validAccess=new Set(['public','password','member']);
 const validMime:Record<string,string>={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
 const clean=(v:FormDataEntryValue|null)=>String(v||'').trim();

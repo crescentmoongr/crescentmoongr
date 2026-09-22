@@ -24,8 +24,8 @@ if(sort==='title')rows.sort((a,b)=>a.title.localeCompare(b.title,'vi'));
 else if(sort==='new')rows.sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
 else rows.sort((a,b)=>new Date(b.updated_at).getTime()-new Date(a.updated_at).getTime());
 
-const statusBadgeLabel=(s:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[s]||'';
-const statusBadgeClass=(s:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'} as Record<string,string>)[s]||'';
+const statusBadgeLabel=(s:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP',upcoming:'UPCOMING'} as Record<string,string>)[s]||'';
+const statusBadgeClass=(s:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop',upcoming:'upcoming'} as Record<string,string>)[s]||'';
 ---
 <BaseLayout title="Tìm kiếm nâng cao — Crescent Moon Translation">
 <section class="advanced-search-head">
@@ -37,7 +37,7 @@ const statusBadgeClass=(s:string)=>({completed:'full',ongoing:'ongoing',hiatus:'
     </div>
     <div class="advanced-filter-grid">
       <label><span>TÁC GIẢ:</span><select name="author"><option value="">Tất cả tác giả</option>{authors.map(a=><option value={a.name} selected={author===a.name}>{a.name}</option>)}</select></label>
-      <label><span>TRẠNG THÁI:</span><select name="status"><option value="">Tất cả trạng thái</option><option value="ongoing" selected={status==='ongoing'}>Đang tiến hành</option><option value="completed" selected={status==='completed'}>Hoàn thành</option><option value="hiatus" selected={status==='hiatus'}>Tạm ngưng</option><option value="dropped" selected={status==='dropped'}>Drop</option></select></label>
+      <label><span>TRẠNG THÁI:</span><select name="status"><option value="">Tất cả trạng thái</option><option value="ongoing" selected={status==='ongoing'}>Đang tiến hành</option><option value="completed" selected={status==='completed'}>Hoàn thành</option><option value="hiatus" selected={status==='hiatus'}>Tạm ngưng</option><option value="dropped" selected={status==='dropped'}>Drop</option><option value="upcoming" selected={status==='upcoming'}>Sắp ra mắt</option></select></label>
       <label><span>SẮP XẾP THEO:</span><select name="sort"><option value="updated" selected={sort==='updated'}>Mới cập nhật</option><option value="new" selected={sort==='new'}>Mới đăng</option><option value="title" selected={sort==='title'}>Tên A → Z</option></select></label>
       <label><span>THỂ LOẠI:</span><select name="genre"><option value="">Tất cả thể loại</option>{genres.map(g=><option value={g.name} selected={genre===g.name}>{g.name}</option>)}</select></label>
     </div>

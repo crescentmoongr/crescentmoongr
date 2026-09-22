@@ -50,8 +50,8 @@ if(session){
     }).filter(Boolean);
   }catch{}
 }
-const statusBadgeLabel=(status:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[status]||'';
-const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'} as Record<string,string>)[status]||'';
+const statusBadgeLabel=(status:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP',upcoming:'UPCOMING'} as Record<string,string>)[status]||'';
+const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop',upcoming:'upcoming'} as Record<string,string>)[status]||'';
 let siteAnnouncementHtml='';
 try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_announcement_html'))?.value||'')}catch{}
 
@@ -182,9 +182,9 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
     try{remaining=JSON.parse(recentDataNode.textContent||'[]')}catch{}
     let offset=0;
     const batchSize=32;
-    const statusText={completed:'Hoàn thành',ongoing:'Đang tiến hành',hiatus:'Tạm ngưng',dropped:'Đã drop'};
-    const badgeText={completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'};
-    const badgeClass={completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'};
+    const statusText={completed:'Hoàn thành',ongoing:'Đang tiến hành',hiatus:'Tạm ngưng',dropped:'Đã drop',upcoming:'Sắp ra mắt'};
+    const badgeText={completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP',upcoming:'UPCOMING'};
+    const badgeClass={completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop',upcoming:'upcoming'};
     const esc=(value)=>String(value??'').replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     loadMoreButton.addEventListener('click',()=>{
       const batch=remaining.slice(offset,offset+batchSize);

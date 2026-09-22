@@ -8,8 +8,8 @@ if(!author)return new Response('Không tìm thấy tác giả.',{status:404});
 const all=await getSeriesList();
 const authorKey=author.name.trim().toLocaleLowerCase('vi-VN');
 const rows=all.filter(x=>(x.author||'').split(',').map(name=>name.trim().toLocaleLowerCase('vi-VN')).includes(authorKey));
-const badge=(s:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[s]||'';
-const badgeClass=(s:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'} as Record<string,string>)[s]||'';
+const badge=(s:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP',upcoming:'UPCOMING'} as Record<string,string>)[s]||'';
+const badgeClass=(s:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop',upcoming:'upcoming'} as Record<string,string>)[s]||'';
 ---
 <BaseLayout title={`${author.name} — Tác giả | Crescent Moon Translation`} description={`Các truyện của ${author.name} tại Crescent Moon Translation.`}>
 <section class="taxonomy-page-head">

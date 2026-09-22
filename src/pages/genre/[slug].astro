@@ -7,8 +7,8 @@ const genre=await getGenreBySlug(slug);
 if(!genre)return new Response('Không tìm thấy thể loại.',{status:404});
 const all=await getSeriesList();
 const rows=all.filter(x=>(x.genres||[]).some(g=>g.trim().toLowerCase()===genre.name.trim().toLowerCase()));
-const badge=(s:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP'} as Record<string,string>)[s]||'';
-const badgeClass=(s:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop'} as Record<string,string>)[s]||'';
+const badge=(s:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP',upcoming:'UPCOMING'} as Record<string,string>)[s]||'';
+const badgeClass=(s:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop',upcoming:'upcoming'} as Record<string,string>)[s]||'';
 ---
 <BaseLayout title={`${genre.name} — Thể loại | Crescent Moon Translation`} description={`Các truyện thuộc thể loại ${genre.name} tại Crescent Moon Translation.`}>
 <section class="taxonomy-page-head"><div><div class="taxonomy-kicker">Thể loại</div><h1>{genre.name}</h1><p class="meta">{rows.length} truyện</p></div></section>

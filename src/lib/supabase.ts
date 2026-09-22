@@ -3,7 +3,7 @@ import { env } from 'cloudflare:workers';
 export type Series = {
   id: string; title: string; slug: string; description: string | null;
   author: string | null; artist: string | null; raw_url?: string | null; cover_key: string | null;
-  type: string | null; status: 'ongoing'|'completed'|'hiatus'|'dropped';
+  type: string | null; status: 'ongoing'|'completed'|'hiatus'|'dropped'|'upcoming';
   is_published: boolean; access_type: 'public'|'password'|'member'; genres?: string[]; favorite_count?: number; notify_discord?: boolean; notify_telegram?: boolean; created_at: string; updated_at: string;
 };
 export type Chapter = {
@@ -61,7 +61,7 @@ export async function getPublicChapterById(id:string,token?:string){
 }
 export async function getPublicChapterPages(chapterId:string){return supabaseGet<ChapterPage[]>(`chapter_pages?select=id,chapter_id,page_number,object_key,created_at&chapter_id=eq.${encodeURIComponent(chapterId)}&order=page_number.asc`)}
 export async function getAdminChapterPages(chapterId:string,token:string){return supabaseGet<ChapterPage[]>(`chapter_pages?select=*&chapter_id=eq.${encodeURIComponent(chapterId)}&order=page_number.asc`,token)}
-export const statusLabel=(s:Series['status'])=>({ongoing:'Đang tiến hành',completed:'Hoàn thành',hiatus:'Tạm ngưng',dropped:'Drop'} as any)[s]??s;
+export const statusLabel=(s:Series['status'])=>({ongoing:'Đang tiến hành',completed:'Hoàn thành',hiatus:'Tạm ngưng',dropped:'Drop',upcoming:'Sắp ra mắt'} as any)[s]??s;
 export const accessLabel=(a:Chapter['access_type'])=>({public:'Public',password:'🔒 Mật khẩu',member:'🔒 Thành viên'} as any)[a]??a;
 
 
