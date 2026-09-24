@@ -99,7 +99,7 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
 
 {recentHistory.length>0&&<>
 <section class="history-continue-panel home-section-content">
-  <div class="history-continue-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Lịch sử đọc gần đây</h2><a href="/account#history">Xem thêm</a></div>
+  <div class="history-continue-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Lịch sử đọc gần đây</h2></div>
   <div class="history-continue-grid">
   {recentHistory.map(({item,chapter})=>{
     const latest=Number(latestChapter.get(item.id)||chapter?.chapter_number||1);
