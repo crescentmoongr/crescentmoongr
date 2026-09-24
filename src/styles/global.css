@@ -3588,3 +3588,27 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .rank-slider-arrow::first-line{line-height:1}
 .rank-slider-arrow{padding-bottom:4px}
 @media(max-width:620px){.favorite-rank-copy>div{padding-left:2.2rem}.rank-slider-arrow{padding-bottom:3px}}
+
+/* v12.25 — favorite rank white face/pink shadow + hover-only desktop arrows */
+.favorite-rank-big,
+.favorite-rank-card.rank-1 .favorite-rank-big,
+.favorite-rank-card.rank-2 .favorite-rank-big,
+.favorite-rank-card.rank-3 .favorite-rank-big{
+  color:#fff;
+  text-shadow:0 3px 0 #e7a6c8,0 5px 12px rgba(179,92,137,.18);
+}
+.rank-slider-arrow{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .18s ease,visibility .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.favorite-rank-slider:hover .rank-slider-arrow,
+.favorite-rank-slider:focus-within .rank-slider-arrow{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+}
+@media (hover:none),(pointer:coarse){
+  .rank-slider-arrow{opacity:1;visibility:visible;pointer-events:auto}
+}

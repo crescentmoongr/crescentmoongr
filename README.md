@@ -971,3 +971,8 @@ Trang chi tiết truyện:
 - Workers KV chỉ còn dùng cho rate-limit khi nhập sai mật khẩu và migration cookie auth legacy trước v12.05.
 - Không `SESSION.delete()` ở lần unlock thành công nếu trước đó không có lần nhập sai, giảm delete operations không cần thiết.
 - Không thay đổi thời hạn unlock: vẫn 48 giờ. Không cần SQL mới.
+
+
+## v12.25
+- Top favorites rank numbers: white face with pastel-pink lower shadow/layer.
+- Desktop slider arrows stay hidden until the Top favorites area is hovered/focused; touch devices keep arrows visible.
