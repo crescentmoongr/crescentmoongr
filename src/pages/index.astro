@@ -16,7 +16,7 @@ try{
     if(!lastPublished.has(ch.series_id)||when>(lastPublished.get(ch.series_id)||0)) lastPublished.set(ch.series_id,when);
     const n=Number(ch.chapter_number); if(!latestChapter.has(ch.series_id)||n>(latestChapter.get(ch.series_id)||-Infinity)) latestChapter.set(ch.series_id,n);
   }
-  updated=[...seriesRows].filter(x=>lastPublished.has(x.id)).sort((a,b)=>(lastPublished.get(b.id)||0)-(lastPublished.get(a.id)||0));
+  updated=[...seriesRows].filter(x=>x.status!=='upcoming'&&lastPublished.has(x.id)).sort((a,b)=>(lastPublished.get(b.id)||0)-(lastPublished.get(a.id)||0));
 }catch(e){error=e instanceof Error?e.message:'Không thể tải dữ liệu.'}
 const recent=updated.slice(0,32);
 const recentMore=updated.slice(32).map(item=>({
@@ -27,7 +27,8 @@ const recentMore=updated.slice(32).map(item=>({
   status:item.status,
   latest_chapter:latestChapter.has(item.id)?latestChapter.get(item.id):null
 }));
-const favoriteRanking=[...allSeries].filter(x=>Number(x.favorite_count||0)>0).sort((a,b)=>Number(b.favorite_count||0)-Number(a.favorite_count||0)).slice(0,8);
+const upcomingSeries=[...allSeries].filter(x=>x.status==='upcoming').sort((a,b)=>new Date(b.updated_at||b.created_at||0).getTime()-new Date(a.updated_at||a.created_at||0).getTime()).slice(0,8);
+const favoriteRanking=[...allSeries].filter(x=>Number(x.favorite_count||0)>0).sort((a,b)=>Number(b.favorite_count||0)-Number(a.favorite_count||0)).slice(0,10);
 // v12.18: the homepage hero is discovery-focused: choose 5 random public series with covers on each page request.
 const randomSlidePool=[...allSeries].filter(item=>Boolean(item.cover_key));
 for(let i=randomSlidePool.length-1;i>0;i--){
@@ -97,31 +98,39 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
 </section>}
 
 {recentHistory.length>0&&<>
-<div class="section-title home-section-head home-section-head-first"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Lịch sử đọc gần đây</h2></div>
-<section class="history-cover-grid home-section-content">
-  {recentHistory.map(({item,chapter})=>
-    <a class="history-cover-card" href={chapter?`/read/${item.slug}/${chapter.chapter_number}`:`/manga/${item.slug}`}>
-      <div class="history-cover-image">
-        {item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}
-      </div>
-      <div class="history-cover-body">
-        <h3>{item.title}</h3>
-        <div class="meta">{chapter?`Đang đọc Chapter ${chapter.chapter_number}`:'Đọc tiếp'}</div>
-      </div>
+<section class="history-continue-panel home-section-content">
+  <div class="history-continue-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Lịch sử đọc gần đây</h2><a href="/account#history">Xem thêm</a></div>
+  <div class="history-continue-grid">
+  {recentHistory.map(({item,chapter})=>{
+    const latest=Number(latestChapter.get(item.id)||chapter?.chapter_number||1);
+    const current=Number(chapter?.chapter_number||0);
+    const progress=Math.max(5,Math.min(100,latest>0?(current/latest)*100:5));
+    return <a class="history-continue-card" href={chapter?`/read/${item.slug}/${chapter.chapter_number}`:`/manga/${item.slug}`}>
+      <div class="history-continue-cover">{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div>
+      <div class="history-continue-info"><h3>{item.title}</h3><div class="meta">{chapter?`Chapter ${chapter.chapter_number}`:'Đọc tiếp'}</div><div class="history-progress"><span style={`width:${progress}%`}></span></div></div>
     </a>
-  )}
+  })}
+  </div>
 </section>
 </>}
 
 {favoriteRanking.length>0&&<>
 <div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Top yêu thích</h2></div>
-<section class="favorite-ranking-grid home-section-content">
-  {favoriteRanking.map((item,index)=><a class={`favorite-ranking-item ${index < 3 ? `favorite-ranking-top favorite-ranking-top-${index+1}` : ''}`} href={`/manga/${item.slug}`}>
-    <div class="favorite-ranking-number">{index < 3 ? <img class="favorite-ranking-medal" src={`/medal-rank-${index+1}.png`} alt={`Hạng ${index+1}`} loading="lazy" decoding="async" /> : index+1}</div>
-    <div class="favorite-ranking-cover">{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div>
-    <div class="favorite-ranking-info"><h3>{item.title}</h3><div class="favorite-ranking-meta">♥ {Number(item.favorite_count||0)} yêu thích</div></div>
+<section class="favorite-rank-slider home-section-content" data-rank-slider>
+  <button type="button" class="rank-slider-arrow rank-slider-prev" data-rank-prev aria-label="Xem hạng trước">‹</button>
+  <div class="favorite-rank-track" data-rank-track>
+  {favoriteRanking.map((item,index)=><a class={`favorite-rank-card rank-${index+1}`} href={`/manga/${item.slug}`}>
+    <div class="favorite-rank-cover">{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}<div class="favorite-rank-shade"></div><div class="favorite-rank-copy"><h3>{item.title}</h3><div>♥ {Number(item.favorite_count||0)} yêu thích</div></div></div>
+    <span class="favorite-rank-big">{index+1}</span>
   </a>)}
+  </div>
+  <button type="button" class="rank-slider-arrow rank-slider-next" data-rank-next aria-label="Xem hạng tiếp">›</button>
 </section>
+</>}
+
+{upcomingSeries.length>0&&<>
+<div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Sắp ra mắt</h2></div>
+<section class="grid home-section-content upcoming-home-grid">{upcomingSeries.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover"><span class="cover-badge upcoming">UPCOMING</span>{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{statusLabel(item.status)}</div></div></a>)}</section>
 </>}
 
 <div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Mới cập nhật</h2></div>
@@ -172,6 +181,16 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
       start();
     },{passive:true});
     start();
+  });
+
+  document.querySelectorAll('[data-rank-slider]').forEach((slider)=>{
+    const track=slider.querySelector('[data-rank-track]');
+    const prev=slider.querySelector('[data-rank-prev]');
+    const next=slider.querySelector('[data-rank-next]');
+    if(!track)return;
+    const step=()=>Math.max(220,track.clientWidth*.82);
+    prev?.addEventListener('click',()=>track.scrollBy({left:-step(),behavior:'smooth'}));
+    next?.addEventListener('click',()=>track.scrollBy({left:step(),behavior:'smooth'}));
   });
 
   const loadMoreButton=document.querySelector('[data-home-load-more]');
