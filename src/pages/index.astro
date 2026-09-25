@@ -133,7 +133,7 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
   <div class="upcoming-feature-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Sắp ra mắt</h2><div class="upcoming-feature-count"><span data-upcoming-current>01</span> / {String(upcomingSeries.length).padStart(2,'0')}</div></div>
   <div class="upcoming-feature-track">
     {upcomingSeries.map((item,index)=>{ const tags=[...(Array.isArray(item.genres)?item.genres:[]),item.type].filter(Boolean).slice(0,2); return <article class={`upcoming-feature-card ${index===0?'is-active':''}`} data-upcoming-card>
-      <a class="upcoming-feature-cover" href={`/manga/${item.slug}`}><span class="cover-badge upcoming">UPCOMING</span>{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading={index===0?'eager':'lazy'}/>:<span>{item.title}</span>}</a>
+      <a class="upcoming-feature-cover" href={`/manga/${item.slug}`}>{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading={index===0?'eager':'lazy'}/>:<span>{item.title}</span>}</a>
       <div class="upcoming-feature-info"><h3><a href={`/manga/${item.slug}`}>{item.title}</a></h3>{tags.length>0&&<div class="upcoming-feature-tags">{tags.join(' · ')}</div>}<div class="upcoming-feature-wait">Chờ Trăng nha~ 🌙</div><a class="upcoming-feature-link" href={`/manga/${item.slug}`}>Xem giới thiệu <span aria-hidden="true">→</span></a></div>
     </article>})}
   </div>
