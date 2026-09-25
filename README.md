@@ -976,3 +976,6 @@ Trang chi tiết truyện:
 ## v12.25
 - Top favorites rank numbers: white face with pastel-pink lower shadow/layer.
 - Desktop slider arrows stay hidden until the Top favorites area is hovered/focused; touch devices keep arrows visible.
+
+### v12.26
+- Top favorites slider navigation arrows are hidden on mobile/touch devices; users swipe horizontally instead.
