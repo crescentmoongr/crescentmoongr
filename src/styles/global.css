@@ -3664,3 +3664,12 @@ button.home-more-button:hover span{transform:translateY(2px);}
 /* v12.36 — Upcoming title size */
 .upcoming-feature-title{font-size:20px;font-weight:700}
 @media(max-width:700px){.upcoming-feature-title{font-size:20px;font-weight:700}}
+
+/* v12.37 — match Upcoming title typography to Top yêu thích on mobile */
+@media(max-width:700px){
+  .upcoming-feature-title{
+    font-size:.83rem;
+    font-weight:700;
+    line-height:1.25;
+  }
+}
