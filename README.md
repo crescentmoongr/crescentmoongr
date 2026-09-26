@@ -979,3 +979,10 @@ Trang chi tiết truyện:
 
 ### v12.26
 - Top favorites slider navigation arrows are hidden on mobile/touch devices; users swipe horizontally instead.
+
+
+### v12.32 — Upcoming title spacing + homepage latest comments
+- Moves the upcoming-card title upward so it is visually separated from the bottom-right intro button.
+- Adds a compact “Bình luận mới” section below “Mới cập nhật”, showing the 6 newest comments with avatar, member name, short comment preview, series title and date.
+- Comment cards link directly to the comment on the series page.
+- Run `supabase-v12-32-home-latest-comments.sql` once before deploying so the homepage can fetch the latest comments in one lightweight RPC instead of one request per series.

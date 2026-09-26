@@ -227,6 +227,15 @@ export async function getSeriesComments(seriesId:string){
   return supabaseRpc<SeriesComment[]>('get_series_comments',{p_series_id:seriesId});
 }
 
+export type LatestSeriesComment = SeriesComment & {
+  series_title:string | null;
+  series_slug:string | null;
+};
+
+export async function getLatestSeriesComments(limit=6){
+  return supabaseRpc<LatestSeriesComment[]>('get_latest_series_comments',{p_limit:limit});
+}
+
 
 export type AdminSeriesComment = SeriesComment & {
   series_title:string | null;

@@ -1,8 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getSeriesList, getAllPublicChapters, statusLabel, getMyHistory, getServiceSiteSetting } from '../lib/supabase';
+import { getSeriesList, getAllPublicChapters, statusLabel, getMyHistory, getServiceSiteSetting, getLatestSeriesComments } from '../lib/supabase';
 import { getSession } from '../lib/auth';
-import { richTextToHtml } from '../lib/richText';
+import { richTextToHtml, commentRichTextToHtml } from '../lib/richText';
 export const prerender=false;
 let allSeries:any[]=[]; let updated:any[]=[]; let allChapters:any[]=[]; let error='';
 let latestChapter=new Map<string,number>();
@@ -55,6 +55,8 @@ const statusBadgeLabel=(status:string)=>({completed:'FULL',ongoing:'ONGOING',hia
 const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop',upcoming:'upcoming'} as Record<string,string>)[status]||'';
 let siteAnnouncementHtml='';
 try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_announcement_html'))?.value||'')}catch{}
+let latestComments:any[]=[];
+try{latestComments=await getLatestSeriesComments(6)}catch{}
 
 ---
 <BaseLayout title="Crescent Moon Translation">
@@ -150,6 +152,22 @@ try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_annou
 {recentMore.length>0&&<div class="home-more-bottom"><button class="home-more-button" type="button" data-home-load-more>Xem thêm <span aria-hidden="true">↓</span></button></div>}
 <script type="application/json" id="recent-more-data" set:html={JSON.stringify(recentMore).replace(/</g,'\\u003c')}></script>
 </>:<div class="empty-state">Chưa có truyện.</div>}
+
+{latestComments.length>0&&<>
+<div class="section-title home-section-head home-comments-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Bình luận mới</h2></div>
+<section class="home-comments-panel home-section-content">
+  <div class="home-comments-grid">
+    {latestComments.map(c=><a class="home-comment-card" href={`/manga/${c.series_slug}#comment-${c.id}`}>
+      <div class="home-comment-avatar">{c.avatar_key?<img src={`/api/avatar/${c.user_id}`} alt="" loading="lazy"/>:<span aria-hidden="true">☾</span>}</div>
+      <div class="home-comment-main">
+        <div class="home-comment-top"><strong class={c.role==='admin'?'admin-name-glow':''}>{c.display_name||c.username||'Thành viên'}</strong><time>{new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit'}).format(new Date(c.created_at))}</time></div>
+        <div class="home-comment-body" set:html={commentRichTextToHtml(c.body)}></div>
+        <div class="home-comment-series">{c.series_title}</div>
+      </div>
+    </a>)}
+  </div>
+</section>
+</>}
 </>}
 <script>
   const sliders=document.querySelectorAll('[data-favorite-slider]');
