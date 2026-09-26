@@ -986,3 +986,7 @@ Trang chi tiết truyện:
 - Adds a compact “Bình luận mới” section below “Mới cập nhật”, showing the 6 newest comments with avatar, member name, short comment preview, series title and date.
 - Comment cards link directly to the comment on the series page.
 - Run `supabase-v12-32-home-latest-comments.sql` once before deploying so the homepage can fetch the latest comments in one lightweight RPC instead of one request per series.
+
+
+## v12.33
+- Moves the Upcoming card title further upward while keeping the intro button fixed at the bottom-right.
