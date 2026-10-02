@@ -1,4 +1,0 @@
-import type { APIRoute } from 'astro';
-import { requireAdminSession } from '../../../../lib/auth';
-import { adminTestMemberRewards } from '../../../../lib/supabase';
-export const POST:APIRoute=async({cookies,request,redirect})=>{const s=await requireAdminSession(cookies);if(!s)return redirect('/login',303);const f=await request.formData();try{const saved=await adminTestMemberRewards(s.token,Number(f.get('streak')||0),String(f.get('achievement')||'')||null,String(f.get('name_style')||'')||null);if(!saved)throw new Error('Supabase không trả lại dữ liệu sau khi lưu test. Hãy chạy file SQL v12.39.');return redirect('/account?success='+encodeURIComponent(`Đã test: ${saved.current_streak} ngày · hạng ${saved.rank_key}.`),303)}catch(e){return redirect('/account?error='+encodeURIComponent(e instanceof Error?e.message:'Test thất bại.'),303)}};
