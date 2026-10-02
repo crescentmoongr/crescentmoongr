@@ -1,12 +1,15 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getSession } from '../lib/auth';
-import { getMyBookmarks,getSeriesById } from '../lib/supabase';
+import { getMyBookmarks,getSeriesById,getMyMemberRewards } from '../lib/supabase';
 export const prerender=false;
 const session=await getSession(Astro.cookies); if(!session) return Astro.redirect('/login?next=/account');
 const user=session.user; const success=Astro.url.searchParams.get('success'); const error=Astro.url.searchParams.get('error');
 const usernameRequired=!String(user.username||'').trim() || Astro.url.searchParams.get('username_required')==='1';
 const bookmarkRows=await getMyBookmarks(user.id,session.token);
+const rewards=user.role==='admin'?await getMyMemberRewards(session.token):null;
+const rankMap:any={none:['','Chưa xếp hạng'],mam_trang:['🌱','Mầm Trăng'],trang_non:['🌙','Trăng Non'],trang_tron:['🌕','Trăng Tròn'],anh_sao:['✨','Ánh Sao'],sao_sang:['🌟','Sao Sáng'],tinh_nguyet:['💫','Tinh Nguyệt']};
+const [rankIcon,rankName]=rankMap[rewards?.rank_key||'none']||rankMap.none;
 const bookmarks=(await Promise.all(bookmarkRows.map(async b=>({b,series:await getSeriesById(b.series_id)})))).filter(x=>x.series);
 ---
 <BaseLayout title="Tài khoản — Crescent Reader">
@@ -15,6 +18,17 @@ const bookmarks=(await Promise.all(bookmarkRows.map(async b=>({b,series:await ge
   <div class="admin-card account-card" id="profile"><h2>Hồ sơ</h2>{usernameRequired&&<div class="notice warning username-account-notice"><strong>Vui lòng bổ sung Username.</strong><br/>Username giúp nhận diện tài khoản và tên bình luận khi bạn chưa đặt Tên hiển thị.</div>}<form method="POST" action="/api/account/profile"><label class="field"><span>Tên hiển thị</span><input name="display_name" maxlength="80" value={user.display_name||''}/></label><label class="field"><span>Username *</span><input name="username" minlength="3" maxlength="40" pattern="[A-Za-z0-9_.-]+" autocomplete="username" value={user.username||''} required/><small class="meta">Bắt buộc · 3–40 ký tự · chữ cái, số, dấu chấm, gạch dưới hoặc gạch ngang.</small></label><button class="button" type="submit">Lưu hồ sơ</button></form></div>
   <div class="admin-card account-card"><h2>Đổi mật khẩu</h2><form method="POST" action="/api/account/password"><label class="field"><span>Mật khẩu mới</span><input name="password" type="password" minlength="8" autocomplete="new-password" required/></label><label class="field"><span>Nhập lại mật khẩu mới</span><input name="confirm_password" type="password" minlength="8" autocomplete="new-password" required/></label><button class="button" type="submit">Đổi mật khẩu</button></form></div>
 </section>
+{user.role==='admin' && <section class="admin-card admin-wide account-page-wide member-test-panel">
+  <div class="section-title"><div><h2>🧪 Thử nghiệm Điểm danh & Hạng Member</h2><p class="meta">Chỉ Admin nhìn thấy khu vực này. Member thường chưa thấy tính năng điểm danh trong giai đoạn test.</p></div></div>
+  <div class="member-reward-summary"><div><span>Hạng hiện tại</span><strong>{rankIcon} {rankName}</strong></div><div><span>Streak hiện tại</span><strong>{rewards?.current_streak||0} ngày</strong></div><div><span>Streak cao nhất</span><strong>{rewards?.highest_streak||0} ngày</strong></div></div>
+  <form method="POST" action="/api/account/checkin" class="member-test-checkin"><button class="button" type="submit">Điểm danh hôm nay (giờ VN)</button><span class="meta">Mỗi ngày 00:00–23:59 theo Asia/Ho_Chi_Minh.</span></form>
+  <form method="POST" action="/api/admin/member/test-rewards" class="admin-form member-test-form">
+    <label class="field"><span>Test mốc streak</span><select name="streak"><option value="1">1 ngày — 🌱 Mầm Trăng</option><option value="7">7 ngày — 🌙 Trăng Non</option><option value="30">30 ngày — 🌕 Trăng Tròn</option><option value="60">60 ngày — ✨ Ánh Sao + màu tên</option><option value="100">100 ngày — 🌟 Sao Sáng</option><option value="365">365 ngày — 💫 Tinh Nguyệt + Gradient/Glow</option></select></label>
+    <label class="field"><span>Badge bình luận test</span><select name="achievement"><option value="">Không badge</option><option>Mọt Truyện</option><option>Nghiện Truyện</option><option>Cú Đêm</option><option>Hóng Chap</option><option>Fan Cứng</option><option>Thánh Bình Luận</option></select></label>
+    <label class="field"><span>Màu tên test</span><select name="name_style"><option value="">Mặc định</option><option value="pink">Hồng</option><option value="purple">Tím</option><option value="blue">Xanh lam</option><option value="cyan">Cyan</option><option value="green">Xanh lá</option><option value="orange">Cam</option><option value="red">Đỏ</option><option value="mocha">Mocha</option><option value="galaxy">Galaxy (365)</option><option value="moonlight">Moonlight (365)</option></select></label>
+    <button class="button secondary" type="submit">Áp dụng dữ liệu test cho Admin</button>
+  </form>
+</section>}
 <section class="admin-card admin-wide account-bookmark-section account-page-wide">
   <div class="section-title"><h2>★ Truyện đã bookmark</h2><span class="meta">{bookmarks.length} truyện</span></div>
   {bookmarks.length?

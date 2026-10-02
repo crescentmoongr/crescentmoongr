@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getChapters,getSeriesBySlug,statusLabel,getSeriesUserState,getReadingHistory,getChapterReads,getSeriesComments,getChapterStats,getSeriesList } from '../../lib/supabase';
+import { getChapters,getSeriesBySlug,statusLabel,getSeriesUserState,getReadingHistory,getChapterReads,getSeriesComments,getChapterStats,getSeriesList,getCommentMemberRewards } from '../../lib/supabase';
 import { getSession } from '../../lib/auth';
 import { richTextToHtml,commentRichTextToHtml } from '../../lib/richText';
 import { slugifyTaxonomy } from '../../lib/slug';
@@ -52,6 +52,9 @@ const sortComments=(items:CommentNode[])=>{
   items.forEach(x=>sortComments(x.replies));
 };
 sortComments(commentRoots);
+const commentRewards=await getCommentMemberRewards(comments.map(c=>c.user_id).filter(Boolean)).catch(()=>[]);
+const commentRewardMap=new Map(commentRewards.map((r:any)=>[r.user_id,r]));
+const rankIconMap:any={mam_trang:'🌱',trang_non:'🌙',trang_tron:'🌕',anh_sao:'✨',sao_sang:'🌟',tinh_nguyet:'💫'};
 const threadedComments:any[]=[];
 const flattenComments=(items:CommentNode[],level=0)=>{
   for(const c of items){
@@ -183,7 +186,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
             <div class="comment-content">
               <div class="comment-head">
                 <div>
-                  <strong class={c.role==='admin'?'admin-name-glow':''}>{c.display_name||c.username||'Thành viên'}</strong>
+                  <span class="comment-member-identity"><span class="member-rank-icon">{c.role==='admin'?'👑':rankIconMap[(commentRewardMap.get(c.user_id) as any)?.rank_key]||''}</span><strong class:list={[c.role==='admin'?'admin-name-glow':'',c.role==='admin'?'admin-celestial-gold':'',c.role!=='admin'&&(commentRewardMap.get(c.user_id) as any)?.name_style?`member-name-${(commentRewardMap.get(c.user_id) as any).name_style}`:'']}>{c.display_name||c.username||'Thành viên'}</strong>{c.role!=='admin'&&(commentRewardMap.get(c.user_id) as any)?.active_achievement&&<span class="comment-achievement-badge">{(commentRewardMap.get(c.user_id) as any).active_achievement}</span>}</span>
                   <span class="meta"> · {new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(c.created_at))}</span>
                 </div>
                 {session&&(session.user.id===c.user_id||session.user.role==='admin')&&
