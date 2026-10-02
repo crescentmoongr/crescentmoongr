@@ -21,6 +21,12 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
       p_is_active:isActive,
       p_can_comment:canComment
     },session.token);
+    const currentStreak=Math.max(0,Number(form.get('current_streak')||0)||0);
+    const highestStreak=Math.max(currentStreak,Number(form.get('highest_streak')||0)||0);
+    const rankKey=clean(form.get('rank_key'))||'none';
+    const achievements=form.getAll('achievements').map(clean).filter(Boolean);
+    const activeAchievement=clean(form.get('active_achievement'))||null;
+    await supabaseRpc('admin_update_member_rewards',{p_user_id:userId,p_current_streak:currentStreak,p_highest_streak:highestStreak,p_rank_key:rankKey,p_achievements:achievements,p_active_achievement:activeAchievement},session.token);
     return redirect('/admin/members?success='+encodeURIComponent('Đã cập nhật thành viên.')+'');
   }catch(e:any){
     return redirect('/admin/members?error='+encodeURIComponent(e?.message||'Không thể cập nhật thành viên.')+'');

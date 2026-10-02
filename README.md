@@ -990,3 +990,10 @@ Trang chi tiết truyện:
 
 ## v12.33
 - Moves the Upcoming card title further upward while keeping the intro button fixed at the bottom-right.
+
+## v12.41 — Điểm danh chính thức + quản lý thành viên
+1. Chạy `supabase-v12-41-checkin-member-admin.sql` trong Supabase SQL Editor.
+2. Deploy source như bình thường. Giữ `SUPABASE_SERVICE_ROLE_KEY` trên Cloudflare để Admin có thể cấp lại mật khẩu.
+3. `/check-in` là trang điểm danh riêng; homepage hiện 7 ngày gần nhất và streak.
+4. Account dùng để chọn Danh hiệu/Màu tên đã mở khóa. Khu test Admin cũ đã bỏ.
+5. Admin > Thành viên có thể sửa Hạng thành viên, Danh hiệu, streak và cấp lại mật khẩu.

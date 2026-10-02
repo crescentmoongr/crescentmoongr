@@ -202,10 +202,13 @@ export type AdminMember = {
   can_comment:boolean;
   created_at:string | null;
   updated_at:string | null;
+  current_streak?:number; highest_streak?:number; rank_key?:string; achievements?:string[]; active_achievement?:string|null;
 };
 
 export async function getAdminMembers(token:string){
-  return supabaseRpc<AdminMember[]>('admin_list_members',{},token);
+  const [members,rewards]=await Promise.all([supabaseRpc<AdminMember[]>('admin_list_members',{},token),supabaseRpc<any[]>('admin_list_member_rewards',{},token).catch(()=>[])]);
+  const byId=new Map(rewards.map((r:any)=>[r.user_id,r]));
+  return members.map(m=>({...m,...(byId.get(m.user_id)||{})}));
 }
 
 export type SeriesComment = {
@@ -284,8 +287,11 @@ export async function getGenreBySlug(slug:string){
   return r[0]??null;
 }
 
-export type MemberRewards = { current_streak:number; highest_streak:number; last_checkin_date:string|null; rank_key:string; solid_color_unlocked:boolean; premium_color_unlocked:boolean; name_style:string|null; active_achievement:string|null };
+export type MemberRewards = { current_streak:number; highest_streak:number; last_checkin_date:string|null; rank_key:string; solid_color_unlocked:boolean; premium_color_unlocked:boolean; name_style:string|null; active_achievement:string|null; achievements?:string[] };
 export async function getMyMemberRewards(token:string){ const r=await supabaseRpc<MemberRewards[]>('get_my_member_rewards',{},token); return r?.[0]??null; }
 export async function checkinVn(token:string){ const r=await supabaseRpc<MemberRewards[]>('checkin_vn',{},token); return r?.[0]??null; }
 export async function getCommentMemberRewards(userIds:string[]){ if(!userIds.length)return []; return supabaseRpc<Array<{user_id:string;rank_key:string;name_style:string|null;active_achievement:string|null}>>('get_comment_member_rewards',{p_user_ids:[...new Set(userIds)]}); }
-export async function adminTestMemberRewards(token:string,streak:number,achievement:string|null,nameStyle:string|null){ const r=await supabaseRpc<MemberRewards[]>('admin_test_member_rewards',{p_streak:streak,p_achievement:achievement,p_name_style:nameStyle},token); return r?.[0]??null; }
+export async function getMyCheckinHistory(token:string,days=60){ return supabaseRpc<Array<{checkin_date:string}>>('get_my_checkin_history',{p_days:days},token); }
+export async function setMyMemberIdentity(token:string,nameStyle:string|null,achievement:string|null){ return supabaseRpc('set_my_member_identity',{p_name_style:nameStyle,p_achievement:achievement},token); }
+
+export async function adminResetUserPassword(userId:string,password:string){ const {url,serviceKey}=serviceConfig(); const r=await fetch(`${url}/auth/v1/admin/users/${encodeURIComponent(userId)}`,{method:'PUT',headers:{apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,'Content-Type':'application/json'},body:JSON.stringify({password})}); if(!r.ok) throw new Error(`Supabase Auth ${r.status}: ${await r.text()}`); return r.json(); }

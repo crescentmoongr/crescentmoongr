@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getSession } from '../lib/auth';
+import { getMyMemberRewards,getMyCheckinHistory } from '../lib/supabase';
+export const prerender=false;
+const session=await getSession(Astro.cookies); if(!session)return Astro.redirect('/login?next=/check-in');
+const rewards=await getMyMemberRewards(session.token); const history=await getMyCheckinHistory(session.token,400).catch(()=>[]);
+const checked=new Set(history.map(x=>x.checkin_date));
+const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const rankMap:any={none:['','Chưa xếp hạng'],mam_trang:['🌱','Mầm Trăng'],trang_non:['🌙','Trăng Non'],trang_tron:['🌕','Trăng Tròn'],anh_sao:['✨','Ánh Sao'],sao_sang:['🌟','Sao Sáng'],tinh_nguyet:['💫','Tinh Nguyệt']};
+const [rankIcon,rankName]=rankMap[rewards?.rank_key||'none']||rankMap.none;
+const milestones=[{n:1,icon:'🌱',name:'Mầm Trăng',gift:'Hạng thành viên'},{n:7,icon:'🌙',name:'Trăng Non',gift:'Hạng thành viên'},{n:30,icon:'🌕',name:'Trăng Tròn',gift:'Hạng thành viên'},{n:60,icon:'✨',name:'Ánh Sao',gift:'Hạng + mở khóa Màu tên'},{n:100,icon:'🌟',name:'Sao Sáng',gift:'Hạng thành viên'},{n:365,icon:'💫',name:'Tinh Nguyệt',gift:'Hạng + Gradient & Glow'}];
+const journeyMax=Math.max(60,Math.min(365,Math.ceil(Math.max(1,rewards?.highest_streak||0)/20)*20+20));
+const success=Astro.url.searchParams.get('success'),error=Astro.url.searchParams.get('error');
+---
+<BaseLayout title="Điểm danh — Crescent Moon">
+<section class="checkin-page-head admin-card"><div><h1>🌙 Điểm danh hằng ngày</h1><p>Tính theo ngày Việt Nam · 00:00–23:59 (Asia/Ho_Chi_Minh)</p></div><div class="checkin-stats"><span>🔥 Streak <strong>{rewards?.current_streak||0}</strong></span><span>🏆 Cao nhất <strong>{rewards?.highest_streak||0}</strong></span><span>{rankIcon} <strong>{rankName}</strong></span></div></section>
+{success&&<div class="notice success">{success}</div>}{error&&<div class="notice error">{error}</div>}
+<section class="checkin-journey admin-card"><div class="section-title"><div><h2>Hành trình điểm danh</h2><p class="meta">Mỗi vòng tròn là một ngày trong chuỗi. Vuốt ngang trên điện thoại để xem tiếp.</p></div></div><div class="checkin-journey-scroll"><div class="checkin-journey-grid">{Array.from({length:journeyMax},(_,i)=>i+1).map(n=>{const done=n<=(rewards?.highest_streak||0);const current=n===(rewards?.current_streak||0);const milestone=milestones.find(m=>m.n===n);return <div class:list={['checkin-day-node',done&&'is-done',current&&'is-current',milestone&&'is-milestone']}><div class="checkin-day-circle">{done?'✓':n}</div><small>{milestone?`${milestone.icon} ${milestone.name}`:`Ngày ${n}`}</small></div>})}</div></div>
+<form method="POST" action="/api/account/checkin" class="checkin-action"><input type="hidden" name="return_to" value="/check-in"/><button class="button" type="submit" disabled={rewards?.last_checkin_date===today}>{rewards?.last_checkin_date===today?'✓ Hôm nay đã điểm danh':'Điểm danh hôm nay'}</button></form></section>
+<section class="admin-card checkin-rewards"><div class="section-title"><div><h2>🎁 Phần thưởng</h2><p class="meta">Đạt mốc sẽ mở khóa vĩnh viễn. Đồ đã mở khóa có thể chỉnh trong Tài khoản.</p></div><a class="button secondary small-button" href="/account">Tới Tài khoản</a></div><div class="checkin-reward-list">{milestones.map(m=><div class:list={['checkin-reward-item',(rewards?.highest_streak||0)>=m.n&&'is-unlocked']}><span class="checkin-reward-icon">{m.icon}</span><div><strong>{m.n} ngày · {m.name}</strong><p>{m.gift}</p></div><span class="checkin-reward-state">{(rewards?.highest_streak||0)>=m.n?'Đã nhận':'Chưa đạt'}</span></div>)}</div></section>
+</BaseLayout>

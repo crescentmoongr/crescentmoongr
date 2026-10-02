@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getSeriesList, getAllPublicChapters, statusLabel, getMyHistory, getServiceSiteSetting, getLatestSeriesComments } from '../lib/supabase';
+import { getSeriesList, getAllPublicChapters, statusLabel, getMyHistory, getServiceSiteSetting, getLatestSeriesComments, getMyMemberRewards, getMyCheckinHistory } from '../lib/supabase';
 import { getSession } from '../lib/auth';
 import { richTextToHtml, commentRichTextToHtml } from '../lib/richText';
 export const prerender=false;
@@ -38,7 +38,7 @@ for(let i=randomSlidePool.length-1;i>0;i--){
 const favoriteSlides=randomSlidePool.slice(0,5);
 const plainIntro=(value:any)=>String(value||'').replace(/<[^>]*>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'\"').replace(/&#39;/g,"'").replace(/\s+/g,' ').trim();
 const session=await getSession(Astro.cookies);
-let recentHistory:any[]=[];
+let recentHistory:any[]=[]; let homeRewards:any=null; let homeCheckins:any[]=[];
 if(session){
   try{
     const history=await getMyHistory(session.user.id,session.token);
@@ -50,7 +50,10 @@ if(session){
       return item?{item,chapter,updated_at:h.updated_at}:null;
     }).filter(Boolean);
   }catch{}
+  try{[homeRewards,homeCheckins]=await Promise.all([getMyMemberRewards(session.token),getMyCheckinHistory(session.token,8)])}catch{}
 }
+const vnDate=(offset=0)=>{const d=new Date(Date.now()+offset*86400000);const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'}).formatToParts(d);const get=(t:string)=>parts.find(x=>x.type===t)?.value||'';return {key:`${get('year')}-${get('month')}-${get('day')}`,label:`${get('day')}/${get('month')}`,weekday:get('weekday')}};
+const homeDays=Array.from({length:7},(_,i)=>vnDate(i-6)); const homeChecked=new Set(homeCheckins.map(x=>x.checkin_date)); const todayVn=homeDays[6]?.key;
 const statusBadgeLabel=(status:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP',upcoming:'UPCOMING'} as Record<string,string>)[status]||'';
 const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop',upcoming:'upcoming'} as Record<string,string>)[status]||'';
 let siteAnnouncementHtml='';
@@ -75,6 +78,8 @@ try{latestComments=await getLatestSeriesComments(6)}catch{}
   <div class="site-announcement-icon" aria-hidden="true"><img src="/announcement-icon.png" alt="" loading="eager" decoding="async"/></div>
   <div class="site-announcement-content rich-content" set:html={siteAnnouncementHtml}></div>
 </section>}
+
+{session&&homeRewards&&<section class="admin-card home-checkin-widget"><div class="home-checkin-top"><div><strong>🌙 Điểm danh hằng ngày</strong><div class="meta">🔥 Streak: <b>{homeRewards.current_streak||0} ngày</b></div></div><a class="button secondary small-button" href="/check-in">Xem lịch điểm danh →</a></div><div class="home-checkin-days">{homeDays.map((d,i)=><div class:list={['home-checkin-day',homeChecked.has(d.key)&&'is-done']}><strong>{homeChecked.has(d.key)?'✓':new Date(d.key+'T00:00:00Z').getUTCDate()}</strong><small>{i===6?'Hôm nay':d.label}</small></div>)}</div>{homeRewards.last_checkin_date!==todayVn&&<form method="POST" action="/api/account/checkin"><input type="hidden" name="return_to" value="/"/><button class="button" type="submit">Điểm danh hôm nay</button></form>}</section>}
 
 {error?<div class="notice error">{error}</div>:<>
 
