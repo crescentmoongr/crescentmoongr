@@ -89,7 +89,7 @@ if(progress instanceof HTMLElement){
     method:'POST',
     credentials:'same-origin',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({series_id:progress.dataset.seriesId,chapter_id:progress.dataset.chapterId})
+    body:JSON.stringify({series_id:progress.dataset.seriesId,chapter_id:progress.dataset.chapterId,time_zone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Asia/Ho_Chi_Minh'})
   }).catch(()=>{});
 }
 const wraps=[...document.querySelectorAll('.reader-canvas-wrap')];

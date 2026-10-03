@@ -32,6 +32,7 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
       p_body:body,
       p_parent_id:parentId
     },session.token);
+    try{await supabaseRpc('record_comment_achievement_activity',{},session.token)}catch{}
     return redirect(returnTo+'?comment=success#comments');
   }catch(e:any){
     const join=returnTo.includes('?')?'&':'?';

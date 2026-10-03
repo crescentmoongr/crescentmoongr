@@ -50,10 +50,10 @@ if(session){
       return item?{item,chapter,updated_at:h.updated_at}:null;
     }).filter(Boolean);
   }catch{}
-  try{[homeRewards,homeCheckins]=await Promise.all([getMyMemberRewards(session.token),getMyCheckinHistory(session.token,8)])}catch{}
+  try{[homeRewards,homeCheckins]=await Promise.all([getMyMemberRewards(session.token),getMyCheckinHistory(session.token,20)])}catch{}
 }
 const vnDate=(offset=0)=>{const d=new Date(Date.now()+offset*86400000);const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'}).formatToParts(d);const get=(t:string)=>parts.find(x=>x.type===t)?.value||'';return {key:`${get('year')}-${get('month')}-${get('day')}`,label:`${get('day')}/${get('month')}`,weekday:get('weekday')}};
-const homeDays=Array.from({length:7},(_,i)=>vnDate(i-6)); const homeChecked=new Set(homeCheckins.map(x=>x.checkin_date)); const todayVn=homeDays[6]?.key;
+const vnWeekday=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Ho_Chi_Minh',weekday:'short'}).format(new Date()); const vnWeekIndex=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].indexOf(vnWeekday); const mondayOffset=-Math.max(0,vnWeekIndex); const homeDays=Array.from({length:14},(_,i)=>vnDate(mondayOffset-7+i)); const homeChecked=new Set(homeCheckins.map(x=>x.checkin_date)); const todayVn=vnDate(0).key;
 const statusBadgeLabel=(status:string)=>({completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP',upcoming:'UPCOMING'} as Record<string,string>)[status]||'';
 const statusBadgeClass=(status:string)=>({completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop',upcoming:'upcoming'} as Record<string,string>)[status]||'';
 let siteAnnouncementHtml='';
@@ -79,7 +79,7 @@ try{latestComments=await getLatestSeriesComments(6)}catch{}
   <div class="site-announcement-content rich-content" set:html={siteAnnouncementHtml}></div>
 </section>}
 
-{session&&homeRewards&&<section class="admin-card home-checkin-widget"><div class="home-checkin-top"><div><strong>🌙 Điểm danh hằng ngày</strong><div class="meta">🔥 Streak: <b>{homeRewards.current_streak||0} ngày</b></div></div><a class="button secondary small-button" href="/check-in">Xem lịch điểm danh →</a></div><div class="home-checkin-days">{homeDays.map((d,i)=><div class:list={['home-checkin-day',homeChecked.has(d.key)&&'is-done']}><strong>{homeChecked.has(d.key)?'✓':new Date(d.key+'T00:00:00Z').getUTCDate()}</strong><small>{i===6?'Hôm nay':d.label}</small></div>)}</div>{homeRewards.last_checkin_date!==todayVn&&<form method="POST" action="/api/account/checkin"><input type="hidden" name="return_to" value="/"/><button class="button" type="submit">Điểm danh hôm nay</button></form>}</section>}
+{session&&homeRewards&&<section class="admin-card home-checkin-widget"><div class="home-checkin-top"><div><strong>🌙 Điểm danh hằng ngày</strong><div class="meta">🔥 Streak: <b>{homeRewards.current_streak||0} ngày</b></div></div><a class="button secondary small-button" href="/check-in">Xem lịch điểm danh →</a></div><div class="home-checkin-days">{homeDays.map((d,i)=><div class:list={['home-checkin-day',homeChecked.has(d.key)&&'is-done']}><strong>{homeChecked.has(d.key)?'✓':new Date(d.key+'T00:00:00Z').getUTCDate()}</strong><small>{d.key===todayVn?'Hôm nay':d.label}</small></div>)}</div>{homeRewards.last_checkin_date!==todayVn&&<form method="POST" action="/api/account/checkin"><input type="hidden" name="return_to" value="/"/><button class="button" type="submit">Điểm danh hôm nay</button></form>}</section>}
 
 {error?<div class="notice error">{error}</div>:<>
 
@@ -165,7 +165,7 @@ try{latestComments=await getLatestSeriesComments(6)}catch{}
     {latestComments.map(c=><a class="home-comment-card" href={`/manga/${c.series_slug}#comment-${c.id}`}>
       <div class="home-comment-avatar">{c.avatar_key?<img src={`/api/avatar/${c.user_id}`} alt="" loading="lazy"/>:<span aria-hidden="true">☾</span>}</div>
       <div class="home-comment-main">
-        <div class="home-comment-top"><strong class={c.role==='admin'?'admin-name-glow':''}>{c.display_name||c.username||'Thành viên'}</strong><time>{new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit'}).format(new Date(c.created_at))}</time></div>
+        <div class="home-comment-top"><strong class={c.role==='admin'?'admin-celestial-gold':''}>{c.display_name||c.username||'Thành viên'}</strong><time>{new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit'}).format(new Date(c.created_at))}</time></div>
         <div class="home-comment-body" set:html={commentRichTextToHtml(c.body)}></div>
         <div class="home-comment-series">{c.series_title}</div>
       </div>
