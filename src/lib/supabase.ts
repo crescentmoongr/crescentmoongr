@@ -295,3 +295,5 @@ export async function getMyCheckinHistory(token:string,days=60){ return supabase
 export async function setMyMemberIdentity(token:string,nameStyle:string|null,achievement:string|null){ return supabaseRpc('set_my_member_identity',{p_name_style:nameStyle,p_achievement:achievement},token); }
 
 export async function adminResetUserPassword(userId:string,password:string){ const {url,serviceKey}=serviceConfig(); const r=await fetch(`${url}/auth/v1/admin/users/${encodeURIComponent(userId)}`,{method:'PUT',headers:{apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,'Content-Type':'application/json'},body:JSON.stringify({password})}); if(!r.ok) throw new Error(`Supabase Auth ${r.status}: ${await r.text()}`); return r.json(); }
+export type AchievementProgress = { read_count:number; night_count:number; fast_count:number; bookmark_count:number; comment_day_count:number };
+export async function getMyAchievementProgress(token:string){ const r=await supabaseRpc<AchievementProgress[]>('get_my_achievement_progress',{},token); return r?.[0]??{read_count:0,night_count:0,fast_count:0,bookmark_count:0,comment_day_count:0}; }
