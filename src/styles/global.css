@@ -3729,3 +3729,6 @@ button.home-more-button:hover span{transform:translateY(2px);}
     width:100%;
   }
 }
+
+/* v12.45 — check-in heading matches homepage section headings */
+.home-checkin-top .home-section-title{margin:0;color:#AC87C5}
