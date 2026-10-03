@@ -3732,3 +3732,10 @@ button.home-more-button:hover span{transform:translateY(2px);}
 
 /* v12.45 — check-in heading matches homepage section headings */
 .home-checkin-top .home-section-title{margin:0;color:#AC87C5}
+
+/* v12.46 — guest check-in preview */
+.home-checkin-guest{gap:7px}
+.home-checkin-guest .home-checkin-guest-title{font-size:1.05rem;line-height:1.35;color:#e45b9c;margin:2px 0 0}
+.home-checkin-guest>small{margin-top:0;line-height:1.45}
+.home-checkin-login{margin-top:7px}
+.checkin-login-prompt p{margin:0 0 10px;color:#e45b9c;font-weight:700}
