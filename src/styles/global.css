@@ -3751,3 +3751,24 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .checkin-inline-message{display:inline-block;margin-left:10px;color:#e45b9c;font-size:.8rem;font-weight:700}
 .checkin-achievements{margin-top:18px}.achievement-guide-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.achievement-guide-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:14px;border:1px solid #f1dfe8;border-radius:14px;background:rgba(255,255,255,.55)}.achievement-guide-icon{font-size:1.6rem}.achievement-guide-copy strong{font-size:1rem}.achievement-guide-copy p{margin:4px 0 0;color:var(--muted);font-size:.8rem;line-height:1.4}.achievement-guide-state{max-width:180px;text-align:right;font-size:.75rem;padding:5px 8px;border-radius:999px;background:#f5eff4;color:#766b73}.achievement-guide-item.is-unlocked .achievement-guide-state{background:#e9f8ed;color:#3f8550}.achievement-progress{height:5px;margin-top:9px;border-radius:99px;overflow:hidden;background:#f1e8ee}.achievement-progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#f29bc0,#c99be4)}
 @media(max-width:700px){.achievement-guide-list{grid-template-columns:1fr}.achievement-guide-item{grid-template-columns:auto minmax(0,1fr)}.achievement-guide-state{grid-column:2;justify-self:start;text-align:left;max-width:100%;margin-top:2px}.checkin-month-cell.is-done .checkin-heart-icon{width:29px;height:29px}.checkin-inline-message{display:block;margin:7px 0 0}}
+
+/* v12.48 — single-column member rank + achievement cards */
+.checkin-reward-list,.achievement-guide-list{grid-template-columns:1fr}
+.checkin-reward-item,.achievement-guide-item{width:100%}
+.achievement-guide-item{grid-template-columns:auto minmax(0,1fr) auto;align-items:center}
+.achievement-guide-copy{min-width:0}
+.achievement-guide-copy strong{display:block}
+.achievement-guide-copy p{display:block;margin:4px 0 0}
+.achievement-guide-state{justify-self:end;align-self:center}
+.achievement-progress{width:100%;max-width:none}
+@media(max-width:700px){
+ .checkin-reward-item{grid-template-columns:auto minmax(0,1fr) auto}
+ .achievement-guide-item{grid-template-columns:auto minmax(0,1fr) auto}
+ .achievement-guide-state{grid-column:3;justify-self:end;text-align:right;max-width:150px;margin-top:0}
+}
+@media(max-width:480px){
+ .checkin-reward-item,.achievement-guide-item{gap:9px;padding:12px 10px}
+ .checkin-reward-icon,.achievement-guide-icon{font-size:1.35rem}
+ .achievement-guide-state{max-width:120px;font-size:.7rem;padding:4px 7px}
+ .achievement-guide-copy p{font-size:.76rem}
+}
