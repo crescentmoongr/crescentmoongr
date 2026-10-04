@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getChapters,getSeriesBySlug,statusLabel,getSeriesUserState,getReadingHistory,getChapterReads,getSeriesComments,getChapterStats,getSeriesList,getCommentMemberRewards } from '../../lib/supabase';
+import { getChapters,getSeriesBySlug,statusLabel,getSeriesUserState,getReadingHistory,getChapterReads,getSeriesComments,getChapterStats,getSeriesList,getCommentMemberRewards,getMyMemberRewards } from '../../lib/supabase';
 import { getSession } from '../../lib/auth';
 import { richTextToHtml,commentRichTextToHtml } from '../../lib/richText';
 import { slugifyTaxonomy } from '../../lib/slug';
@@ -10,6 +10,7 @@ let series=null; let chapters=[]; let error='';
 try{series=await getSeriesBySlug(slug); if(series) chapters=await getChapters(series.id)}catch(e){error=e instanceof Error?e.message:'Không thể tải dữ liệu.'}
 if(!series&&!error) return new Response('Không tìm thấy truyện.',{status:404});
 const session=series?await getSession(Astro.cookies):null;
+let ownRewards:any=null; if(session){try{ownRewards=await getMyMemberRewards(session.token)}catch{}}
 let bookmarked=false, favorited=false, favoriteCount=Number(series?.favorite_count||0), history=null, readIds=new Set<string>();
 if(series&&session){
   const [state,h,r]=await Promise.all([getSeriesUserState(series.id,session.token),getReadingHistory(series.id,session.user.id,session.token),getChapterReads(series.id,session.user.id,session.token)]);
@@ -140,7 +141,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
     ? <form method="POST" action="/api/comments/create" class="comment-form" data-comment-form>
         <input type="hidden" name="series_id" value={series.id}/>
         <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
-        <div class="comment-author-line">Bình luận với tư cách <strong class={session.user.role==='admin'?'admin-name-glow':''}>{session.user.display_name||session.user.username||'Thành viên'}</strong></div>
+        <div class="comment-author-line">Bình luận với tư cách <span class="comment-member-identity"><span class="member-rank-icon">{session.user.role==='admin'?'👑':rankIconMap[ownRewards?.rank_key]||''}</span><strong class={session.user.role==='admin'?'admin-celestial-gold':''}>{session.user.display_name||session.user.username||'Thành viên'}</strong></span></div>
 
         <div class="comment-editor-shell">
           <div class="comment-toolbar" role="toolbar" aria-label="Định dạng bình luận">
@@ -206,7 +207,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
                   <input type="hidden" name="series_id" value={series.id}/>
                   <input type="hidden" name="parent_id" value={c.id}/>
                   <input type="hidden" name="return_to" value={`/manga/${series.slug}`}/>
-                  <div class="replying-to">Trả lời <strong class={c.role==='admin'?'admin-celestial-gold':''}>{c.display_name||c.username||'Thành viên'}</strong></div>
+                  <div class="replying-to">Trả lời <span class="comment-member-identity"><span class="member-rank-icon">{c.role==='admin'?'👑':rankIconMap[(commentRewardMap.get(c.user_id) as any)?.rank_key]||''}</span><strong class={c.role==='admin'?'admin-celestial-gold':''}>{c.display_name||c.username||'Thành viên'}</strong></span></div>
                   <div class="comment-editor-shell">
                     <div class="comment-toolbar" role="toolbar" aria-label="Định dạng trả lời">
                       <button type="button" data-comment-cmd="bold"><strong>B</strong></button>

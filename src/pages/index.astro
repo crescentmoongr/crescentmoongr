@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getSeriesList, getAllPublicChapters, statusLabel, getMyHistory, getServiceSiteSetting, getLatestSeriesComments, getMyMemberRewards, getMyCheckinHistory } from '../lib/supabase';
+import { getSeriesList, getAllPublicChapters, statusLabel, getMyHistory, getServiceSiteSetting, getLatestSeriesComments, getCommentMemberRewards, getMyMemberRewards, getMyCheckinHistory } from '../lib/supabase';
 import { getSession } from '../lib/auth';
 import { richTextToHtml, commentRichTextToHtml } from '../lib/richText';
 export const prerender=false;
@@ -60,6 +60,9 @@ let siteAnnouncementHtml='';
 try{siteAnnouncementHtml=richTextToHtml((await getServiceSiteSetting('site_announcement_html'))?.value||'')}catch{}
 let latestComments:any[]=[];
 try{latestComments=await getLatestSeriesComments(6)}catch{}
+const homeRankIconMap:any={mam_trang:'🌱',trang_non:'🌙',trang_tron:'🌕',anh_sao:'✨',sao_sang:'🌟',tinh_nguyet:'💫'};
+let latestCommentRewardMap=new Map<string,any>();
+try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments.map(c=>c.user_id).filter(Boolean))).map((x:any)=>[x.user_id,x]))}catch{}
 
 ---
 <BaseLayout title="Crescent Moon Translation">
@@ -165,7 +168,7 @@ try{latestComments=await getLatestSeriesComments(6)}catch{}
     {latestComments.map(c=><a class="home-comment-card" href={`/manga/${c.series_slug}#comment-${c.id}`}>
       <div class="home-comment-avatar">{c.avatar_key?<img src={`/api/avatar/${c.user_id}`} alt="" loading="lazy"/>:<span aria-hidden="true">☾</span>}</div>
       <div class="home-comment-main">
-        <div class="home-comment-top"><strong class={c.role==='admin'?'admin-celestial-gold':''}>{c.display_name||c.username||'Thành viên'}</strong><time>{new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit'}).format(new Date(c.created_at))}</time></div>
+        <div class="home-comment-top"><span class="comment-member-identity"><span class="member-rank-icon">{c.role==='admin'?'👑':homeRankIconMap[latestCommentRewardMap.get(c.user_id)?.rank_key]||''}</span><strong class={c.role==='admin'?'admin-celestial-gold':''}>{c.display_name||c.username||'Thành viên'}</strong></span><time>{new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit'}).format(new Date(c.created_at))}</time></div>
         <div class="home-comment-body" set:html={commentRichTextToHtml(c.body)}></div>
         <div class="home-comment-series">{c.series_title}</div>
       </div>
