@@ -338,7 +338,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   const render=()=>{
     if(!(notifList instanceof HTMLElement))return;
     const seen=getSeen();
-    const unread=items.filter(x=>x?.id&&!seen.includes(x.id)).length;
+    const unread=items.filter(x=>x?.id&&(x.type==='comment_reply'?!x.is_read:!seen.includes(x.id))).length;
 
     if(badge instanceof HTMLElement){
       badge.textContent=unread>=21?'20+':String(unread);
@@ -349,13 +349,13 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
     if(!items.length){
       const empty=document.createElement('div');
       empty.className='notification-empty';
-      empty.textContent='Chưa có chapter mới.';
+      empty.textContent='Chưa có thông báo mới.';
       notifList.appendChild(empty);
       return;
     }
 
     for(const item of items){
-      const isUnread=!seen.includes(item.id);
+      const isUnread=item.type==='comment_reply'?!item.is_read:!seen.includes(item.id);
       const link=document.createElement('a');
       link.className=`notification-item${isUnread?' is-unread':''}`;
       link.href=String(item.href||'/');
@@ -377,12 +377,17 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
       const title=document.createElement('div');
       title.className='notification-item-title';
-      title.innerHTML=`<strong></strong> đã cập nhật chapter mới`;
-      title.querySelector('strong').textContent=String(item.title||'Truyện');
-
       const chapter=document.createElement('div');
       chapter.className='notification-item-chapter';
-      chapter.textContent=`Chapter ${item.chapter_number}${item.chapter_title?' — '+item.chapter_title:''}`;
+      if(item.type==='comment_reply'){
+        title.innerHTML=`<strong></strong> đã trả lời bình luận của bạn`;
+        title.querySelector('strong').textContent=String(item.actor_name||'Thành viên');
+        chapter.textContent=String(item.preview||item.title||'').trim();
+      }else{
+        title.innerHTML=`<strong></strong> đã cập nhật chapter mới`;
+        title.querySelector('strong').textContent=String(item.title||'Truyện');
+        chapter.textContent=`Chapter ${item.chapter_number}${item.chapter_title?' — '+item.chapter_title:''}`;
+      }
 
       const meta=document.createElement('div');
       meta.className='notification-item-meta';
@@ -395,7 +400,12 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
       body.append(title,chapter,meta);
       link.append(cover,body);
-      link.addEventListener('click',()=>markRead(item.id));
+      link.addEventListener('click',()=>{
+        if(item.type==='comment_reply'&&item.notification_id){
+          item.is_read=true; render();
+          fetch('/api/notifications/read',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({id:item.notification_id})}).catch(()=>{});
+        }else markRead(item.id);
+      });
       notifList.appendChild(link);
     }
   };
@@ -426,8 +436,11 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   if(markAll instanceof HTMLButtonElement){
     markAll.addEventListener('click',()=>{
-      saveSeen(items.map(x=>x.id).filter(Boolean));
+      saveSeen(items.filter(x=>x.type!=='comment_reply').map(x=>x.id).filter(Boolean));
+      const hasReplies=items.some(x=>x.type==='comment_reply'&&!x.is_read);
+      items.forEach(x=>{if(x.type==='comment_reply')x.is_read=true});
       render();
+      if(hasReplies)fetch('/api/notifications/read',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({all:true})}).catch(()=>{});
     });
   }
 

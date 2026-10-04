@@ -3772,3 +3772,5 @@ button.home-more-button:hover span{transform:translateY(2px);}
  .achievement-guide-state{max-width:120px;font-size:.7rem;padding:4px 7px}
  .achievement-guide-copy p{font-size:.76rem}
 }
+/* v12.50 — never render a zero/unread badge when hidden */
+.notification-badge[hidden]{display:none!important}

@@ -997,3 +997,10 @@ Trang chi tiết truyện:
 3. `/check-in` là trang điểm danh riêng; homepage hiện 7 ngày gần nhất và streak.
 4. Account dùng để chọn Danh hiệu/Màu tên đã mở khóa. Khu test Admin cũ đã bỏ.
 5. Admin > Thành viên có thể sửa Hạng thành viên, Danh hiệu, streak và cấp lại mật khẩu.
+
+## v12.50 — Thông báo phản hồi bình luận
+- Khi một reply được duyệt/hiển thị, người sở hữu bình luận được trả lời nhận thông báo riêng trong chuông 🔔.
+- Không gửi thông báo khi tự trả lời chính mình; mỗi reply chỉ tạo một notification cho người được reply trực tiếp.
+- Bấm notification mở đúng truyện và cuộn tới reply; hỗ trợ trạng thái Chưa đọc/Đã đọc theo tài khoản.
+- Badge unread được ẩn hoàn toàn khi số thông báo chưa đọc bằng 0.
+- SQL REQUIRED: chỉ chạy `supabase-v12-50-comment-reply-notifications.sql`. ZIP này không chứa SQL cũ.
