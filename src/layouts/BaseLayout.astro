@@ -455,4 +455,64 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 })();
 </script>
 
+<script is:inline>
+(()=>{
+  const EMOJIS=['😀','😆','😂','🤣','🥹','😭','🥺','🥰','😍','😘','😋','🤭','🤔','😏','😌','🙄','😳','😱','😤','😡','🫠','❤️','🩷','💜','💙','💕','💖','💗','💓','💞','💔','❤️‍🔥','👍','👎','👏','🙌','🫶','🙏','✨','⭐','🌙','🔥','🎉','🎀','👀','💀','🤡','📖','📚','🌚','🌝','🫣','🤤','😈','💢','💥','🤌','👉','👈'];
+  const excludedNames=new Set(['email','password','confirm_password','username','slug','raw_url','x_url','facebook','telegram','discord','ad_html','q','series_password']);
+  let activeTarget=null, savedRange=null;
+  const popup=document.createElement('div');
+  popup.className='emoji-picker-popover'; popup.hidden=true;
+  popup.innerHTML='<div class="emoji-picker-title">Emoji</div><div class="emoji-picker-grid"></div>';
+  document.body.appendChild(popup);
+  const grid=popup.querySelector('.emoji-picker-grid');
+  EMOJIS.forEach(e=>{const b=document.createElement('button');b.type='button';b.className='emoji-choice';b.textContent=e;b.title=e;b.addEventListener('click',()=>insertEmoji(e));grid.appendChild(b)});
+
+  function eligible(el){
+    if(el.matches?.('[contenteditable="true"]')) return true;
+    if(el instanceof HTMLTextAreaElement) return !el.hidden && !el.classList.contains('comment-source') && !excludedNames.has(el.name||'');
+    if(el instanceof HTMLInputElement){
+      const type=(el.type||'text').toLowerCase();
+      return ['text'].includes(type) && !excludedNames.has(el.name||'') && !el.readOnly && !el.disabled;
+    }
+    return false;
+  }
+  function remember(target){
+    activeTarget=target;
+    if(target.matches?.('[contenteditable="true"]')){
+      const sel=window.getSelection(); if(sel&&sel.rangeCount&&target.contains(sel.anchorNode)) savedRange=sel.getRangeAt(0).cloneRange();
+    }
+  }
+  function insertEmoji(e){
+    const t=activeTarget; if(!t)return;
+    if(t.matches?.('[contenteditable="true"]')){
+      t.focus(); const sel=window.getSelection();
+      if(savedRange&&sel){sel.removeAllRanges();sel.addRange(savedRange)}
+      document.execCommand('insertText',false,e);
+      if(sel&&sel.rangeCount)savedRange=sel.getRangeAt(0).cloneRange();
+      t.dispatchEvent(new Event('input',{bubbles:true}));
+    }else if(t instanceof HTMLInputElement||t instanceof HTMLTextAreaElement){
+      const a=t.selectionStart??t.value.length,b=t.selectionEnd??a;
+      t.value=t.value.slice(0,a)+e+t.value.slice(b); const pos=a+e.length;
+      t.focus();t.setSelectionRange(pos,pos);t.dispatchEvent(new Event('input',{bubbles:true}));t.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+    popup.hidden=true;
+  }
+  function addButton(target){
+    if(target.dataset.emojiReady==='1')return; target.dataset.emojiReady='1';
+    const wrap=document.createElement('span');wrap.className='emoji-field-button-wrap';
+    const btn=document.createElement('button');btn.type='button';btn.className='emoji-picker-button';btn.textContent='😊';btn.title='Thêm emoji';btn.setAttribute('aria-label','Thêm emoji');
+    btn.addEventListener('mousedown',()=>remember(target));
+    btn.addEventListener('click',ev=>{ev.preventDefault();remember(target);const r=btn.getBoundingClientRect();popup.hidden=false;const w=Math.min(310,window.innerWidth-20);popup.style.width=w+'px';popup.style.left=Math.max(10,Math.min(window.innerWidth-w-10,r.left))+'px';popup.style.top=(r.bottom+8+window.scrollY)+'px'});
+    wrap.appendChild(btn);
+    if(target.matches?.('[contenteditable="true"]')){
+      const toolbar=target.parentElement?.querySelector('.comment-toolbar'); if(toolbar)toolbar.appendChild(btn); else target.insertAdjacentElement('beforebegin',wrap);
+    }else target.insertAdjacentElement('afterend',wrap);
+    target.addEventListener('keyup',()=>remember(target));target.addEventListener('mouseup',()=>remember(target));target.addEventListener('focus',()=>remember(target));
+  }
+  function scan(){document.querySelectorAll('input,textarea,[contenteditable="true"]').forEach(el=>{if(eligible(el))addButton(el)})}
+  scan(); new MutationObserver(scan).observe(document.body,{childList:true,subtree:true});
+  document.addEventListener('click',e=>{if(!(e.target instanceof Element))return;if(!e.target.closest('.emoji-picker-popover')&&!e.target.closest('.emoji-picker-button'))popup.hidden=true});
+})();
+</script>
+
 </body></html>
