@@ -458,7 +458,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 <script is:inline>
 (()=>{
   const EMOJIS=['😀','😆','😂','🤣','🥹','😭','🥺','🥰','😍','😘','😋','🤭','🤔','😏','😌','🙄','😳','😱','😤','😡','🫠','❤️','🩷','💜','💙','💕','💖','💗','💓','💞','💔','❤️‍🔥','👍','👎','👏','🙌','🫶','🙏','✨','⭐','🌙','🔥','🎉','🎀','👀','💀','🤡','📖','📚','🌚','🌝','🫣','🤤','😈','💢','💥','🤌','👉','👈'];
-  const excludedNames=new Set(['email','password','confirm_password','username','slug','raw_url','x_url','facebook','telegram','discord','ad_html','q','series_password']);
+  const excludedNames=new Set(['email','password','confirm_password','username','slug','raw_url','x_url','facebook','telegram','discord','ad_html','q','series_password','title','author']);
   let activeTarget=null, savedRange=null;
   const popup=document.createElement('div');
   popup.className='emoji-picker-popover'; popup.hidden=true;
@@ -468,6 +468,8 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   EMOJIS.forEach(e=>{const b=document.createElement('button');b.type='button';b.className='emoji-choice';b.textContent=e;b.title=e;b.addEventListener('click',()=>insertEmoji(e));grid.appendChild(b)});
 
   function eligible(el){
+    // Taxonomy names (Admin > Tác giả / Thể loại) are metadata, not content fields.
+    if(el.closest?.('.taxonomy-create-form, .taxonomy-admin-row')) return false;
     if(el.matches?.('[contenteditable="true"]')) return true;
     if(el instanceof HTMLTextAreaElement) return !el.hidden && !el.classList.contains('comment-source') && !excludedNames.has(el.name||'');
     if(el instanceof HTMLInputElement){
