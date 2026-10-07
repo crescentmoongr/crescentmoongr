@@ -100,7 +100,13 @@ const loadPage=async(wrap)=>{
   try{const src=canvas.dataset.src||''; const res=await fetch(src,{credentials:'same-origin',cache:'no-store',headers:{'X-Crescent-Reader':'1'}}); if(!res.ok)throw new Error(String(res.status)); const blob=await res.blob(); const img=await createImageBitmap(blob); canvas.width=img.width; canvas.height=img.height; const ctx=canvas.getContext('2d',{alpha:false}); if(!ctx)throw new Error('canvas'); ctx.drawImage(img,0,0); img.close(); wrap.dataset.loaded='1'; if(loading instanceof HTMLElement)loading.remove();}catch{if(loading instanceof HTMLElement)loading.textContent='Không tải được ảnh. Hãy tải lại trang.'}finally{delete wrap.dataset.loading}
 };
 const io=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting){loadPage(e.target);io.unobserve(e.target)}},{rootMargin:'1400px 0px'}); wraps.forEach(w=>io.observe(w));
-document.addEventListener('contextmenu',e=>{if(e.target instanceof Element&&e.target.closest('[data-protected-reader]'))e.preventDefault()});
+// Reader-only deterrents. These discourage casual Inspect/View Source access but are not a security boundary.
+document.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('dragstart',e=>{if(e.target instanceof Element&&e.target.closest('[data-protected-reader]'))e.preventDefault()});
-document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['s','u'].includes(e.key.toLowerCase())&&document.querySelector('[data-protected-reader]'))e.preventDefault()});
+document.addEventListener('keydown',e=>{
+  const key=e.key.toLowerCase();
+  const ctrl=e.ctrlKey||e.metaKey;
+  const blocked=e.key==='F12'||(ctrl&&e.shiftKey&&['i','j','c'].includes(key))||(ctrl&&['u','s'].includes(key));
+  if(blocked){e.preventDefault();e.stopPropagation();}
+},{capture:true});
 </script>

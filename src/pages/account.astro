@@ -23,6 +23,14 @@ const bookmarks=(await Promise.all(bookmarkRows.map(async b=>({b,series:await ge
   <form method="POST" action="/api/account/member-identity" class="member-identity-form">
     <label class="field"><span>Danh hiệu đang sử dụng</span><select name="achievement"><option value="">Không hiển thị</option>{(rewards?.achievements||[]).map(x=><option value={x} selected={rewards?.active_achievement===x}>{x}</option>)}</select>{!(rewards?.achievements||[]).length&&<small class="meta">Chưa mở khóa Danh hiệu nào.</small>}</label>
     <label class="field"><span>🎨 Màu tên</span><select name="name_style" disabled={!rewards?.solid_color_unlocked}><option value="">Mặc định</option>{rewards?.solid_color_unlocked&&<><option value="pink" selected={rewards?.name_style==='pink'}>Hồng</option><option value="purple" selected={rewards?.name_style==='purple'}>Tím</option><option value="blue" selected={rewards?.name_style==='blue'}>Xanh lam</option><option value="cyan" selected={rewards?.name_style==='cyan'}>Cyan</option><option value="green" selected={rewards?.name_style==='green'}>Xanh lá</option><option value="orange" selected={rewards?.name_style==='orange'}>Cam</option><option value="red" selected={rewards?.name_style==='red'}>Đỏ</option><option value="mocha" selected={rewards?.name_style==='mocha'}>Mocha</option></>}{rewards?.premium_color_unlocked&&<><option value="sakura" selected={rewards?.name_style==='sakura'}>Sakura Dream ✨</option><option value="moonlight" selected={rewards?.name_style==='moonlight'}>Moonlight ✨</option><option value="galaxy" selected={rewards?.name_style==='galaxy'}>Galaxy ✨</option><option value="crystal" selected={rewards?.name_style==='crystal'}>Crystal ✨</option><option value="aurora" selected={rewards?.name_style==='aurora'}>Aurora ✨</option><option value="sunset" selected={rewards?.name_style==='sunset'}>Sunset ✨</option><option value="crimson" selected={rewards?.name_style==='crimson'}>Crimson Flame ✨</option><option value="cotton" selected={rewards?.name_style==='cotton'}>Cotton Candy ✨</option><option value="purple_haze" selected={rewards?.name_style==='purple_haze'}>Purple Haze ✨</option><option value="starlight" selected={rewards?.name_style==='starlight'}>Starlight ✨</option><option value="prismatic" selected={rewards?.name_style==='prismatic'}>Prismatic ✨</option></>}</select><small class="meta">{rewards?.premium_color_unlocked?'Đã mở Gradient + Glow 365 ngày.':rewards?.solid_color_unlocked?'Màu thường đã mở. Gradient + Glow mở ở 365 ngày.':'Mở khóa khi đạt streak 60 ngày.'}</small></label>
+    <div class="member-identity-preview" data-member-preview>
+      <span class="meta member-preview-label">Xem trước</span>
+      <div class="member-preview-line">
+        <span class="member-rank-icon">{user.role==='admin'?'👑':rankIcon}</span>
+        <strong data-member-preview-name class:list={[user.role==='admin'?'admin-celestial-gold':'',user.role!=='admin'&&rewards?.name_style?`member-name-${rewards.name_style}`:'']}>{user.display_name||user.username||'Thành viên'}</strong>
+        <span class="comment-achievement-badge" data-member-preview-achievement hidden={!rewards?.active_achievement}>{rewards?.active_achievement||''}</span>
+      </div>
+    </div>
     <button class="button" type="submit">Lưu thay đổi</button>
   </form>
 </section>
@@ -55,5 +63,27 @@ if(usernameInput instanceof HTMLInputElement && usernameStatus instanceof HTMLEl
     usernameStatus.textContent='Đang kiểm tra username...';
     try{const r=await fetch('/api/account/username-availability?username='+encodeURIComponent(username));const data=await r.json();usernameStatus.textContent=data.available?'✓ Username này có thể sử dụng':'Username này đã có người sử dụng rồi, chọn tên khác nha ♡';usernameStatus.classList.toggle('is-available',!!data.available);usernameStatus.classList.toggle('is-taken',!data.available);}catch{usernameStatus.textContent='Sẽ kiểm tra lại username khi cậu bấm Lưu hồ sơ.';}
   });
+}
+
+const identityForm=document.querySelector('.member-identity-form');
+if(identityForm instanceof HTMLFormElement){
+  const styleSelect=identityForm.querySelector('select[name="name_style"]');
+  const achievementSelect=identityForm.querySelector('select[name="achievement"]');
+  const previewName=identityForm.querySelector('[data-member-preview-name]');
+  const previewAchievement=identityForm.querySelector('[data-member-preview-achievement]');
+  const styleClasses=['pink','purple','blue','cyan','green','orange','red','mocha','sakura','moonlight','galaxy','crystal','aurora','sunset','crimson','cotton','purple_haze','starlight','prismatic'].map(x=>'member-name-'+x);
+  const updatePreview=()=>{
+    if(previewName instanceof HTMLElement && styleSelect instanceof HTMLSelectElement){
+      previewName.classList.remove(...styleClasses);
+      if(styleSelect.value)previewName.classList.add('member-name-'+styleSelect.value);
+    }
+    if(previewAchievement instanceof HTMLElement && achievementSelect instanceof HTMLSelectElement){
+      previewAchievement.textContent=achievementSelect.value;
+      previewAchievement.hidden=!achievementSelect.value;
+    }
+  };
+  styleSelect?.addEventListener('change',updatePreview);
+  achievementSelect?.addEventListener('change',updatePreview);
+  updatePreview();
 }
 </script>

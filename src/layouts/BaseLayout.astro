@@ -458,7 +458,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 <script is:inline>
 (()=>{
   const EMOJIS=['😀','😆','😂','🤣','🥹','😭','🥺','🥰','😍','😘','😋','🤭','🤔','😏','😌','🙄','😳','😱','😤','😡','🫠','❤️','🩷','💜','💙','💕','💖','💗','💓','💞','💔','❤️‍🔥','👍','👎','👏','🙌','🫶','🙏','✨','⭐','🌙','🔥','🎉','🎀','👀','💀','🤡','📖','📚','🌚','🌝','🫣','🤤','😈','💢','💥','🤌','👉','👈'];
-  const excludedNames=new Set(['email','password','confirm_password','username','slug','raw_url','x_url','facebook','telegram','discord','ad_html','q','series_password','title','author']);
+  const excludedNames=new Set(['email','password','confirm_password','username','slug','raw_url','x_url','facebook','telegram','discord','ad_html','q','series_password','title','author','display_name']);
   let activeTarget=null, savedRange=null;
   const popup=document.createElement('div');
   popup.className='emoji-picker-popover'; popup.hidden=true;

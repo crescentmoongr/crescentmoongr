@@ -3787,3 +3787,9 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .emoji-choice{appearance:none;border:0;background:transparent;border-radius:8px;aspect-ratio:1;cursor:pointer;font-size:21px;display:grid;place-items:center;padding:3px}
 .emoji-choice:hover{background:#fff0f7;transform:scale(1.08)}
 @media(max-width:520px){.emoji-picker-grid{grid-template-columns:repeat(7,1fr)}.emoji-choice{font-size:20px}}
+
+/* v12.55 — live member identity preview */
+.member-identity-preview{grid-column:1/-1;border:1px dashed rgba(172,135,197,.35);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.48)}
+.member-preview-label{display:block;margin-bottom:7px;font-weight:700}
+.member-preview-line{display:flex;align-items:center;gap:7px;min-height:30px}.member-preview-line strong{font-size:17px;font-weight:800}
+@media(max-width:760px){.member-identity-preview{grid-column:1/-1}}
