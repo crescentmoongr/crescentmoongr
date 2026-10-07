@@ -198,7 +198,9 @@ async function readUser(accessToken: string): Promise<SessionUser | null> {
   };
 }
 
-export async function getSession(cookies: any): Promise<{ token: string; user: SessionUser } | null> {
+const sessionRequestCache = new WeakMap<object, Promise<{ token: string; user: SessionUser } | null>>();
+
+async function resolveSession(cookies: any): Promise<{ token: string; user: SessionUser } | null> {
   const deadline = await readDeadline(cookies);
   if (!deadline) {
     clearAuthCookies(cookies);
@@ -226,6 +228,20 @@ export async function getSession(cookies: any): Promise<{ token: string; user: S
     clearAuthCookies(cookies);
     return null;
   }
+}
+
+export async function getSession(cookies: any): Promise<{ token: string; user: SessionUser } | null> {
+  // Deduplicate Auth + profile lookups when a page and BaseLayout ask for the
+  // same session during one Astro request. WeakMap keeps request objects isolated.
+  if (cookies && (typeof cookies === 'object' || typeof cookies === 'function')) {
+    const key = cookies as object;
+    const cached = sessionRequestCache.get(key);
+    if (cached) return cached;
+    const pending = resolveSession(cookies);
+    sessionRequestCache.set(key, pending);
+    return pending;
+  }
+  return resolveSession(cookies);
 }
 
 export async function getSessionUser(cookies: any) {

@@ -3793,3 +3793,13 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .member-preview-label{display:block;margin-bottom:7px;font-weight:700}
 .member-preview-line{display:flex;align-items:center;gap:7px;min-height:30px}.member-preview-line strong{font-size:17px;font-weight:800}
 @media(max-width:760px){.member-identity-preview{grid-column:1/-1}}
+
+/* v12.56: bulk series password tools */
+.series-bulk-password{margin:14px 0;padding:14px;display:grid;gap:12px;background:rgba(255,255,255,.58)}
+.series-bulk-password-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.series-bulk-password-controls select,.series-bulk-password-controls input{min-height:38px}
+.series-bulk-password-controls input{min-width:210px}
+.series-bulk-select{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.admin-series-select{display:grid;place-items:center;align-self:center;padding:8px}
+.admin-series-select input{width:17px;height:17px}
+@media(max-width:700px){.series-bulk-password-controls>*{width:100%}.admin-series-select{padding:4px}}

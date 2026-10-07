@@ -65,7 +65,7 @@ let latestCommentRewardMap=new Map<string,any>();
 try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments.map(c=>c.user_id).filter(Boolean))).map((x:any)=>[x.user_id,x]))}catch{}
 
 ---
-<BaseLayout title="Crescent Moon Translation">
+<BaseLayout title="Crescent Moon Translation" session={session} memberRewards={homeRewards}>
 
 {session&&!String(session.user.username||'').trim()&&<div class="username-required-overlay" role="dialog" aria-modal="true" aria-labelledby="username-required-title">
   <div class="username-required-modal">

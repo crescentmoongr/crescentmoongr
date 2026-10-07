@@ -9,16 +9,18 @@ const {
   image = '/social-preview.png',
   imageAlt,
   canonical,
-  ogType = 'website'
+  ogType = 'website',
+  session: providedSession = undefined,
+  memberRewards: providedMemberRewards = undefined
 } = Astro.props;
 
 const pageUrl = new URL(canonical || Astro.url.pathname, Astro.url.origin).href;
 const absoluteImage = new URL(image || '/social-preview.png', Astro.url.origin).href;
-const layoutSession = await getSession(Astro.cookies);
+const layoutSession = providedSession === undefined ? await getSession(Astro.cookies) : providedSession;
 const user = layoutSession?.user||null;
 const rankIconMap:any={mam_trang:'🌱',trang_non:'🌙',trang_tron:'🌕',anh_sao:'✨',sao_sang:'🌟',tinh_nguyet:'💫'};
-let headerRewards:any=null;
-if(layoutSession){ try{ headerRewards=await getMyMemberRewards(layoutSession.token); }catch{} }
+let headerRewards:any=providedMemberRewards ?? null;
+if(layoutSession && providedMemberRewards === undefined){ try{ headerRewards=await getMyMemberRewards(layoutSession.token); }catch{} }
 const headerRankIcon=user?.role==='admin'?'👑':(rankIconMap[headerRewards?.rank_key]||'');
 
 // Public site settings are loaded in one Supabase request to avoid extra subrequests.

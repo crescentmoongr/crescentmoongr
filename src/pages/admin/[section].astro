@@ -100,8 +100,19 @@ const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội'
 
 {section==='series' && <section class="admin-card admin-wide admin-anchor-section">
   <div class="section-title"><div><h2>Quản lý truyện</h2><p class="meta">Truyện có chapter mới được publish sẽ lên đầu; các truyện còn lại xếp theo ngày tạo.</p></div><span class="meta" data-series-visible-count>{rows.length} truyện</span></div>
+  {rows.length>0&&<form method="POST" action="/api/admin/series/bulk-password" class="admin-card series-bulk-password" data-bulk-password-form>
+    <div><strong>🔐 Mật khẩu hàng loạt</strong><p class="meta">Chọn truyện bên dưới hoặc áp dụng cho toàn bộ truyện. Có thể gỡ pass rồi đặt lại một mật khẩu chung bất cứ lúc nào.</p></div>
+    <div class="series-bulk-password-controls">
+      <select name="scope" data-bulk-scope aria-label="Phạm vi"><option value="selected">Các truyện đã chọn</option><option value="all">Tất cả truyện</option></select>
+      <select name="bulk_password_action" data-bulk-action aria-label="Thao tác"><option value="clear">Gỡ mật khẩu</option><option value="set">Đặt mật khẩu chung</option></select>
+      <input name="bulk_password" type="password" minlength="4" placeholder="Nhập mật khẩu chung" data-bulk-password hidden/>
+      <button class="button secondary small-button" type="submit">Áp dụng</button>
+    </div>
+    <div class="series-bulk-select"><label class="member-check"><input type="checkbox" data-select-all-series/><span>Chọn tất cả trong danh sách</span></label><span class="meta" data-selected-series-count>0 truyện đã chọn</span></div>
+    <div data-selected-series-inputs></div>
+  </form>}
   <label class="field admin-series-search"><span>Tìm truyện</span><input type="search" placeholder="Gõ tên truyện..." autocomplete="off" data-admin-series-search/></label>
-  {rows.length===0?<div class="empty-state">Chưa có truyện nào.</div>:<div class="admin-series-list" data-admin-series-list>{rows.map(item=>{const chapterCount=chapterCounts.get(item.id)||0;return <div class="admin-series-row" data-series-row data-series-search-text={`${item.title} ${item.slug}`}><div class="admin-thumb">{item.cover_key?<img src={`/api/cover/${item.id}`} alt="" loading="lazy"/>:<span>Không bìa</span>}</div><div><strong>{item.title}</strong><div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.access_type==='password'?'🔒 Mật khẩu cả bộ':item.access_type==='member'?'🔒 Thành viên':'Public'} · {item.is_published?'Công khai':'Bản nháp'}</div><div class="admin-statline"><span>{chapterCount} chapter</span><span>👁 {new Intl.NumberFormat('vi-VN').format(seriesViews.get(item.id)||0)} lượt xem</span></div></div><div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa / Chapters</a>{item.is_published&&<a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div></div>})}</div>}
+  {rows.length===0?<div class="empty-state">Chưa có truyện nào.</div>:<div class="admin-series-list" data-admin-series-list>{rows.map(item=>{const chapterCount=chapterCounts.get(item.id)||0;return <div class="admin-series-row" data-series-row data-series-id={item.id} data-series-search-text={`${item.title} ${item.slug}`}><label class="admin-series-select" title="Chọn truyện"><input type="checkbox" data-series-select value={item.id}/></label><div class="admin-thumb">{item.cover_key?<img src={`/api/cover/${item.id}`} alt="" loading="lazy"/>:<span>Không bìa</span>}</div><div><strong>{item.title}</strong><div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.access_type==='password'?'🔒 Mật khẩu cả bộ':item.access_type==='member'?'🔒 Thành viên':'Public'} · {item.is_published?'Công khai':'Bản nháp'}</div><div class="admin-statline"><span>{chapterCount} chapter</span><span>👁 {new Intl.NumberFormat('vi-VN').format(seriesViews.get(item.id)||0)} lượt xem</span></div></div><div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa / Chapters</a>{item.is_published&&<a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div></div>})}</div>}
   <div class="empty-state" hidden data-admin-series-no-results>Không tìm thấy truyện phù hợp.</div>
 </section>}
 
@@ -118,6 +129,37 @@ const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội'
   </div>
 </div>
 
+<script>
+const bulkForm=document.querySelector('[data-bulk-password-form]');
+if(bulkForm instanceof HTMLFormElement){
+  const action=bulkForm.querySelector('[data-bulk-action]');
+  const password=bulkForm.querySelector('[data-bulk-password]');
+  const scope=bulkForm.querySelector('[data-bulk-scope]');
+  const all=document.querySelector('[data-select-all-series]');
+  const boxes=Array.from(document.querySelectorAll('[data-series-select]')).filter(x=>x instanceof HTMLInputElement);
+  const count=bulkForm.querySelector('[data-selected-series-count]');
+  const holder=bulkForm.querySelector('[data-selected-series-inputs]');
+  const sync=()=>{
+    const selected=boxes.filter(x=>x.checked);
+    if(count) count.textContent=`${selected.length} truyện đã chọn`;
+    if(holder) holder.innerHTML=selected.map(x=>`<input type="hidden" name="series_ids" value="${x.value.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">`).join('');
+    if(all instanceof HTMLInputElement){all.checked=boxes.length>0&&selected.length===boxes.length;all.indeterminate=selected.length>0&&selected.length<boxes.length;}
+  };
+  const togglePassword=()=>{if(action instanceof HTMLSelectElement&&password instanceof HTMLInputElement){const set=action.value==='set';password.hidden=!set;password.required=set;}};
+  action?.addEventListener('change',togglePassword); togglePassword();
+  boxes.forEach(x=>x.addEventListener('change',sync));
+  all?.addEventListener('change',()=>{if(all instanceof HTMLInputElement){boxes.forEach(x=>x.checked=all.checked);sync();}});
+  sync();
+  bulkForm.addEventListener('submit',(event)=>{
+    const isAll=scope instanceof HTMLSelectElement&&scope.value==='all';
+    const selected=boxes.filter(x=>x.checked).length;
+    if(!isAll&&!selected){event.preventDefault();alert('Hãy chọn ít nhất một truyện.');return;}
+    const setting=action instanceof HTMLSelectElement&&action.value==='set';
+    const target=isAll?'tất cả truyện':`${selected} truyện đã chọn`;
+    if(!confirm(setting?`Đặt cùng một mật khẩu cho ${target}?`:`Gỡ mật khẩu và chuyển ${target} sang Public?`)) event.preventDefault();
+  });
+}
+</script>
 <script>
 const title=document.querySelector('#title'),slug=document.querySelector('#slug');let slugTouched=false;slug?.addEventListener('input',()=>slugTouched=true);title?.addEventListener('input',()=>{if(slugTouched||!(slug instanceof HTMLInputElement)||!(title instanceof HTMLInputElement))return;slug.value=title.value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')});const access=document.querySelector('#new_access_type'),passwordField=document.querySelector('#new_series_password_field');const toggle=()=>{if(access instanceof HTMLSelectElement&&passwordField instanceof HTMLElement)passwordField.hidden=access.value!=='password'};access?.addEventListener('change',toggle);toggle();
 
