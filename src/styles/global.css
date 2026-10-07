@@ -3803,3 +3803,24 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .admin-series-select{display:grid;place-items:center;align-self:center;padding:8px}
 .admin-series-select input{width:17px;height:17px}
 @media(max-width:700px){.series-bulk-password-controls>*{width:100%}.admin-series-select{padding:4px}}
+
+/* v12.58: giữ bố cục card cũ; checkbox chỉ thêm ở mé trái, nút thao tác nằm hàng dưới */
+.admin-series-row{
+  grid-template-columns:34px 54px minmax(0,1fr);
+  gap:12px;
+  align-items:center;
+}
+.admin-series-select{grid-column:1;grid-row:1;align-self:center;justify-self:center;padding:0}
+.admin-series-row>.admin-thumb{grid-column:2;grid-row:1}
+.admin-series-row>.admin-thumb+div{grid-column:3;grid-row:1;min-width:0}
+.admin-series-row>.row-actions{
+  grid-column:2/4;
+  grid-row:2;
+  justify-content:flex-start;
+  align-self:start;
+  margin-top:0;
+}
+@media(max-width:700px){
+  .admin-series-row{grid-template-columns:28px 46px minmax(0,1fr);align-items:start}
+  .admin-series-row>.row-actions{grid-column:2/4;grid-row:2;justify-content:flex-start}
+}
