@@ -319,16 +319,19 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   }
 
   const relativeTime=(value)=>{
-    const time=new Date(value||0).getTime();
-    if(!Number.isFinite(time))return '';
-    const diff=Math.max(0,Date.now()-time);
+    if(value===null||value===undefined||value==='')return '';
+    const time=new Date(value).getTime();
+    if(!Number.isFinite(time)||time<=0)return '';
+    const elapsed=Date.now()-time;
+    if(elapsed>48*60*60*1000)return '';
+    const diff=Math.max(0,elapsed);
     const min=Math.floor(diff/60000);
     if(min<1)return 'Vừa xong';
     if(min<60)return `${min} phút trước`;
     const hour=Math.floor(min/60);
     if(hour<24)return `${hour} giờ trước`;
     const day=Math.floor(hour/24);
-    return `${day} ngày trước`;
+    return day===1?`Hôm qua lúc ${new Intl.DateTimeFormat('vi-VN',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Ho_Chi_Minh'}).format(new Date(time))}`:`${day} ngày trước`;
   };
 
   const markRead=(id)=>{
@@ -397,8 +400,10 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
       dot.className='notification-unread-dot';
       dot.textContent=isUnread?'• Chưa đọc':'✓ Đã đọc';
       const time=document.createElement('span');
-      time.textContent=relativeTime(item.published_at);
-      meta.append(dot,time);
+      const displayTime=relativeTime(item.published_at);
+      if(displayTime)time.textContent=displayTime;
+      meta.append(dot);
+      if(displayTime)meta.append(time);
 
       body.append(title,chapter,meta);
       link.append(cover,body);

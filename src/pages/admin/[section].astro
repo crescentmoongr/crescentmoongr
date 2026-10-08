@@ -112,7 +112,16 @@ const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội'
     <div data-selected-series-inputs></div>
   </form>}
   <label class="field admin-series-search"><span>Tìm truyện</span><input type="search" placeholder="Gõ tên truyện..." autocomplete="off" data-admin-series-search/></label>
-  {rows.length===0?<div class="empty-state">Chưa có truyện nào.</div>:<div class="admin-series-list" data-admin-series-list>{rows.map(item=>{const chapterCount=chapterCounts.get(item.id)||0;return <div class="admin-series-row" data-series-row data-series-id={item.id} data-series-search-text={`${item.title} ${item.slug}`}><label class="admin-series-select" title="Chọn truyện"><input type="checkbox" data-series-select value={item.id}/></label><div class="admin-thumb">{item.cover_key?<img src={`/api/cover/${item.id}`} alt="" loading="lazy"/>:<span>Không bìa</span>}</div><div><strong>{item.title}</strong><div class="meta">/{item.slug} · {statusLabel(item.status)} · {item.access_type==='password'?'🔒 Mật khẩu cả bộ':item.access_type==='member'?'🔒 Thành viên':'Public'} · {item.is_published?'Công khai':'Bản nháp'}</div><div class="admin-statline"><span>{chapterCount} chapter</span><span>👁 {new Intl.NumberFormat('vi-VN').format(seriesViews.get(item.id)||0)} lượt xem</span></div></div><div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa / Chapters</a>{item.is_published&&<a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div></div>})}</div>}
+  {rows.length===0?<div class="empty-state">Chưa có truyện nào.</div>:<div class="admin-series-list" data-admin-series-list>{rows.map(item=>{const chapterCount=chapterCounts.get(item.id)||0;return <div class="admin-series-row" data-series-row data-series-id={item.id} data-series-search-text={`${item.title} ${item.slug}`}>
+    <label class="admin-series-select" title="Chọn truyện"><input type="checkbox" data-series-select value={item.id}/></label>
+    <div class="admin-thumb">{item.cover_key?<img src={`/api/cover/${item.id}`} alt="" loading="lazy"/>:<span>Không bìa</span>}</div>
+    <div class="admin-series-details">
+      <div class="admin-series-title-line"><strong>{item.title}</strong><span class="meta">{chapterCount} chapter</span></div>
+      <div class="meta admin-series-slug">/{item.slug}</div>
+      <div class="meta admin-series-info"><span>{item.access_type==='password'?'🔒 Mật khẩu cả bộ':item.access_type==='member'?'🔒 Thành viên':'Public'}</span><span>{statusLabel(item.status)} · {item.is_published?'Công khai':'Bản nháp'}</span><span>👁 {new Intl.NumberFormat('vi-VN').format(seriesViews.get(item.id)||0)} lượt xem</span></div>
+      <div class="row-actions"><a class="button secondary small-button" href={`/admin/series/${item.id}`}>Sửa truyện</a>{item.is_published&&<a class="button secondary small-button" href={`/manga/${item.slug}`}>Xem</a>}</div>
+    </div>
+  </div>})}</div>}
   <div class="empty-state" hidden data-admin-series-no-results>Không tìm thấy truyện phù hợp.</div>
 </section>}
 

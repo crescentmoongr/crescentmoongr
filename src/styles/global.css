@@ -3824,3 +3824,26 @@ button.home-more-button:hover span{transform:translateY(2px);}
   .admin-series-row{grid-template-columns:28px 46px minmax(0,1fr);align-items:start}
   .admin-series-row>.row-actions{grid-column:2/4;grid-row:2;justify-content:flex-start}
 }
+
+/* v12.59: compact series cards, old left-aligned details and full-width bulk form */
+.admin-wide .series-bulk-password{width:100%;max-width:none;box-sizing:border-box;margin-inline:0}
+.admin-wide .series-bulk-password-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) auto;gap:10px;align-items:center}
+.admin-wide .series-bulk-password-controls select,.admin-wide .series-bulk-password-controls input{width:100%;min-width:0;box-sizing:border-box}
+.admin-wide .series-bulk-password-controls input:not([hidden]){grid-column:1/-1}
+.admin-series-list .admin-series-row{display:grid;grid-template-columns:24px 72px minmax(0,1fr);align-items:start;column-gap:14px;row-gap:0;padding:12px 14px;min-height:0}
+.admin-series-list .admin-series-row>.admin-series-select{grid-column:1;grid-row:1;align-self:center;justify-self:center;padding:0}
+.admin-series-list .admin-series-row>.admin-thumb{grid-column:2;grid-row:1;width:72px;height:100px}
+.admin-series-list .admin-series-row>.admin-series-details{grid-column:3;grid-row:1;min-width:0;display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.admin-series-title-line{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;line-height:1.35}
+.admin-series-title-line strong{font-size:1rem}
+.admin-series-slug{overflow-wrap:anywhere;text-align:left}
+.admin-series-info{display:flex;flex-wrap:wrap;gap:4px 12px;text-align:left}
+.admin-series-list .admin-series-row .row-actions{display:flex;grid-column:auto;grid-row:auto;justify-content:flex-start;align-items:center;gap:8px;margin-top:7px;width:auto}
+.admin-series-list .admin-series-row .row-actions .small-button{grid-column:auto;justify-self:auto;white-space:nowrap}
+@media(max-width:700px){
+ .admin-wide .series-bulk-password-controls{grid-template-columns:1fr}
+ .admin-wide .series-bulk-password-controls input:not([hidden]){grid-column:1}
+ .admin-series-list .admin-series-row{grid-template-columns:20px 66px minmax(0,1fr);gap:10px;padding:10px}
+ .admin-series-list .admin-series-row>.admin-thumb{width:66px;height:92px}
+ .admin-series-list .admin-series-row .row-actions{flex-wrap:wrap}
+}
