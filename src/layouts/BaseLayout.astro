@@ -87,6 +87,34 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   <link rel="icon" type="image/png" href="/honeymoon_4213586.png" />
   <link rel="shortcut icon" href="/honeymoon_4213586.png" />
+  <script is:inline data-style-recovery>
+    (() => {
+      const KEY = 'cm:style-recovery-at';
+      const cssLinks = () => Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+      const stylesReady = () => {
+        const links = cssLinks();
+        if (!links.length) return false;
+        return links.every(link => link.sheet !== null);
+      };
+      const recover = () => {
+        // Give a resumed tab a moment to reconnect its stylesheet before deciding.
+        window.setTimeout(() => {
+          if (stylesReady()) return;
+          const now = Date.now();
+          const last = Number(sessionStorage.getItem(KEY) || 0);
+          if (now - last < 30000) return; // never create a reload loop
+          sessionStorage.setItem(KEY, String(now));
+          location.reload();
+        }, 900);
+      };
+      window.addEventListener('pageshow', recover);
+      window.addEventListener('online', recover);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') recover();
+      });
+      cssLinks().forEach(link => link.addEventListener('error', recover, { once: true }));
+    })();
+  </script>
 </head>
 <body>
 <header class="site-header">
