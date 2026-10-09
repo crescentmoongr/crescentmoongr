@@ -4,7 +4,7 @@ export type Series = {
   id: string; title: string; slug: string; description: string | null;
   author: string | null; artist: string | null; raw_url?: string | null; cover_key: string | null;
   type: string | null; status: 'ongoing'|'completed'|'hiatus'|'dropped'|'upcoming';
-  is_published: boolean; access_type: 'public'|'password'|'member'; genres?: string[]; favorite_count?: number; notify_discord?: boolean; notify_telegram?: boolean; created_at: string; updated_at: string;
+  is_published: boolean; access_type: 'public'|'password'|'member'; genres?: string[]; tags?: string[]; favorite_count?: number; notify_discord?: boolean; notify_telegram?: boolean; created_at: string; updated_at: string;
 };
 export type Chapter = {
   id: string; series_id: string; chapter_number: number; title: string | null;
@@ -278,6 +278,9 @@ export async function getAuthorBySlug(slug:string){
   return r[0]??null;
 }
 
+export type TagProfile = {id:string;name:string;slug:string;created_at:string;updated_at:string};
+export async function getTags(){return supabaseGet<TagProfile[]>('tags?select=*&order=name.asc');}
+export async function getTagBySlug(slug:string){const rows=await supabaseGet<TagProfile[]>(`tags?select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`);return rows[0]??null;}
 export async function getGenres(){
   return supabaseGet<GenreProfile[]>('genres?select=*&order=name.asc');
 }

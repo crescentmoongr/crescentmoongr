@@ -10,7 +10,7 @@ const parseAuthors=(v:string)=>[...new Map(v.split(',').map(x=>x.trim()).filter(
 const safeSlug=(s:string)=>s.toLowerCase().trim().replace(/[^a-z0-9-]+/g,'-').replace(/-+/g,'-').replace(/^-+|-+$/g,'');
 const safeUrl=(v:string)=>{if(!v)return null;try{const u=new URL(v);if(!['http:','https:'].includes(u.protocol))throw 0;return u.href.slice(0,1000)}catch{throw new Error('Link mua raw không hợp lệ. Hãy dùng URL bắt đầu bằng http:// hoặc https://.')}};
 export const POST:APIRoute=async({request,cookies,redirect})=>{
-  const adminSession=await requireAdminSession(cookies); if(!adminSession) return redirect('/login?next=/admin'); const token=adminSession.token; const f=await request.formData(); const selectedGenres=f.getAll('genres').map(x=>clean(x)).filter(Boolean); const id=clean(f.get('id')); let newCover='';
+  const adminSession=await requireAdminSession(cookies); if(!adminSession) return redirect('/login?next=/admin'); const token=adminSession.token; const f=await request.formData(); const selectedGenres=f.getAll('genres').map(x=>clean(x)).filter(Boolean); const selectedTags=f.getAll('tags').map(x=>clean(x)).filter(Boolean); const id=clean(f.get('id')); let newCover='';
   try{
     const old=await getAdminSeriesById(id,token); if(!old) throw new Error('Không tìm thấy truyện.'); const access=clean(f.get('access_type'))||'public'; if(!['public','password','member'].includes(access)) throw new Error('Quyền đọc không hợp lệ.'); const password=clean(f.get('series_password'));
     if(access==='password'&&!password&&!await hasAdminSeriesPassword(id,token)) throw new Error('Hãy nhập mật khẩu cho truyện.');
@@ -30,7 +30,7 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
       }
     }
     if(access==='password'&&password) await supabaseRpc('admin_set_series_password',{p_series_id:id,p_password:password},token);
-    await supabasePatch(`series?id=eq.${encodeURIComponent(id)}`,token,{title,slug,description:sanitizeRichText(clean(f.get('description')))||null,author:authorName||null,artist:clean(f.get('artist'))||null,raw_url:rawUrl,genres:selectedGenres,type:clean(f.get('type'))||null,status:clean(f.get('status')),is_published:f.get('is_published')==='true',cover_key:coverKey,access_type:access,notify_discord:f.get('notify_discord')==='true',notify_telegram:f.get('notify_telegram')==='true'});
+    await supabasePatch(`series?id=eq.${encodeURIComponent(id)}`,token,{title,slug,description:sanitizeRichText(clean(f.get('description')))||null,author:authorName||null,artist:clean(f.get('artist'))||null,raw_url:rawUrl,genres:selectedGenres,tags:selectedTags,type:clean(f.get('type'))||null,status:clean(f.get('status')),is_published:f.get('is_published')==='true',cover_key:coverKey,access_type:access,notify_discord:f.get('notify_discord')==='true',notify_telegram:f.get('notify_telegram')==='true'});
     if(access!=='password') await supabaseRpc('admin_clear_series_password',{p_series_id:id},token);
     if(newCover&&old.cover_key) await env.MANGA_STORAGE.delete(old.cover_key);
     return redirect(`/admin/series/${id}?success=`+encodeURIComponent('Đã lưu thay đổi.'));

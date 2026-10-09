@@ -90,7 +90,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
       {series.raw_url&&<div class="series-info-row series-raw-row"><span class="series-info-icon">🛒</span><span><b>Mua raw:</b> <a class="series-raw-link" href={series.raw_url} target="_blank" rel="noopener noreferrer nofollow sponsored">Ủng hộ tác giả ↗</a></span></div>}
     </div>
 
-    {series.genres?.length?<div class="pills">{series.genres.map(g=><a class="pill taxonomy-pill" href={`/genre/${slugifyTaxonomy(g)}`}>{g}</a>)}</div>:null}
+    {(series.genres?.length||series.tags?.length)?<div class="pills">{(series.genres||[]).map(g=><a class="pill taxonomy-pill taxonomy-genre-pill" href={`/genre/${slugifyTaxonomy(g)}`}>{g}</a>)}{(series.tags||[]).map(t=><a class="pill taxonomy-pill" href={`/tag/${slugifyTaxonomy(t)}`}>{t}</a>)}</div>:null}
 
     <div class="row-actions manga-actions">
       <form method="POST" action="/api/library/bookmark">
