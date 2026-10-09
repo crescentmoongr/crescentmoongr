@@ -46,9 +46,9 @@ try{
   if(section==='comments'){try{adminComments=await getAdminSeriesComments(token); adminCommentRewardMap=new Map((await getCommentMemberRewards(adminComments.map((c:any)=>c.user_id).filter(Boolean))).map((x:any)=>[x.user_id,x]));}catch(e){commentsError=e instanceof Error?e.message:'Không tải được bình luận.'}}
   if(section==='authors') authors=await getAuthors();
   if(section==='genres') genresManaged=await getGenres();
-  if(section==='tags') tagsManaged=await getTags();
+  if(section==='tags') tagsManaged=await getTags(token);
   if(section==='add-series'){
-    const [a,g,t]=await Promise.allSettled([getAuthors(),getGenres(),getTags()]);
+    const [a,g,t]=await Promise.allSettled([getAuthors(),getGenres(),getTags(token)]);
     authors=a.status==='fulfilled'?a.value:[];
     genresManaged=g.status==='fulfilled'?g.value:[];
     tagsManaged=t.status==='fulfilled'?t.value:[];

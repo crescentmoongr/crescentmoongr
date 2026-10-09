@@ -4,6 +4,11 @@ import { supabaseRpc } from '../../../../lib/supabase';
 
 export const prerender=false;
 const clean=(v:any)=>String(v||'').trim();
+const friendlyError=(e:any)=>{
+  const message=String(e?.message||'');
+  if(/23505|duplicate key|tags_slug_key|already exists/i.test(message)) return 'Tag này đã tồn tại rồi, chọn tên khác nha ♡';
+  return message||'Không thể lưu Tag.';
+};
 
 export const POST:APIRoute=async({request,cookies,redirect})=>{
   const session=await requireAdminSession(cookies);
@@ -15,13 +20,13 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
     const rawName=clean(f.get('name'));
     if(!rawName)throw new Error('Tên Tag là bắt buộc.');
 
-    // Editing an existing genre remains a single-item save.
+    // Editing an existing tag remains a single-item save.
     if(id){
       await supabaseRpc('admin_save_tag',{p_id:id,p_name:rawName},session.token);
       return redirect('/admin/tags?success='+encodeURIComponent('Đã lưu Tag.')+'');
     }
 
-    // Creating genres supports comma-separated batch input.
+    // Creating tags supports comma-separated batch input.
     // Trim spaces, remove empty entries and duplicates in the same submission.
     const names=[...new Map(
       rawName
@@ -41,9 +46,9 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
         await supabaseRpc('admin_save_tag',{p_id:null,p_name:name},session.token);
         saved++;
       }catch(e:any){
-        // Existing genres or other DB validation errors shouldn't stop
+        // Existing tags or other DB validation errors shouldn't stop
         // the remaining items from being processed.
-        errors.push(`${name}: ${e?.message||'không thể lưu'}`);
+        errors.push(`${name}: ${friendlyError(e)}`);
       }
     }
 
@@ -57,6 +62,6 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
 
     return redirect('/admin/tags?success='+encodeURIComponent(message)+'');
   }catch(e:any){
-    return redirect('/admin/tags?error='+encodeURIComponent(e?.message||'Không thể lưu Tag.')+'');
+    return redirect('/admin/tags?error='+encodeURIComponent(friendlyError(e))+'');
   }
 };
