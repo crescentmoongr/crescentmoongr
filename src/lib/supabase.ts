@@ -279,7 +279,9 @@ export async function getAuthorBySlug(slug:string){
 }
 
 export type TagProfile = {id:string;name:string;slug:string;created_at:string;updated_at:string};
-export async function getTags(token?:string){return supabaseGet<TagProfile[]>('tags?select=*&order=name.asc',token);}
+export async function getTags(){
+  return supabaseGet<TagProfile[]>('tags?select=*&order=name.asc');
+}
 export async function getTagBySlug(slug:string){const rows=await supabaseGet<TagProfile[]>(`tags?select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`);return rows[0]??null;}
 export async function getGenres(token?:string){
   return supabaseGet<GenreProfile[]>('genres?select=*&order=name.asc',token);
