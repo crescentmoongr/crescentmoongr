@@ -3847,3 +3847,7 @@ button.home-more-button:hover span{transform:translateY(2px);}
  .admin-series-list .admin-series-row>.admin-thumb{width:66px;height:92px}
  .admin-series-list .admin-series-row .row-actions{flex-wrap:wrap}
 }
+
+/* v12.61: Author and genres occupy separate full-width rows */
+.form-grid > .admin-series-full-row { grid-column: 1 / -1; min-width: 0; }
+.form-grid > .admin-series-full-row input:not([type="checkbox"]) { width: 100%; }
