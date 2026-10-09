@@ -45,9 +45,9 @@ try{
   if(section==='members'){try{members=await getAdminMembers(token)}catch(e){membersError=e instanceof Error?e.message:'Không tải được thành viên.'}}
   if(section==='comments'){try{adminComments=await getAdminSeriesComments(token); adminCommentRewardMap=new Map((await getCommentMemberRewards(adminComments.map((c:any)=>c.user_id).filter(Boolean))).map((x:any)=>[x.user_id,x]));}catch(e){commentsError=e instanceof Error?e.message:'Không tải được bình luận.'}}
   if(section==='authors') authors=await getAuthors();
-  if(section==='genres') genresManaged=await getGenres();
-  if(section==='tags') tagsManaged=await getTags();
-  if(section==='add-series') [authors,genresManaged,tagsManaged]=await Promise.all([getAuthors(),getGenres(),getTags()]);
+  if(section==='genres') genresManaged=await getGenres(token);
+  if(section==='tags') tagsManaged=await getTags(token);
+  if(section==='add-series') [authors,genresManaged,tagsManaged]=await Promise.all([getAuthors(),getGenres(token),getTags(token)]);
 }catch{}
 const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội',ads:'Quảng cáo','add-series':'Thêm truyện',series:'Quản lý truyện',comments:'Quản lý bình luận',members:'Quản lý thành viên',authors:'Quản lý tác giả',genres:'Quản lý thể loại',tags:'Quản lý Tag'};
 ---
@@ -91,8 +91,8 @@ const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội'
   <form method="POST" action="/api/admin/series/create" enctype="multipart/form-data" class="admin-form"><div class="form-grid">
     <label class="field"><span>Tên truyện *</span><input id="title" name="title" required maxlength="200"/></label><label class="field"><span>Slug *</span><input id="slug" name="slug" required maxlength="200" placeholder="ten-truyen"/></label>
     <label class="field admin-series-full-row"><span>Tác giả</span><input name="author" maxlength="500" list="author-suggestions"/><datalist id="author-suggestions">{authors.map(a=><option value={a.name}/>)}</datalist></label>
-    <div class="field genre-picker-field admin-series-full-row"><span>Thể loại</span><div class="genre-bubble-picker" data-genre-picker>{genresManaged.map(g=><label class="genre-bubble"><input type="checkbox" name="genres" value={g.name}/><span>{g.name}</span></label>)}</div></div>
-    <div class="field genre-picker-field admin-series-full-row"><span>Tag</span><div class="genre-bubble-picker tag-bubble-picker">{tagsManaged.map(t=><label class="genre-bubble"><input type="checkbox" name="tags" value={t.name}/><span>{t.name}</span></label>)}</div><small class="meta">Chọn các Tag phù hợp với truyện.</small></div>
+    <div class="field genre-picker-field admin-series-full-row"><span>Thể loại</span><div class="genre-bubble-picker" data-genre-picker>{genresManaged.length===0?<span class="meta">Chưa tải được danh sách thể loại hoặc chưa có thể loại. Kiểm tra mục Quản lý thể loại.</span>:genresManaged.map(g=><label class="genre-bubble"><input type="checkbox" name="genres" value={g.name}/><span>{g.name}</span></label>)}</div></div>
+    <div class="field genre-picker-field admin-series-full-row"><span>Tag</span><div class="genre-bubble-picker tag-bubble-picker">{tagsManaged.length===0?<span class="meta">Chưa có Tag hoặc chưa tải được danh sách. Kiểm tra mục Quản lý Tag.</span>:tagsManaged.map(t=><label class="genre-bubble"><input type="checkbox" name="tags" value={t.name}/><span>{t.name}</span></label>)}</div><small class="meta">Chọn các Tag phù hợp với truyện.</small></div>
     <label class="field"><span>Link mua raw</span><input name="raw_url" type="url" maxlength="1000" placeholder="https://..."/></label><label class="field"><span>Loại truyện</span><select name="type"><option value="">— Chưa chọn —</option><option value="Manga">Manga</option><option value="Manhwa">Manhwa</option><option value="Manhua">Manhua</option><option value="Novel">Novel</option><option value="Other">Khác</option></select></label>
     <label class="field"><span>Trạng thái *</span><select name="status" required><option value="ongoing">Đang tiến hành</option><option value="completed">Hoàn thành</option><option value="hiatus">Tạm ngưng</option><option value="dropped">Drop</option><option value="upcoming">Sắp ra mắt</option></select></label><label class="field"><span>Quyền đọc *</span><select name="access_type" id="new_access_type" required><option value="public">Public</option><option value="password">Khóa mật khẩu cả bộ</option><option value="member">Thành viên</option></select></label><label class="field" id="new_series_password_field" hidden><span>Mật khẩu truyện *</span><input name="series_password" type="password" minlength="4" autocomplete="new-password"/></label>
   </div>
