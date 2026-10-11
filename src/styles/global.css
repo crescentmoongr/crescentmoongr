@@ -3903,3 +3903,6 @@ button.home-more-button:hover span{transform:translateY(2px);}
   font-weight:700;
 }
 @media(prefers-reduced-motion:reduce){.taxonomy-genre-pill,.genre-bubble-picker:not(.tag-bubble-picker) .genre-bubble span{transition:none}}
+
+/* v12.70: allow retry action inside the otherwise non-interactive reader overlay. */
+.reader-loading .reader-retry-button{pointer-events:auto;position:relative;z-index:2;touch-action:manipulation}

@@ -138,7 +138,7 @@ const addRetryButton=(wrap,loading)=>{
   if(!(loading instanceof HTMLElement)||loading.querySelector('.reader-retry-button'))return;
   const button=document.createElement('button');
   button.type='button';button.className='button reader-retry-button';button.textContent='↻ Tải lại ảnh';
-  button.style.cssText='display:block;margin:12px auto 0;cursor:pointer';
+  button.style.cssText='display:block;margin:12px auto 0;cursor:pointer;pointer-events:auto;position:relative;z-index:2;touch-action:manipulation';
   button.addEventListener('click',retryFailedPages);
   loading.appendChild(button);
 };
