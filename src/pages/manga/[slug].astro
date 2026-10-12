@@ -20,7 +20,7 @@ const continueChapter=history?chapters.find(c=>c.id===history.chapter_id):null;
 const latest=chapters[0]||null;
 const updated=latest?.published_at||series?.updated_at;
 const accessText=series?.access_type==='password'?'🔒 Khóa mật khẩu cả bộ':series?.access_type==='member'?'🔒 Dành cho thành viên':'Public';
-const fmt=(v?:string|null)=>v?new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(v)):'—';
+const fmt=(v?:string|null)=>v?new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(v)):'—';
 const introHtml=series?richTextToHtml(series.description):'';
 const seriesAuthors=series?.author?series.author.split(',').map(x=>x.trim()).filter(Boolean):[];
 let comments:any[]=[];
@@ -128,7 +128,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
 </section>
 
 <div class="section-title"><h2 class="major-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Mục lục</h2><span class="meta">{chapters.length} chap</span></div>
-{chapters.length===0?<div class="empty-state">Chưa có chapter được đăng.</div>:<div class="chapter-list">{chapters.map(ch=><a class={`chapter ${readIds.has(ch.id)?'chapter-read':''}`} href={`/read/${series.slug}/${ch.chapter_number}`}><span>Chapter {ch.chapter_number}{ch.title?` — ${ch.title}`:''}</span><span class="chapter-right">{session&&<span class={readIds.has(ch.id)?'read-state read':'read-state'}>{readIds.has(ch.id)?'✓ Đã đọc':'Chưa đọc'}</span>}<span class={series.access_type==='public'?'meta':'lock'}>{series.access_type==='password'?'🔒':series.access_type==='member'?'🔒':'Đọc'}</span></span></a>)}</div>}
+{chapters.length===0?<div class="empty-state">Chưa có chapter được đăng.</div>:<div class="chapter-list">{chapters.map(ch=><a class={`chapter ${readIds.has(ch.id)?'chapter-read':''}`} href={`/read/${series.slug}/${ch.chapter_number}`}><span>Chapter {ch.chapter_number}{ch.title?` — ${ch.title}`:''}</span><span class="chapter-right">{session&&<span class={readIds.has(ch.id)?'read-state read':'read-state'}>{readIds.has(ch.id)?'✓ Đã đọc':'Chưa đọc'}</span>}<span class={series.access_type==='public'?'meta':'lock'}>{series.access_type==='password'?'🔒':series.access_type==='member'?'🔒':fmt(ch.published_at||ch.created_at)}</span></span></a>)}</div>}
 
 <section class="comments-section" id="comments">
   <div class="section-title"><h2 class="major-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Bình luận</h2><span class="meta">{comments.length} bình luận</span></div>
