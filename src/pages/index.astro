@@ -139,7 +139,7 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
 </>}
 
 {topViewedSeries.length>0&&<section class="top-views-section home-section-content" data-top-views aria-label="Top lượt xem">
-  <div class="top-views-header"><h2>🏆 Top lượt xem 🏆</h2><span>Truyện được đọc nhiều nhất</span></div>
+  <div class="top-views-header"><h2 class="home-section-title">🏆 TOP LƯỢT XEM 🏆</h2><span>Truyện được đọc nhiều nhất</span></div>
   <div class="top-views-viewport">
     <div class="top-views-scroll" data-top-views-track>
       {topViewedSeries.map((item,index)=><a class="top-views-card" href={`/manga/${item.slug}`} aria-label={`${item.title}, hạng ${index+1}, ${item.total_views} lượt xem`}>

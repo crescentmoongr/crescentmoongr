@@ -3938,3 +3938,27 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .top-views-hint{display:none}
 @media(max-width:640px){.top-views-card{flex-basis:100%}.top-views-viewport{max-width:270px}}
 @media(prefers-reduced-motion:reduce){.top-views-scroll{transition:none}}
+
+/* v12.76 — pink ombre panel, matching Top yêu thích heading */
+.top-views-section{
+  background:
+    radial-gradient(ellipse at 12% 18%,rgba(255,184,215,.5),transparent 54%),
+    radial-gradient(ellipse at 88% 76%,rgba(217,174,243,.5),transparent 55%),
+    linear-gradient(125deg,rgba(255,216,234,.5),rgba(241,208,246,.5) 52%,rgba(255,223,237,.5));
+  border:1px solid rgba(217,160,209,.36);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  color:#70576f;
+}
+.top-views-header h2.home-section-title{
+  font-family:"Lora","Noto Serif",Georgia,"Times New Roman",serif;
+  font-weight:700;
+  letter-spacing:-.015em;
+  color:#AC87C5;
+  text-transform:uppercase;
+  font-size:clamp(1.15rem,2.2vw,1.5rem);
+  margin:0 0 6px;
+}
+.top-views-header span{color:#846f87}
+.top-views-dot{background:rgba(165,126,167,.38)}
+.top-views-dot.is-active{background:#d677bd}
