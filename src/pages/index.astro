@@ -138,17 +138,19 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
 </section>
 </>}
 
-{topViewedSeries.length>0&&<section class="top-views-section home-section-content" aria-label="Top lượt xem">
+{topViewedSeries.length>0&&<section class="top-views-section home-section-content" data-top-views aria-label="Top lượt xem">
   <div class="top-views-header"><h2>🏆 Top lượt xem 🏆</h2><span>Truyện được đọc nhiều nhất</span></div>
-  <div class="top-views-scroll">
-    {topViewedSeries.map((item,index)=><a class="top-views-card" href={`/manga/${item.slug}`} aria-label={`${item.title}, hạng ${index+1}, ${item.total_views} lượt xem`}>
-      <img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy" decoding="async"/>
-      <span class="top-views-gradient"></span>
-      <span class="top-views-rank">#{index+1}</span>
-      <span class="top-views-caption"><strong>{item.title}</strong><small>◉ {new Intl.NumberFormat('vi-VN').format(item.total_views)} lượt xem</small></span>
-    </a>)}
+  <div class="top-views-viewport">
+    <div class="top-views-scroll" data-top-views-track>
+      {topViewedSeries.map((item,index)=><a class="top-views-card" href={`/manga/${item.slug}`} aria-label={`${item.title}, hạng ${index+1}, ${item.total_views} lượt xem`}>
+        <img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy" decoding="async"/>
+        <span class="top-views-gradient"></span>
+        <span class="top-views-rank">#{index+1}</span>
+        <span class="top-views-caption"><strong>{item.title}</strong><small>◉ {new Intl.NumberFormat('vi-VN').format(item.total_views)} lượt xem</small></span>
+      </a>)}
+    </div>
   </div>
-  <div class="top-views-hint">Vuốt ngang để xem thêm →</div>
+  <div class="top-views-dots" data-top-views-dots aria-label="Vị trí slide"></div>
 </section>}
 
 {favoriteRanking.length>0&&<>
@@ -205,6 +207,64 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
 </>}
 </>}
 <script>
+  // Top lượt xem: slide tự động, dừng khi rê chuột hoặc dùng bàn phím.
+  document.querySelectorAll('[data-top-views]').forEach((slider)=>{
+    const track=slider.querySelector('[data-top-views-track]');
+    const dots=slider.querySelector('[data-top-views-dots]');
+    if(!track||!dots)return;
+    const cards=Array.from(track.querySelectorAll('.top-views-card'));
+    if(!cards.length)return;
+    let index=0,paused=false,timer;
+    const visibleCount=()=>window.matchMedia('(max-width:640px)').matches?1:Math.min(3,cards.length);
+    const pageCount=()=>Math.max(1,cards.length-visibleCount()+1);
+    const show=(next)=>{
+      const count=pageCount();index=((next%count)+count)%count;
+      const first=cards[0];
+      const gap=parseFloat(getComputedStyle(track).gap)||0;
+      track.style.transform=`translate3d(-${index*(first.getBoundingClientRect().width+gap)}px,0,0)`;
+      dots.querySelectorAll('button').forEach((button,i)=>{
+        const active=i===index;button.classList.toggle('is-active',active);
+        button.setAttribute('aria-current',active?'true':'false');
+      });
+    };
+    const update=()=>{
+      const count=pageCount();dots.replaceChildren();
+      for(let i=0;i<count;i++){
+        const button=document.createElement('button');button.type='button';
+        button.className='top-views-dot';button.setAttribute('aria-label',`Xem slide ${i+1}`);
+        button.addEventListener('click',()=>show(i));dots.appendChild(button);
+      }
+      show(Math.min(index,count-1));
+    };
+    const stop=()=>{if(timer!==undefined)window.clearInterval(timer);timer=undefined};
+    const play=()=>{
+      stop();if(paused||pageCount()<2||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+      timer=window.setInterval(()=>{if(!document.hidden)show(index+1)},4500);
+    };
+    slider.addEventListener('mouseenter',()=>{paused=true;stop()});
+    slider.addEventListener('mouseleave',()=>{paused=false;play()});
+    slider.addEventListener('focusin',()=>{paused=true;stop()});
+    slider.addEventListener('focusout',(event)=>{if(!slider.contains(event.relatedTarget)){paused=false;play()}});
+    window.addEventListener('resize',()=>{update();play()},{passive:true});
+    update();play();
+    // Tự lấy màu trung bình phần dưới bìa; fallback trung tính nếu không đọc được pixel.
+    cards.forEach((card)=>{
+      const img=card.querySelector('img');if(!img)return;
+      const apply=()=>{
+        try{
+          const canvas=document.createElement('canvas');canvas.width=24;canvas.height=24;
+          const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)return;
+          ctx.drawImage(img,0,0,24,24);
+          const data=ctx.getImageData(0,11,24,13).data;
+          let r=0,g=0,b=0,n=0;
+          for(let i=0;i<data.length;i+=16){if(data[i+3]<200)continue;r+=data[i];g+=data[i+1];b+=data[i+2];n++}
+          if(!n)return;
+          card.style.setProperty('--cover-rgb',`${Math.round(r/n*.68)},${Math.round(g/n*.68)},${Math.round(b/n*.68)}`);
+        }catch{}
+      };
+      if(img.complete&&img.naturalWidth)apply();else img.addEventListener('load',apply,{once:true});
+    });
+  });
   document.querySelectorAll('[data-checkin-form]').forEach((form)=>{
     form.addEventListener('submit',async(event)=>{
       event.preventDefault();
