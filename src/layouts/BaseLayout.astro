@@ -504,7 +504,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   function eligible(el){
     // Taxonomy names (Admin > Tác giả / Thể loại) are metadata, not content fields.
-    if(el.closest?.('.taxonomy-create-form, .taxonomy-admin-row')) return false;
+    if(el.closest?.('.taxonomy-create-form, .taxonomy-admin-row, [data-admin-tag-editor]')) return false;
     if(el.matches?.('[contenteditable="true"]')) return true;
     if(el instanceof HTMLTextAreaElement) return !el.hidden && !el.classList.contains('comment-source') && !excludedNames.has(el.name||'');
     if(el instanceof HTMLInputElement){
