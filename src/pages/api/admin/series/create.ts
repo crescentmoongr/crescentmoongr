@@ -1,3 +1,4 @@
+import { ensureAdminSeriesTags } from '../../../../lib/adminSeriesTags';
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { requireAdminSession } from '../../../../lib/auth';
@@ -15,7 +16,7 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
   const adminSession=await requireAdminSession(cookies); if(!adminSession) return redirect('/login?next=/admin'); const token=adminSession.token;
   let coverKey=''; let seriesId='';
   try{
-    const f=await request.formData(); const selectedGenres=f.getAll('genres').map(x=>clean(x)).filter(Boolean); const selectedTags=f.getAll('tags').map(x=>clean(x)).filter(Boolean); const title=clean(f.get('title')); const slug=safeSlug(clean(f.get('slug'))); const status=clean(f.get('status')); const access=clean(f.get('access_type'))||'public'; const password=clean(f.get('series_password')); const rawUrl=safeUrl(clean(f.get('raw_url')));
+    const f=await request.formData(); const selectedGenres=f.getAll('genres').map(x=>clean(x)).filter(Boolean); const selectedTags=await ensureAdminSeriesTags(f.getAll('tags').map(x=>clean(x)).filter(Boolean),token); const title=clean(f.get('title')); const slug=safeSlug(clean(f.get('slug'))); const status=clean(f.get('status')); const access=clean(f.get('access_type'))||'public'; const password=clean(f.get('series_password')); const rawUrl=safeUrl(clean(f.get('raw_url')));
     if(!title||!slug) throw new Error('Tên truyện và slug là bắt buộc.'); if(!validStatus.has(status)) throw new Error('Trạng thái không hợp lệ.'); if(!validAccess.has(access)) throw new Error('Quyền đọc không hợp lệ.'); if(access==='password'&&password.length<4) throw new Error('Mật khẩu truyện cần ít nhất 4 ký tự.');
     const authorNames=parseAuthors(clean(f.get('author')));
     const authorName=authorNames.join(', ');
