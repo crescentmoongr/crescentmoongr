@@ -22,6 +22,7 @@ const updated=latest?.published_at||series?.updated_at;
 const accessText=series?.access_type==='password'?'🔒 Khóa mật khẩu cả bộ':series?.access_type==='member'?'🔒 Dành cho thành viên':'Public';
 const fmt=(v?:string|null)=>v?new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(v)):'—';
 const introHtml=series?richTextToHtml(series.description):'';
+const cmoaRawLink=series?.raw_cmoa_url||series?.raw_url||null;
 const seriesAuthors=series?.author?series.author.split(',').map(x=>x.trim()).filter(Boolean):[];
 let comments:any[]=[];
 let recommendations:any[]=[];
@@ -87,7 +88,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
         <div class="series-info-row"><span class="series-info-icon">▦</span><span><b>Cập nhật:</b> {fmt(updated)}</span></div>
         <div class="series-info-row"><span class="series-info-icon">♙</span><span><b>Quyền đọc:</b> {accessText}</span></div>
         <div class="series-info-row series-views-row"><span class="series-info-icon">◉</span><span><b>Lượt xem:</b> {new Intl.NumberFormat('vi-VN').format(totalSeriesViews)}</span></div>
-      {series.raw_url&&<div class="series-info-row series-raw-row"><span class="series-info-icon">🛒</span><span><b>Mua raw:</b> <a class="series-raw-link" href={series.raw_url} target="_blank" rel="noopener noreferrer nofollow sponsored">Ủng hộ tác giả ↗</a></span></div>}
+      {(cmoaRawLink||series.raw_renta_url)&&<div class="series-info-row series-raw-row"><span class="series-info-icon">🛒</span><span><b>Mua raw:</b> {cmoaRawLink&&<a class="series-raw-link" href={cmoaRawLink} target="_blank" rel="noopener noreferrer nofollow sponsored">CMOA ↗</a>} {series.raw_renta_url&&<a class="series-raw-link" href={series.raw_renta_url} target="_blank" rel="noopener noreferrer nofollow sponsored">RENTA ↗</a>}</span></div>}
     </div>
 
     {(series.genres?.length||series.tags?.length)?<div class="pills">{(series.genres||[]).map(g=><a class="pill taxonomy-pill taxonomy-genre-pill" href={`/genre/${slugifyTaxonomy(g)}`}>{g}</a>)}{(series.tags||[]).map(t=><a class="pill taxonomy-pill" href={`/tag/${slugifyTaxonomy(t)}`}>{t}</a>)}</div>:null}

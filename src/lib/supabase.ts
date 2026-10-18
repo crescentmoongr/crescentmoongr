@@ -2,7 +2,7 @@ import { env } from 'cloudflare:workers';
 
 export type Series = {
   id: string; title: string; slug: string; description: string | null;
-  author: string | null; artist: string | null; raw_url?: string | null; cover_key: string | null;
+  author: string | null; artist: string | null; raw_url?: string | null; raw_cmoa_url?: string | null; raw_renta_url?: string | null; cover_key: string | null;
   type: string | null; status: 'ongoing'|'completed'|'hiatus'|'dropped'|'upcoming';
   is_published: boolean; access_type: 'public'|'password'|'member'; genres?: string[]; tags?: string[]; favorite_count?: number; notify_discord?: boolean; notify_telegram?: boolean; created_at: string; updated_at: string;
 };

@@ -3968,3 +3968,6 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .admin-tag-entry input{flex:1 1 240px;min-width:0;border:1px solid #e7cddd;border-radius:12px;background:rgba(255,255,255,.9);padding:11px 13px;color:#765c6b;font:inherit}
 .admin-tag-entry input:focus{outline:2px solid #dca7cd;outline-offset:1px}
 .admin-tag-entry button{white-space:nowrap}
+
+/* v12.79 - raw purchase links */
+.series-raw-row .series-raw-link + .series-raw-link{margin-left:12px}
