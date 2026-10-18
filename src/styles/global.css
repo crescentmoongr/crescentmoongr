@@ -3971,3 +3971,25 @@ button.home-more-button:hover span{transform:translateY(2px);}
 
 /* v12.79 - raw purchase links */
 .series-raw-row .series-raw-link + .series-raw-link{margin-left:12px}
+
+/* v12.81: raw links aligned and helper underneath */
+.form-grid>.admin-raw-links{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px;align-items:start}
+.admin-raw-links>.field{min-width:0;margin:0}.admin-raw-links>.field input{width:100%}
+.admin-raw-links-help{grid-column:1/-1;margin-top:-4px}
+/* v12.81: member search/filter and card layout */
+.admin-member-filters{display:grid;grid-template-columns:minmax(230px,1.7fr) minmax(155px,1fr) minmax(140px,.75fr);gap:12px;align-items:end;margin-bottom:8px}
+.admin-member-filters .admin-member-search{margin:0;max-width:none;display:grid;gap:6px;font-weight:600}
+.admin-member-filters .admin-member-search input{width:100%}
+.member-filter{display:grid;gap:6px;font-size:.86rem;font-weight:600}.member-filter select{width:100%;min-width:0}
+.admin-member-editor[hidden]{display:none!important}
+.admin-member-row-expanded{grid-template-columns:1fr;align-items:start}
+.admin-member-main{grid-column:1/-1;gap:5px}
+.admin-member-main .comment-member-identity{display:flex;align-items:center;gap:9px}
+.member-username-toggle{font-size:.75rem;padding:5px 10px;min-height:28px}
+.member-username-edit{max-width:380px;margin:7px 0}
+.member-username-edit[hidden]{display:none!important}
+.admin-member-stats{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end;margin-top:10px}
+.admin-member-stats .member-control{min-width:0}
+.admin-member-stats input,.admin-member-stats select{width:100%;min-width:0}
+@media(max-width:900px){.admin-member-filters{grid-template-columns:1fr 1fr}.admin-member-filters .admin-member-search{grid-column:1/-1}.admin-member-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.form-grid>.admin-raw-links{grid-template-columns:1fr}.admin-member-filters{grid-template-columns:1fr}.admin-member-filters .admin-member-search{grid-column:auto}}
