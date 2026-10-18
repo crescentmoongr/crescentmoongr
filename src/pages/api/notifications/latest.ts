@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSession } from '../../../lib/auth';
-import { getAllPublicChapters,getSeriesList,supabaseRpc } from '../../../lib/supabase';
+import { getAllPublicChapters,getSeriesList,getMyMemberRewards,supabaseRpc } from '../../../lib/supabase';
 export const prerender=false;
 
 export const GET:APIRoute=async({cookies})=>{
@@ -9,7 +9,15 @@ export const GET:APIRoute=async({cookies})=>{
     const replyPromise=session
       ? supabaseRpc<any[]>('get_my_comment_reply_notifications',{p_limit:20},session.token).catch(()=>[])
       : Promise.resolve([]);
-    const [chapters,series,replies]=await Promise.all([getAllPublicChapters(),getSeriesList(),replyPromise]);
+    const achievementsPromise=session ? (async()=>{
+      try{
+        const rewards=await getMyMemberRewards(session.token);
+        const owned=[...new Set((rewards?.achievements||[]).filter((x):x is string=>typeof x==='string'&&!!x))];
+        // Atomic, idempotent insert; also backfills titles already unlocked before this release.
+        return await supabaseRpc<any[]>('sync_my_achievement_notifications',{p_achievements:owned},session.token);
+      }catch(e){console.error('Achievement notification sync failed',e);return []}
+    })() : Promise.resolve([]);
+    const [chapters,series,replies,achievements]=await Promise.all([getAllPublicChapters(),getSeriesList(),replyPromise,achievementsPromise]);
     const seriesMap=new Map(series.map(s=>[s.id,s]));
     const cutoff=Date.now()-7*24*60*60*1000;
     const chapterItems=chapters.filter(ch=>{
@@ -27,7 +35,11 @@ export const GET:APIRoute=async({cookies})=>{
       cover:n.actor_user_id?`/api/avatar/${encodeURIComponent(n.actor_user_id)}`:null,
       created_at:n.created_at,is_read:!!n.is_read
     }));
-    const items=[...replyItems,...chapterItems].sort((a:any,b:any)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,30);
+    const achievementItems=(achievements||[]).map((n:any)=>({
+      id:`achievement:${n.id}`,notification_id:n.id,type:'achievement',title:n.achievement,
+      href:'/account#achievements',cover:null,created_at:n.created_at,is_read:!!n.is_read
+    }));
+    const items=[...achievementItems,...replyItems,...chapterItems].sort((a:any,b:any)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,30);
     return new Response(JSON.stringify({items}),{headers:{'content-type':'application/json; charset=utf-8','cache-control':'private, no-store'}});
   }catch{
     return new Response(JSON.stringify({items:[]}),{headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});

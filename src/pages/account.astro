@@ -1,16 +1,20 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getSession } from '../lib/auth';
-import { getMyBookmarks,getSeriesById,getMyMemberRewards } from '../lib/supabase';
+import { getMyBookmarks,getMyFavoriteSeries,getSeriesById,getMyMemberRewards } from '../lib/supabase';
 export const prerender=false;
 const session=await getSession(Astro.cookies); if(!session) return Astro.redirect('/login?next=/account');
 const user=session.user; const success=Astro.url.searchParams.get('success'); const error=Astro.url.searchParams.get('error');
 const usernameRequired=!String(user.username||'').trim() || Astro.url.searchParams.get('username_required')==='1';
 const bookmarkRows=await getMyBookmarks(user.id,session.token);
 const rewards=await getMyMemberRewards(session.token);
+let favoriteRows: {series_id:string;created_at:string|null}[]=[];
+let favoritesUnavailable=false;
+try{favoriteRows=await getMyFavoriteSeries(session.token);}catch(error){favoritesUnavailable=true;console.error('Account favorites:',error);}
 const rankMap:any={none:['','Chưa xếp hạng'],mam_trang:['🌱','Mầm Trăng'],trang_non:['🌙','Trăng Non'],trang_tron:['🌕','Trăng Tròn'],anh_sao:['✨','Ánh Sao'],sao_sang:['🌟','Sao Sáng'],tinh_nguyet:['💫','Tinh Nguyệt']};
 const [rankIcon,rankName]=rankMap[rewards?.rank_key||'none']||rankMap.none;
 const bookmarks=(await Promise.all(bookmarkRows.map(async b=>({b,series:await getSeriesById(b.series_id)})))).filter(x=>x.series);
+const favorites=(await Promise.all(favoriteRows.map(async b=>({b,series:await getSeriesById(b.series_id)})))).filter(x=>x.series);
 ---
 <BaseLayout title="Tài khoản — Crescent Reader">
 <section class="account-grid account-page-grid">
@@ -34,6 +38,19 @@ const bookmarks=(await Promise.all(bookmarkRows.map(async b=>({b,series:await ge
     <button class="button" type="submit">Lưu thay đổi</button>
   </form>
 </section>
+<section class="admin-card admin-wide account-bookmark-section account-page-wide" id="account-favorites">
+  <div class="section-title"><h2>❤️ Truyện yêu thích</h2><span class="meta">{favorites.length} truyện</span></div>
+  {favoritesUnavailable?<div class="empty-state">Chưa tải được danh sách yêu thích. Hãy kiểm tra SQL v12.83 trong Supabase.</div>:
+    favorites.length?<>
+      <div class="account-bookmark-grid" data-account-favorites>
+        {favorites.map(({series},index)=><a class="account-bookmark-card" href={`/manga/${series!.slug}`} data-favorite-item hidden={index>=12}>
+          <div class="account-bookmark-cover">{series!.cover_key?<img src={`/api/cover/${series!.id}`} alt={`Bìa ${series!.title}`} loading="lazy"/>:<span>{series!.title}</span>}</div>
+          <div class="account-bookmark-body"><h3>{series!.title}</h3></div>
+        </a>)}
+      </div>
+      {favorites.length>12&&<div class="account-favorites-more"><button class="button secondary" type="button" data-favorites-more>Xem thêm</button></div>}
+    </>:<div class="empty-state">Cậu chưa yêu thích truyện nào.</div>}
+</section>
 <section class="admin-card admin-wide account-bookmark-section account-page-wide">
   <div class="section-title"><h2>★ Truyện đã bookmark</h2><span class="meta">{bookmarks.length} truyện</span></div>
   {bookmarks.length?
@@ -54,6 +71,13 @@ const bookmarks=(await Promise.all(bookmarkRows.map(async b=>({b,series:await ge
 </BaseLayout>
 
 <script>
+const moreFavorites=document.querySelector('[data-favorites-more]');
+moreFavorites?.addEventListener('click',()=>{
+  const hiddenItems=Array.from(document.querySelectorAll('[data-favorite-item][hidden]')).slice(0,12);
+  hiddenItems.forEach(item=>{if(item instanceof HTMLElement)item.hidden=false;});
+  if(!document.querySelector('[data-favorite-item][hidden]')) moreFavorites.remove();
+});
+
 const usernameInput=document.querySelector('[data-username-input]');
 const usernameStatus=document.querySelector('[data-username-status]');
 if(usernameInput instanceof HTMLInputElement && usernameStatus instanceof HTMLElement && usernameInput.dataset.usernameLocked!=='1'){

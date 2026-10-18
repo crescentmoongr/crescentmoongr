@@ -3993,3 +3993,7 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .admin-member-stats input,.admin-member-stats select{width:100%;min-width:0}
 @media(max-width:900px){.admin-member-filters{grid-template-columns:1fr 1fr}.admin-member-filters .admin-member-search{grid-column:1/-1}.admin-member-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.form-grid>.admin-raw-links{grid-template-columns:1fr}.admin-member-filters{grid-template-columns:1fr}.admin-member-filters .admin-member-search{grid-column:auto}}
+
+/* v12.83 — Account favorites share the existing compact Bookmark card layout */
+.account-favorites-more{display:flex;justify-content:center;margin-top:18px}
+[data-favorite-item][hidden]{display:none!important}

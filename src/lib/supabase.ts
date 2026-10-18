@@ -88,6 +88,10 @@ export async function getReadingHistory(seriesId:string,userId:string,token:stri
 export async function getChapterReads(seriesId:string,userId:string,token:string){
   return supabaseGet<ChapterRead[]>(`chapter_reads?select=*&user_id=eq.${encodeURIComponent(userId)}&series_id=eq.${encodeURIComponent(seriesId)}`,token);
 }
+export type FavoriteSeriesRow = { series_id:string; created_at:string|null };
+export async function getMyFavoriteSeries(token:string){
+  return supabaseRpc<FavoriteSeriesRow[]>('get_my_favorite_series',{},token);
+}
 export async function getMyBookmarks(userId:string,token:string){
   return supabaseGet<Bookmark[]>(`bookmarks?select=*&user_id=eq.${encodeURIComponent(userId)}&order=created_at.desc`,token);
 }
