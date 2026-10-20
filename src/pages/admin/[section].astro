@@ -88,7 +88,7 @@ const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội'
 </section>}
 
 {section==='ads' && <section class="admin-card admin-wide admin-anchor-section">
-  <div class="section-title"><h2>Quảng cáo</h2></div><form method="POST" action="/api/admin/settings/ads" class="admin-form"><label class="field"><span>HTML / Script quảng cáo</span><textarea name="ad_html" rows="12" maxlength="100000" placeholder="Dán nguyên code HTML / script của bên quảng cáo vào đây...">{adHtml}</textarea></label><p class="meta">Mã này được chạy trên toàn bộ website, trừ trang Admin.</p><button class="button" type="submit">Lưu quảng cáo</button></form>
+  <div class="section-title"><h2>Quảng cáo</h2></div><form method="POST" action="/api/admin/settings/ads" class="admin-form"><label class="field"><span>HTML / Script quảng cáo</span><textarea name="ad_html" rows="20" spellcheck="false" placeholder="Dán nguyên code HTML / script của bên quảng cáo vào đây...">{adHtml}</textarea></label><p class="meta">Hỗ trợ mã dài (tối đa 2 MB UTF-8). Mã này được chạy trên toàn bộ website, trừ trang Admin.</p><button class="button" type="submit">Lưu quảng cáo</button></form>
 </section>}
 
 {section==='add-series' && <section class="admin-card admin-wide admin-anchor-section">
