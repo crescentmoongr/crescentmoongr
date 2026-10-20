@@ -49,11 +49,13 @@ for(const c of commentMap.values()){
   if(parent && Number(c.depth||0)>0) parent.replies.push(c);
   else commentRoots.push(c);
 }
-const sortComments=(items:CommentNode[])=>{
+// Show newest top-level comments first, while keeping replies in their existing chronological order.
+commentRoots.sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
+const sortReplies=(items:CommentNode[])=>{
   items.sort((a,b)=>new Date(a.created_at).getTime()-new Date(b.created_at).getTime());
-  items.forEach(x=>sortComments(x.replies));
+  items.forEach(x=>sortReplies(x.replies));
 };
-sortComments(commentRoots);
+commentRoots.forEach(root=>sortReplies(root.replies));
 const commentRewards=await getCommentMemberRewards(comments.map(c=>c.user_id).filter(Boolean)).catch(()=>[]);
 const commentRewardMap=new Map(commentRewards.map((r:any)=>[r.user_id,r]));
 const rankIconMap:any={mam_trang:'🌱',trang_non:'🌙',trang_tron:'🌕',anh_sao:'✨',sao_sang:'🌟',tinh_nguyet:'💫'};
