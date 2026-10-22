@@ -3997,3 +3997,6 @@ button.home-more-button:hover span{transform:translateY(2px);}
 /* v12.83 — Account favorites share the existing compact Bookmark card layout */
 .account-favorites-more{display:flex;justify-content:center;margin-top:18px}
 [data-favorite-item][hidden]{display:none!important}
+
+/* v12.87: footer translation credit */
+.footer-credit-note{max-width:760px;margin:20px auto 12px;line-height:1.7;font-size:.9rem;color:var(--muted);text-align:center;padding:0 12px}
