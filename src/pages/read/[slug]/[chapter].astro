@@ -51,6 +51,25 @@ const nextChapter=currentIndex>=0?chapterList[currentIndex-1]||null:null;
 
   <a class="reader-bottom-info" href={`/manga/${series.slug}`} aria-label="Thông tin truyện" title="Thông tin truyện"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10.5v6"/><circle cx="12" cy="7.5" r=".8"/></svg></a>
 </nav>}
+{allowed&&<div id="reader-protection-notice" class="reader-protection-notice" role="alert" aria-live="assertive" aria-hidden="true">
+  <div class="reader-protection-card">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="M12 7v5"/><circle cx="12" cy="16" r=".7" fill="currentColor" stroke="none"/></svg>
+    <strong>Không thể thực hiện thao tác này!</strong>
+    <p>Tính năng lưu ảnh, sao chép và tải trang đã được khóa để bảo vệ bản quyền của nhóm dịch.</p>
+    <small>Crescent Moon Translation Group ♡</small>
+  </div>
+</div>}
+<style>
+.reader-protection-notice{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(37,22,43,.36);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,visibility .18s ease}
+.reader-protection-notice.is-visible{opacity:1;visibility:visible;pointer-events:auto}
+.reader-protection-card{width:min(100%,510px);padding:30px 26px;border-radius:18px;border:1px solid #f0d6e6;background:#fffafdf5;box-shadow:0 18px 55px rgba(67,35,64,.18);text-align:center;color:#352b35}
+.reader-protection-card svg{display:block;width:32px;height:32px;margin:0 auto 15px;color:#c779a8}
+.reader-protection-card strong{display:block;font-size:18px;line-height:1.5}
+.reader-protection-card p{margin:10px 0 14px;font-size:14px;line-height:1.65}
+.reader-protection-card small{font-size:12px;color:#827783}
+@media(max-width:480px){.reader-protection-card{padding:25px 18px}.reader-protection-card strong{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.reader-protection-notice{transition:none}}
+</style>
 </BaseLayout>
 <script>
 const chapterJump=document.querySelector('[data-chapter-jump]');
@@ -200,13 +219,45 @@ const io=new IntersectionObserver(entries=>{
 },{rootMargin:'1400px 0px'});
 wraps.forEach(w=>io.observe(w));
 scheduleImageExpiry();
-// Reader-only deterrents. These discourage casual Inspect/View Source access but are not a security boundary.
-document.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('dragstart',e=>{if(e.target instanceof Element&&e.target.closest('[data-protected-reader]'))e.preventDefault()});
-document.addEventListener('keydown',e=>{
-  const key=e.key.toLowerCase();
-  const ctrl=e.ctrlKey||e.metaKey;
-  const blocked=e.key==='F12'||(ctrl&&e.shiftKey&&['i','j','c'].includes(key))||(ctrl&&['u','s'].includes(key));
-  if(blocked){e.preventDefault();e.stopPropagation();}
-},{capture:true});
+// Reader-only deterrents. Browser extensions can bypass client-side handlers.
+const protectionNotice=document.getElementById('reader-protection-notice');
+let protectionTimer;
+const showProtectionNotice=()=>{
+  if(!(protectionNotice instanceof HTMLElement))return;
+  protectionNotice.classList.add('is-visible');
+  protectionNotice.setAttribute('aria-hidden','false');
+  window.clearTimeout(protectionTimer);
+  protectionTimer=window.setTimeout(()=>{
+    protectionNotice.classList.remove('is-visible');
+    protectionNotice.setAttribute('aria-hidden','true');
+  },3000);
+};
+if(protectionNotice){
+  protectionNotice.addEventListener('click',()=>{
+    protectionNotice.classList.remove('is-visible');
+    protectionNotice.setAttribute('aria-hidden','true');
+    window.clearTimeout(protectionTimer);
+  });
+  document.addEventListener('contextmenu',e=>{
+    e.preventDefault();
+    showProtectionNotice();
+  },{capture:true});
+  document.addEventListener('dragstart',e=>{
+    if(e.target instanceof Element&&e.target.closest('[data-protected-reader]')){
+      e.preventDefault();showProtectionNotice();
+    }
+  },{capture:true});
+  document.addEventListener('keydown',e=>{
+    const key=e.key.toLowerCase();
+    const ctrl=e.ctrlKey||e.metaKey;
+    const protectedKey=e.key==='F12'||(ctrl&&e.shiftKey&&['i','j','c'].includes(key))||(ctrl&&['u','s','p'].includes(key));
+    const copyingReader=ctrl&&['c','x'].includes(key)&&(
+      e.target instanceof Element&&!!e.target.closest('[data-protected-reader],.novel-reader-content') ||
+      window.getSelection()?.anchorNode?.parentElement?.closest('.novel-reader-content')
+    );
+    if(protectedKey||copyingReader){
+      e.preventDefault();e.stopPropagation();showProtectionNotice();
+    }
+  },{capture:true});
+}
 </script>
