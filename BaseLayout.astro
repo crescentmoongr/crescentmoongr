@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
-import { getSessionUser } from '../lib/auth';
-import { getSiteSetting } from '../lib/supabase';
+import { getSession } from '../lib/auth';
+import { getSiteSettings, getMyMemberRewards } from '../lib/supabase';
 export const prerender=false;
 const {
   title = 'Crescent Moon Translation',
@@ -9,27 +9,31 @@ const {
   image = '/social-preview.png',
   imageAlt,
   canonical,
-  ogType = 'website'
+  ogType = 'website',
+  session: providedSession = undefined,
+  memberRewards: providedMemberRewards = undefined
 } = Astro.props;
 
 const pageUrl = new URL(canonical || Astro.url.pathname, Astro.url.origin).href;
 const absoluteImage = new URL(image || '/social-preview.png', Astro.url.origin).href;
-const user = await getSessionUser(Astro.cookies);
+const layoutSession = providedSession === undefined ? await getSession(Astro.cookies) : providedSession;
+const user = layoutSession?.user||null;
+const rankIconMap:any={mam_trang:'🌱',trang_non:'🌙',trang_tron:'🌕',anh_sao:'✨',sao_sang:'🌟',tinh_nguyet:'💫'};
+let headerRewards:any=providedMemberRewards ?? null;
+if(layoutSession && providedMemberRewards === undefined){ try{ headerRewards=await getMyMemberRewards(layoutSession.token); }catch{} }
+const headerRankIcon=user?.role==='admin'?'👑':(rankIconMap[headerRewards?.rank_key]||'');
 
-// v11.33: run the Admin ad code site-wide on public pages.
-// /admin and its sub-routes are intentionally excluded.
+// Public site settings are loaded in one Supabase request to avoid extra subrequests.
+// /admin and its sub-routes intentionally skip public ads/socials.
 const isAdminPage = Astro.url.pathname === '/admin' || Astro.url.pathname.startsWith('/admin/');
 let siteAdHtml = '';
-if (!isAdminPage) {
-  try {
-    siteAdHtml = (await getSiteSetting('reader_ad_html'))?.value || '';
-  } catch {}
-}
-
 let socialLinks:{facebook?:string;telegram?:string;discord?:string}={};
 if (!isAdminPage) {
   try {
-    const raw=(await getSiteSetting('social_links'))?.value||'';
+    const settings=await getSiteSettings(['reader_ad_html','social_links']);
+    const byKey=new Map(settings.map(item=>[item.key,item.value||'']));
+    siteAdHtml=byKey.get('reader_ad_html')||'';
+    const raw=byKey.get('social_links')||'';
     const parsed=raw?JSON.parse(raw):{};
     if(parsed&&typeof parsed==='object') socialLinks=parsed;
   } catch {}
@@ -42,6 +46,15 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width" />
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PD10P16FDD"></script>
+  <script is:inline>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-PD10P16FDD');
+  </script>
 
   <title>{title}</title>
   <meta name="description" content={description} />
@@ -74,6 +87,34 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   <link rel="icon" type="image/png" href="/honeymoon_4213586.png" />
   <link rel="shortcut icon" href="/honeymoon_4213586.png" />
+  <script is:inline data-style-recovery>
+    (() => {
+      const KEY = 'cm:style-recovery-at';
+      const cssLinks = () => Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+      const stylesReady = () => {
+        const links = cssLinks();
+        if (!links.length) return false;
+        return links.every(link => link.sheet !== null);
+      };
+      const recover = () => {
+        // Give a resumed tab a moment to reconnect its stylesheet before deciding.
+        window.setTimeout(() => {
+          if (stylesReady()) return;
+          const now = Date.now();
+          const last = Number(sessionStorage.getItem(KEY) || 0);
+          if (now - last < 30000) return; // never create a reload loop
+          sessionStorage.setItem(KEY, String(now));
+          location.reload();
+        }, 900);
+      };
+      window.addEventListener('pageshow', recover);
+      window.addEventListener('online', recover);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') recover();
+      });
+      cssLinks().forEach(link => link.addEventListener('error', recover, { once: true }));
+    })();
+  </script>
 </head>
 <body>
 <header class="site-header">
@@ -84,8 +125,9 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
       <a href="/">Trang chủ</a>
       <a href="/search">Tìm kiếm</a>
       <a href="/password">Mật khẩu</a>
+      {user&&<a href="/check-in">Điểm danh</a>}
       {user?.role==='admin'&&<a href="/admin">Admin</a>}
-      {user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
+      {user?<a href="/account" class={user.role==='admin'?'admin-celestial-gold':''}>{headerRankIcon&&<span class="member-rank-icon">{headerRankIcon}</span>}{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
     </nav>
 
     <a class="header-icon-button mobile-search-button" href="/search" aria-label="Tìm kiếm" title="Tìm kiếm">
@@ -117,11 +159,13 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   <nav class="mobile-menu-panel" data-mobile-menu hidden aria-label="Menu trên điện thoại">
     <a href="/">🏠 Trang chủ</a>
     <a href="/password">Mật khẩu</a>
+    {user&&<a href="/check-in">Điểm danh</a>}
     {user?.role==='admin'&&<a href="/admin">Admin</a>}
-    {user?<a href="/account">{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
+    {user?<a href="/account" class={user.role==='admin'?'admin-celestial-gold':''}>{headerRankIcon&&<span class="member-rank-icon">{headerRankIcon}</span>}{user.display_name||user.username||'Tài khoản'}</a>:<a href="/login">Đăng nhập</a>}
   </nav>
 </header>
-<main class="shell"><slot />
+<main class="shell">
+<slot />
 
 {siteAdHtml && (
   <div class="sitewide-ad-code" aria-label="Quảng cáo" set:html={siteAdHtml}></div>
@@ -129,7 +173,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 </main><footer class="footer">
   {!isAdminPage&&hasSocialLinks&&<div class="footer-socials" aria-label="Theo dõi Crescent Moon">
     {socialLinks.facebook&&<a class="footer-social-link facebook" href={socialLinks.facebook} target="_blank" rel="noopener noreferrer nofollow" aria-label="Facebook" title="Facebook">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.3 8H17V4.2c-.47-.06-2.08-.2-4-.2-3.95 0-6.65 2.4-6.65 6.83V14H2v4.25h4.35V24h5.34v-5.75h3.58L15.84 14h-4.15v-2.75c0-1.23.33-2.07 2.61-2.07Z"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.55 21v-8h2.72l.41-3.12h-3.13V7.89c0-.9.25-1.52 1.56-1.52h1.67V3.58c-.29-.04-1.28-.12-2.43-.12-2.4 0-4.04 1.46-4.04 4.15v2.27H7.6V13h2.71v8h3.24Z"/></svg>
     </a>}
     {socialLinks.telegram&&<a class="footer-social-link telegram" href={socialLinks.telegram} target="_blank" rel="noopener noreferrer nofollow" aria-label="Telegram" title="Telegram">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.8 3.2 18.6 20c-.24 1.18-.88 1.47-1.78.92l-4.87-3.59-2.35 2.26c-.26.26-.48.48-.98.48l.35-4.96 9.03-8.16c.39-.35-.09-.55-.61-.2L6.23 13.78 1.42 12.28c-1.05-.33-1.07-1.05.22-1.55L20.45 3.48c.87-.32 1.63.2 1.35-.28Z"/></svg>
@@ -138,8 +182,54 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 5.34A16.2 16.2 0 0 0 15.45 4l-.5 1.04a15.1 15.1 0 0 0-5.9 0L8.55 4A16.3 16.3 0 0 0 4.5 5.35C1.94 9.14 1.25 12.84 1.6 16.5A16.5 16.5 0 0 0 6.57 19l1.2-1.64a10.7 10.7 0 0 1-1.88-.9l.46-.35c3.62 1.68 7.55 1.68 11.13 0l.46.35c-.6.36-1.23.66-1.88.9L17.26 19a16.5 16.5 0 0 0 4.96-2.5c.42-4.24-.72-7.9-2.72-11.16ZM8.15 14.28c-1.08 0-1.97-.99-1.97-2.2 0-1.22.87-2.2 1.97-2.2 1.1 0 1.99.99 1.97 2.2 0 1.21-.87 2.2-1.97 2.2Zm7.7 0c-1.08 0-1.97-.99-1.97-2.2 0-1.22.87-2.2 1.97-2.2 1.1 0 1.99.99 1.97 2.2 0 1.21-.87 2.2-1.97 2.2Z"/></svg>
     </a>}
   </div>}
-  <div>2024 Crescent Moon Translation</div>
-</footer><script is:inline data-copy-protection>
+  {!isAdminPage&&<div class="footer-traffic" data-site-traffic aria-label="Thống kê lượt xem">
+    <div class="footer-stat">
+      <div class="footer-stat-main"><img class="footer-stat-icon" src="/stats-heart.png" alt="" aria-hidden="true" loading="lazy" decoding="async" /><b data-site-today>—</b></div>
+      <span class="footer-stat-label">HÔM NAY</span>
+    </div>
+    <div class="footer-stat">
+      <div class="footer-stat-main"><img class="footer-stat-icon" src="/stats-heart-rate.png" alt="" aria-hidden="true" loading="lazy" decoding="async" /><b data-site-month>—</b></div>
+      <span class="footer-stat-label">THÁNG NÀY</span>
+    </div>
+    <div class="footer-stat">
+      <div class="footer-stat-main"><img class="footer-stat-icon" src="/stats-following.png" alt="" aria-hidden="true" loading="lazy" decoding="async" /><b data-site-total>—</b></div>
+      <span class="footer-stat-label">TỔNG LƯỢT XEM</span>
+    </div>
+  </div>}
+  <p class="footer-credit-note">🌙 Crescent Moon được xây dựng với mong muốn chia sẻ những bản dịch đến cộng đồng yêu truyện. Mỗi bản dịch là tâm huyết của nhóm, vì vậy mong các bạn không sao chép, re-up hoặc sử dụng lại nội dung khi chưa được cho phép.</p>
+  <div>© {new Date().getFullYear()} Crescent Moon Translation</div>
+</footer><script is:inline data-site-traffic-script>
+(() => {
+  const root=document.querySelector('[data-site-traffic]');
+  if(!(root instanceof HTMLElement)) return;
+  const compact=(value)=>{
+    const n=Number(value)||0;
+    if(n<1000) return new Intl.NumberFormat('vi-VN').format(n);
+    if(n<1_000_000) return `${(n/1000).toFixed(n>=100_000?0:1).replace('.0','')}K`;
+    return `${(n/1_000_000).toFixed(n>=100_000_000?0:1).replace('.0','')}M`;
+  };
+  const paint=(data)=>{
+    const a=root.querySelector('[data-site-today]');
+    const b=root.querySelector('[data-site-month]');
+    const c=root.querySelector('[data-site-total]');
+    if(a)a.textContent=compact(data.today);
+    if(b)b.textContent=compact(data.month);
+    if(c)c.textContent=compact(data.total);
+  };
+  const path=location.pathname.replace(/\/+$/,'')||'/';
+  const key=`cm:site-view:${path}`;
+  const now=Date.now();
+  let shouldCount=true;
+  try{shouldCount=now-Number(localStorage.getItem(key)||0)>=60_000}catch{}
+  if(shouldCount){try{localStorage.setItem(key,String(now))}catch{} }
+  fetch('/api/stats/site',{
+    method:shouldCount?'POST':'GET',
+    credentials:'same-origin',
+    keepalive:shouldCount,
+    headers:{Accept:'application/json'}
+  }).then(async r=>{if(!r.ok)throw new Error('stats');paint(await r.json())}).catch(()=>{if(shouldCount){try{localStorage.removeItem(key)}catch{}}});
+})();
+</script><script is:inline data-copy-protection>
 (() => {
   const canEdit = (target) => {
     if (!(target instanceof Element)) return false;
@@ -258,16 +348,19 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   }
 
   const relativeTime=(value)=>{
-    const time=new Date(value||0).getTime();
-    if(!Number.isFinite(time))return '';
-    const diff=Math.max(0,Date.now()-time);
+    if(value===null||value===undefined||value==='')return '';
+    const time=new Date(value).getTime();
+    if(!Number.isFinite(time)||time<=0)return '';
+    const elapsed=Date.now()-time;
+    if(elapsed>48*60*60*1000)return '';
+    const diff=Math.max(0,elapsed);
     const min=Math.floor(diff/60000);
     if(min<1)return 'Vừa xong';
     if(min<60)return `${min} phút trước`;
     const hour=Math.floor(min/60);
     if(hour<24)return `${hour} giờ trước`;
     const day=Math.floor(hour/24);
-    return `${day} ngày trước`;
+    return day===1?`Hôm qua lúc ${new Intl.DateTimeFormat('vi-VN',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Ho_Chi_Minh'}).format(new Date(time))}`:`${day} ngày trước`;
   };
 
   const markRead=(id)=>{
@@ -279,10 +372,10 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   const render=()=>{
     if(!(notifList instanceof HTMLElement))return;
     const seen=getSeen();
-    const unread=items.filter(x=>x?.id&&!seen.includes(x.id)).length;
+    const unread=items.filter(x=>x?.id&&((x.type==='comment_reply'||x.type==='achievement')?!x.is_read:!seen.includes(x.id))).length;
 
     if(badge instanceof HTMLElement){
-      badge.textContent=unread>99?'99+':String(unread);
+      badge.textContent=unread>=21?'20+':String(unread);
       badge.hidden=unread===0;
     }
 
@@ -290,13 +383,13 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
     if(!items.length){
       const empty=document.createElement('div');
       empty.className='notification-empty';
-      empty.textContent='Chưa có chapter mới.';
+      empty.textContent='Chưa có thông báo mới.';
       notifList.appendChild(empty);
       return;
     }
 
     for(const item of items){
-      const isUnread=!seen.includes(item.id);
+      const isUnread=(item.type==='comment_reply'||item.type==='achievement')?!item.is_read:!seen.includes(item.id);
       const link=document.createElement('a');
       link.className=`notification-item${isUnread?' is-unread':''}`;
       link.href=String(item.href||'/');
@@ -318,12 +411,20 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
       const title=document.createElement('div');
       title.className='notification-item-title';
-      title.innerHTML=`<strong></strong> đã cập nhật chapter mới`;
-      title.querySelector('strong').textContent=String(item.title||'Truyện');
-
       const chapter=document.createElement('div');
       chapter.className='notification-item-chapter';
-      chapter.textContent=`Chapter ${item.chapter_number}${item.chapter_title?' — '+item.chapter_title:''}`;
+      if(item.type==='comment_reply'){
+        title.innerHTML=`<strong></strong> đã trả lời bình luận của bạn`;
+        title.querySelector('strong').textContent=String(item.actor_name||'Thành viên');
+        chapter.textContent=String(item.preview||item.title||'').trim();
+      }else if(item.type==='achievement'){
+        title.textContent='🎉 Bạn đã đạt Danh hiệu mới!';
+        chapter.textContent=`${String(item.title||'Danh hiệu')} — Xem tại Tài khoản`;
+      }else{
+        title.innerHTML=`<strong></strong> đã cập nhật chapter mới`;
+        title.querySelector('strong').textContent=String(item.title||'Truyện');
+        chapter.textContent=`Chapter ${item.chapter_number}${item.chapter_title?' — '+item.chapter_title:''}`;
+      }
 
       const meta=document.createElement('div');
       meta.className='notification-item-meta';
@@ -331,12 +432,22 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
       dot.className='notification-unread-dot';
       dot.textContent=isUnread?'• Chưa đọc':'✓ Đã đọc';
       const time=document.createElement('span');
-      time.textContent=relativeTime(item.published_at);
-      meta.append(dot,time);
+      const displayTime=relativeTime(item.published_at);
+      if(displayTime)time.textContent=displayTime;
+      meta.append(dot);
+      if(displayTime)meta.append(time);
 
       body.append(title,chapter,meta);
       link.append(cover,body);
-      link.addEventListener('click',()=>markRead(item.id));
+      link.addEventListener('click',()=>{
+        if(item.type==='comment_reply'&&item.notification_id){
+          item.is_read=true; render();
+          fetch('/api/notifications/read',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({id:item.notification_id})}).catch(()=>{});
+        }else if(item.type==='achievement'&&item.notification_id){
+          item.is_read=true;render();
+          fetch('/api/notifications/read',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({type:'achievement',id:item.notification_id})}).catch(()=>{});
+        }else markRead(item.id);
+      });
       notifList.appendChild(link);
     }
   };
@@ -367,8 +478,12 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   if(markAll instanceof HTMLButtonElement){
     markAll.addEventListener('click',()=>{
-      saveSeen(items.map(x=>x.id).filter(Boolean));
+      saveSeen(items.filter(x=>x.type!=='comment_reply'&&x.type!=='achievement').map(x=>x.id).filter(Boolean));
+      const hasReplies=items.some(x=>x.type==='comment_reply'&&!x.is_read);
+      const hasAchievements=items.some(x=>x.type==='achievement'&&!x.is_read);
+      items.forEach(x=>{if(x.type==='comment_reply'||x.type==='achievement')x.is_read=true});
       render();
+      if(hasReplies||hasAchievements)fetch('/api/notifications/read',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({all:true})}).catch(()=>{});
     });
   }
 
@@ -380,6 +495,68 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   // Load once on page open so the bell badge can show unread updates immediately.
   loadNotifications();
+})();
+</script>
+
+<script is:inline>
+(()=>{
+  const EMOJIS=['😀','😆','😂','🤣','🥹','😭','🥺','🥰','😍','😘','😋','🤭','🤔','😏','😌','🙄','😳','😱','😤','😡','🫠','❤️','🩷','💜','💙','💕','💖','💗','💓','💞','💔','❤️‍🔥','👍','👎','👏','🙌','🫶','🙏','✨','⭐','🌙','🔥','🎉','🎀','👀','💀','🤡','📖','📚','🌚','🌝','🫣','🤤','😈','💢','💥','🤌','👉','👈'];
+  const excludedNames=new Set(['email','password','confirm_password','username','slug','raw_url','x_url','facebook','telegram','discord','ad_html','q','series_password','title','author','display_name']);
+  let activeTarget=null, savedRange=null;
+  const popup=document.createElement('div');
+  popup.className='emoji-picker-popover'; popup.hidden=true;
+  popup.innerHTML='<div class="emoji-picker-title">Emoji</div><div class="emoji-picker-grid"></div>';
+  document.body.appendChild(popup);
+  const grid=popup.querySelector('.emoji-picker-grid');
+  EMOJIS.forEach(e=>{const b=document.createElement('button');b.type='button';b.className='emoji-choice';b.textContent=e;b.title=e;b.addEventListener('click',()=>insertEmoji(e));grid.appendChild(b)});
+
+  function eligible(el){
+    // Taxonomy names (Admin > Tác giả / Thể loại) are metadata, not content fields.
+    if(el.closest?.('.taxonomy-create-form, .taxonomy-admin-row, [data-admin-tag-editor]')) return false;
+    if(el.matches?.('[contenteditable="true"]')) return true;
+    if(el instanceof HTMLTextAreaElement) return !el.hidden && !el.classList.contains('comment-source') && !excludedNames.has(el.name||'');
+    if(el instanceof HTMLInputElement){
+      const type=(el.type||'text').toLowerCase();
+      return ['text'].includes(type) && !excludedNames.has(el.name||'') && !el.readOnly && !el.disabled;
+    }
+    return false;
+  }
+  function remember(target){
+    activeTarget=target;
+    if(target.matches?.('[contenteditable="true"]')){
+      const sel=window.getSelection(); if(sel&&sel.rangeCount&&target.contains(sel.anchorNode)) savedRange=sel.getRangeAt(0).cloneRange();
+    }
+  }
+  function insertEmoji(e){
+    const t=activeTarget; if(!t)return;
+    if(t.matches?.('[contenteditable="true"]')){
+      t.focus(); const sel=window.getSelection();
+      if(savedRange&&sel){sel.removeAllRanges();sel.addRange(savedRange)}
+      document.execCommand('insertText',false,e);
+      if(sel&&sel.rangeCount)savedRange=sel.getRangeAt(0).cloneRange();
+      t.dispatchEvent(new Event('input',{bubbles:true}));
+    }else if(t instanceof HTMLInputElement||t instanceof HTMLTextAreaElement){
+      const a=t.selectionStart??t.value.length,b=t.selectionEnd??a;
+      t.value=t.value.slice(0,a)+e+t.value.slice(b); const pos=a+e.length;
+      t.focus();t.setSelectionRange(pos,pos);t.dispatchEvent(new Event('input',{bubbles:true}));t.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+    popup.hidden=true;
+  }
+  function addButton(target){
+    if(target.dataset.emojiReady==='1')return; target.dataset.emojiReady='1';
+    const wrap=document.createElement('span');wrap.className='emoji-field-button-wrap';
+    const btn=document.createElement('button');btn.type='button';btn.className='emoji-picker-button';btn.textContent='😊';btn.title='Thêm emoji';btn.setAttribute('aria-label','Thêm emoji');
+    btn.addEventListener('mousedown',()=>remember(target));
+    btn.addEventListener('click',ev=>{ev.preventDefault();remember(target);const r=btn.getBoundingClientRect();popup.hidden=false;const w=Math.min(310,window.innerWidth-20);popup.style.width=w+'px';popup.style.left=Math.max(10,Math.min(window.innerWidth-w-10,r.left))+'px';popup.style.top=(r.bottom+8+window.scrollY)+'px'});
+    wrap.appendChild(btn);
+    if(target.matches?.('[contenteditable="true"]')){
+      const toolbar=target.parentElement?.querySelector('.comment-toolbar'); if(toolbar)toolbar.appendChild(btn); else target.insertAdjacentElement('beforebegin',wrap);
+    }else target.insertAdjacentElement('afterend',wrap);
+    target.addEventListener('keyup',()=>remember(target));target.addEventListener('mouseup',()=>remember(target));target.addEventListener('focus',()=>remember(target));
+  }
+  function scan(){document.querySelectorAll('input,textarea,[contenteditable="true"]').forEach(el=>{if(eligible(el))addButton(el)})}
+  scan(); new MutationObserver(scan).observe(document.body,{childList:true,subtree:true});
+  document.addEventListener('click',e=>{if(!(e.target instanceof Element))return;if(!e.target.closest('.emoji-picker-popover')&&!e.target.closest('.emoji-picker-button'))popup.hidden=true});
 })();
 </script>
 
