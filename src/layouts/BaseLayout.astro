@@ -152,8 +152,8 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 <div id="cm-facebook-gate" role="dialog" aria-modal="true" aria-labelledby="cm-fb-title">
   <div class="cm-fb-card">
     <h2 id="cm-fb-title">🌙 Mở bằng trình duyệt nhé ♡</h2>
-    <p>Trình duyệt Facebook/Messenger không hỗ trợ đọc truyện tại đây. Vui lòng mở liên kết bằng Safari hoặc Chrome để tiếp tục.</p>
-    <button type="button" class="cm-fb-copy" id="cm-fb-copy">Sao chép liên kết</button>
+    <p>Trình duyệt Facebook/Messenger không hỗ trợ đọc truyện tại đây. Vui lòng mở liên kết bằng Safari/Chrome/Trình duyệt web để tiếp tục.</p>
+    <button type="button" class="cm-fb-copy" id="cm-fb-copy">Mở bằng trình duyệt</button>
     <p class="cm-fb-help">Hoặc nhấn <strong>•••</strong> ở góc trên và chọn <strong>Mở trong trình duyệt ngoài</strong>.</p>
     <p class="cm-fb-status" id="cm-fb-status" aria-live="polite"></p>
   </div>
@@ -165,19 +165,18 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
     if (!button || !status) return;
     button.addEventListener('click', async () => {
       const url = window.location.href;
-      try {
-        if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
-        await navigator.clipboard.writeText(url);
-        status.textContent = 'Đã sao chép! Hãy dán liên kết vào Safari hoặc Chrome nhé.';
-      } catch {
-        const input = document.createElement('textarea');
-        input.value = url;
-        input.style.position = 'fixed'; input.style.opacity = '0';
-        document.body.appendChild(input); input.select();
-        const copied = document.execCommand('copy');
-        input.remove();
-        status.textContent = copied ? 'Đã sao chép! Hãy mở Safari hoặc Chrome nhé.' : 'Không thể sao chép tự động. Hãy dùng menu ••• để mở trình duyệt ngoài.';
+      const ua = navigator.userAgent || '';
+      // Android supports intent URLs in some in-app browsers; iOS does not
+      // provide a reliable web API to force Safari to open.
+      if (/Android/i.test(ua)) {
+        const clean = url.replace(/^https?:\/\//, '');
+        window.location.href = 'intent://' + clean + '#Intent;scheme=' + window.location.protocol.replace(':', '') + ';package=com.android.chrome;end';
+        status.textContent = 'Nếu chưa mở được, hãy chọn ••• → Mở trong trình duyệt ngoài.';
+        return;
       }
+      status.textContent = 'Hãy nhấn ••• ở góc trên và chọn Mở trong trình duyệt ngoài.';
+      try { await navigator.clipboard.writeText(url); status.textContent += ' Liên kết đã được sao chép để bạn dán vào Safari/Chrome/Trình duyệt web.'; }
+      catch { /* Clipboard may be unavailable in Facebook in-app browser. */ }
     });
   })();
 </script>
