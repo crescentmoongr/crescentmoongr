@@ -115,8 +115,72 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
       cssLinks().forEach(link => link.addEventListener('error', recover, { once: true }));
     })();
   </script>
+  <!-- Detect Facebook/Messenger in-app browsers before the page is displayed. -->
+  <script is:inline>
+    (() => {
+      const ua = navigator.userAgent || '';
+      const inFacebook = /FBAN|FBAV|FB_IAB|FB4A|FBIOS|FBOP|Messenger|\bFBSS\b/i.test(ua);
+      if (inFacebook) document.documentElement.classList.add('cm-facebook-browser');
+    })();
+  </script>
+  <style is:global>
+    html.cm-facebook-browser body { overflow: hidden !important; }
+    html.cm-facebook-browser body > :not(#cm-facebook-gate) { visibility: hidden !important; }
+    #cm-facebook-gate { display: none; }
+    html.cm-facebook-browser #cm-facebook-gate {
+      display: flex !important; position: fixed; inset: 0; z-index: 2147483647;
+      box-sizing: border-box; align-items: center; justify-content: center;
+      padding: 18px; background: rgba(32,25,39,.78); overflow-y: auto;
+      font-family: inherit;
+    }
+    #cm-facebook-gate .cm-fb-card {
+      width: min(100%, 410px); box-sizing: border-box; border-radius: 20px;
+      padding: 26px 22px; background: #fff; color: #48414d;
+      box-shadow: 0 18px 60px rgba(24,13,29,.24); text-align: center;
+    }
+    #cm-facebook-gate h2 { margin: 0 0 10px; color: #ad79a9; font-size: 21px; line-height: 1.35; }
+    #cm-facebook-gate p { margin: 0 0 18px; line-height: 1.65; font-size: 14px; }
+    #cm-facebook-gate .cm-fb-copy {
+      display: block; width: 100%; padding: 13px; border: 0; border-radius: 12px;
+      background: #ed9ebc; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+    }
+    #cm-facebook-gate .cm-fb-help { margin: 16px 0 0; color: #766b79; font-size: 13px; }
+    #cm-facebook-gate .cm-fb-status { min-height: 1.4em; margin: 10px 0 0; color: #a35e86; font-size: 13px; }
+  </style>
 </head>
 <body>
+<div id="cm-facebook-gate" role="dialog" aria-modal="true" aria-labelledby="cm-fb-title">
+  <div class="cm-fb-card">
+    <h2 id="cm-fb-title">🌙 Mở bằng trình duyệt nhé ♡</h2>
+    <p>Trình duyệt Facebook/Messenger không hỗ trợ đọc truyện tại đây. Vui lòng mở liên kết bằng Safari hoặc Chrome để tiếp tục.</p>
+    <button type="button" class="cm-fb-copy" id="cm-fb-copy">Sao chép liên kết</button>
+    <p class="cm-fb-help">Hoặc nhấn <strong>•••</strong> ở góc trên và chọn <strong>Mở trong trình duyệt ngoài</strong>.</p>
+    <p class="cm-fb-status" id="cm-fb-status" aria-live="polite"></p>
+  </div>
+</div>
+<script is:inline>
+  (() => {
+    const button = document.getElementById('cm-fb-copy');
+    const status = document.getElementById('cm-fb-status');
+    if (!button || !status) return;
+    button.addEventListener('click', async () => {
+      const url = window.location.href;
+      try {
+        if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+        await navigator.clipboard.writeText(url);
+        status.textContent = 'Đã sao chép! Hãy dán liên kết vào Safari hoặc Chrome nhé.';
+      } catch {
+        const input = document.createElement('textarea');
+        input.value = url;
+        input.style.position = 'fixed'; input.style.opacity = '0';
+        document.body.appendChild(input); input.select();
+        const copied = document.execCommand('copy');
+        input.remove();
+        status.textContent = copied ? 'Đã sao chép! Hãy mở Safari hoặc Chrome nhé.' : 'Không thể sao chép tự động. Hãy dùng menu ••• để mở trình duyệt ngoài.';
+      }
+    });
+  })();
+</script>
 <header class="site-header">
   <a class="brand" href="/"><img src="/crescent-moon-logo.png" alt="Crescent Moon" class="site-logo" /></a>
 
