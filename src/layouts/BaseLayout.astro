@@ -140,12 +140,16 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
     }
     #cm-facebook-gate h2 { margin: 0 0 10px; color: #ad79a9; font-size: 21px; line-height: 1.35; }
     #cm-facebook-gate p { margin: 0 0 18px; line-height: 1.65; font-size: 14px; }
-    #cm-facebook-gate .cm-fb-copy {
-      display: block; width: 100%; padding: 13px; border: 0; border-radius: 12px;
-      background: #ed9ebc; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+    #cm-facebook-gate .cm-fb-help {
+      margin: 18px 0 0; padding: 17px 16px; border: 2px solid #eda7c3;
+      border-radius: 14px; background: #fff4f8; color: #65515e;
+      font-size: 14px; line-height: 1.7; text-align: left;
     }
-    #cm-facebook-gate .cm-fb-help { margin: 16px 0 0; color: #766b79; font-size: 13px; }
-    #cm-facebook-gate .cm-fb-status { min-height: 1.4em; margin: 10px 0 0; color: #a35e86; font-size: 13px; }
+    #cm-facebook-gate .cm-fb-help-title { display: block; color: #bd628c; font-weight: 750; margin-bottom: 7px; }
+    #cm-facebook-gate .cm-fb-help ol { margin: 0; padding-left: 22px; }
+    #cm-facebook-gate .cm-fb-help li + li { margin-top: 5px; }
+    #cm-facebook-gate .cm-fb-help strong { color: #ac5782; }
+
   </style>
 </head>
 <body>
@@ -153,33 +157,16 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   <div class="cm-fb-card">
     <h2 id="cm-fb-title">🌙 Mở bằng trình duyệt nhé ♡</h2>
     <p>Trình duyệt Facebook/Messenger không hỗ trợ đọc truyện tại đây. Vui lòng mở liên kết bằng Safari/Chrome/Trình duyệt web để tiếp tục.</p>
-    <button type="button" class="cm-fb-copy" id="cm-fb-copy">Mở bằng trình duyệt</button>
-    <p class="cm-fb-help">Hoặc nhấn <strong>•••</strong> ở góc trên và chọn <strong>Mở trong trình duyệt ngoài</strong>.</p>
-    <p class="cm-fb-status" id="cm-fb-status" aria-live="polite"></p>
+    <div class="cm-fb-help" aria-label="Hướng dẫn mở trình duyệt ngoài">
+      <span class="cm-fb-help-title">Cách mở bằng trình duyệt:</span>
+      <ol>
+        <li>Nhấn <strong>•••</strong> ở góc trên bên phải.</li>
+        <li>Chọn <strong>“Mở trong trình duyệt ngoài”</strong> hoặc <strong>“Mở bằng Safari/Chrome/Trình duyệt web”</strong>.</li>
+      </ol>
+    </div>
   </div>
 </div>
-<script is:inline>
-  (() => {
-    const button = document.getElementById('cm-fb-copy');
-    const status = document.getElementById('cm-fb-status');
-    if (!button || !status) return;
-    button.addEventListener('click', async () => {
-      const url = window.location.href;
-      const ua = navigator.userAgent || '';
-      // Android supports intent URLs in some in-app browsers; iOS does not
-      // provide a reliable web API to force Safari to open.
-      if (/Android/i.test(ua)) {
-        const clean = url.replace(/^https?:\/\//, '');
-        window.location.href = 'intent://' + clean + '#Intent;scheme=' + window.location.protocol.replace(':', '') + ';package=com.android.chrome;end';
-        status.textContent = 'Nếu chưa mở được, hãy chọn ••• → Mở trong trình duyệt ngoài.';
-        return;
-      }
-      status.textContent = 'Hãy nhấn ••• ở góc trên và chọn Mở trong trình duyệt ngoài.';
-      try { await navigator.clipboard.writeText(url); status.textContent += ' Liên kết đã được sao chép để bạn dán vào Safari/Chrome/Trình duyệt web.'; }
-      catch { /* Clipboard may be unavailable in Facebook in-app browser. */ }
-    });
-  })();
-</script>
+
 <header class="site-header">
   <a class="brand" href="/"><img src="/crescent-moon-logo.png" alt="Crescent Moon" class="site-logo" /></a>
 
