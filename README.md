@@ -1004,3 +1004,7 @@ Trang chi tiết truyện:
 - Bấm notification mở đúng truyện và cuộn tới reply; hỗ trợ trạng thái Chưa đọc/Đã đọc theo tài khoản.
 - Badge unread được ẩn hoàn toàn khi số thông báo chưa đọc bằng 0.
 - SQL REQUIRED: chỉ chạy `supabase-v12-50-comment-reply-notifications.sql`. ZIP này không chứa SQL cũ.
+
+## v12.91 — Reader image display
+- Removed the five-minute Canvas clearing timer. Already loaded chapter images remain displayed.
+- Signed image URL expiration and refresh/retry behavior remain unchanged.
