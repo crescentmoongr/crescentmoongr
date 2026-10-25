@@ -114,31 +114,6 @@ if(progress instanceof HTMLElement){
 const wraps=[...document.querySelectorAll('.reader-canvas-wrap')];
 const protectedReader=document.querySelector('[data-protected-reader]');
 let refreshPromise=null;
-let imageExpiryTimer=null;
-const IMAGE_LIFETIME_MS=5*60*1000;
-const clearDisplayedImages=()=>{
-  for(const wrap of wraps){
-    if(!(wrap instanceof HTMLElement))continue;
-    const canvas=wrap.querySelector('canvas');
-    if(!(canvas instanceof HTMLCanvasElement))continue;
-    canvas.width=0;canvas.height=0;
-    delete wrap.dataset.loaded;
-    delete wrap.dataset.loading;
-    wrap.dataset.failed='1';
-    let loading=wrap.querySelector('.reader-loading');
-    if(!(loading instanceof HTMLElement)){
-      loading=document.createElement('div');
-      loading.className='reader-loading';
-      wrap.appendChild(loading);
-    }
-    loading.textContent='Phiên ảnh đã hết hạn sau 5 phút.';
-    addRetryButton(wrap,loading);
-  }
-};
-const scheduleImageExpiry=()=>{
-  if(imageExpiryTimer!==null)clearTimeout(imageExpiryTimer);
-  imageExpiryTimer=setTimeout(clearDisplayedImages,IMAGE_LIFETIME_MS);
-};
 const refreshLinks=()=>{
   if(refreshPromise)return refreshPromise;
   const parts=location.pathname.split('/').filter(Boolean);
@@ -150,7 +125,6 @@ const refreshLinks=()=>{
     const result=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(result.error||'Không thể cấp lại liên kết ảnh.');
     const urls=new Map((result.pages||[]).map(p=>[String(p.id),p.url]));
-    scheduleImageExpiry();
     for(const wrap of wraps){
       const canvas=wrap.querySelector('canvas');
       const url=urls.get(String(wrap.dataset.pageId||''));
@@ -218,7 +192,6 @@ const io=new IntersectionObserver(entries=>{
   for(const e of entries)if(e.isIntersecting){loadPage(e.target);io.unobserve(e.target)}
 },{rootMargin:'1400px 0px'});
 wraps.forEach(w=>io.observe(w));
-scheduleImageExpiry();
 // Reader-only deterrents. Browser extensions can bypass client-side handlers.
 const protectionNotice=document.getElementById('reader-protection-notice');
 let protectionTimer;
