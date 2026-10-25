@@ -1,3 +1,4 @@
+import {parseRawLinks,parseRelatedSeries} from '../../../../lib/seriesLinks';
 import { ensureAdminSeriesTags } from '../../../../lib/adminSeriesTags';
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
@@ -17,7 +18,7 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
     const old=await getAdminSeriesById(id,token); if(!old) throw new Error('Không tìm thấy truyện.'); const access=clean(f.get('access_type'))||'public'; if(!['public','password','member'].includes(access)) throw new Error('Quyền đọc không hợp lệ.'); const password=clean(f.get('series_password'));
     if(access==='password'&&!password&&!await hasAdminSeriesPassword(id,token)) throw new Error('Hãy nhập mật khẩu cho truyện.');
     let coverKey=old.cover_key; const cover=f.get('cover'); if(cover instanceof File&&cover.size){if(cover.size>8*1024*1024||!mime[cover.type]) throw new Error('Ảnh bìa không hợp lệ hoặc vượt 8 MB.'); newCover=`covers/${crypto.randomUUID()}.${mime[cover.type]}`; await env.MANGA_STORAGE.put(newCover,await cover.arrayBuffer(),{httpMetadata:{contentType:cover.type,cacheControl:'public, max-age=86400'}}); coverKey=newCover;}
-    const title=clean(f.get('title')), slug=safeSlug(clean(f.get('slug'))), rawCmoaUrl=safeUrl(clean(f.get('raw_cmoa_url'))), rawRentaUrl=safeUrl(clean(f.get('raw_renta_url'))); if(!title||!slug) throw new Error('Tên và slug là bắt buộc.');
+    const title=clean(f.get('title')), slug=safeSlug(clean(f.get('slug'))), rawLinks=parseRawLinks(f), relatedIds=parseRelatedSeries(f,id); if(!title||!slug) throw new Error('Tên và slug là bắt buộc.');
     const authorNames=parseAuthors(clean(f.get('author')));
     const authorName=authorNames.join(', ');
     if(authorNames.length){
@@ -32,7 +33,7 @@ export const POST:APIRoute=async({request,cookies,redirect})=>{
       }
     }
     if(access==='password'&&password) await supabaseRpc('admin_set_series_password',{p_series_id:id,p_password:password},token);
-    await supabasePatch(`series?id=eq.${encodeURIComponent(id)}`,token,{title,slug,description:sanitizeRichText(clean(f.get('description')))||null,author:authorName||null,artist:clean(f.get('artist'))||null,raw_cmoa_url:rawCmoaUrl,raw_renta_url:rawRentaUrl,raw_url:null,genres:selectedGenres,tags:selectedTags,type:clean(f.get('type'))||null,status:clean(f.get('status')),is_published:f.get('is_published')==='true',cover_key:coverKey,access_type:access,notify_discord:f.get('notify_discord')==='true',notify_telegram:f.get('notify_telegram')==='true'});
+    await supabasePatch(`series?id=eq.${encodeURIComponent(id)}`,token,{title,slug,description:sanitizeRichText(clean(f.get('description')))||null,author:authorName||null,artist:clean(f.get('artist'))||null,raw_cmoa_url:rawLinks.find(x=>x.platform==='CMOA')?.url||null,raw_renta_url:rawLinks.find(x=>x.platform==='RENTA')?.url||null,raw_links:rawLinks,related_series_ids:relatedIds,raw_url:null,genres:selectedGenres,tags:selectedTags,type:clean(f.get('type'))||null,status:clean(f.get('status')),is_published:f.get('is_published')==='true',cover_key:coverKey,access_type:access,notify_discord:f.get('notify_discord')==='true',notify_telegram:f.get('notify_telegram')==='true'});
     if(access!=='password') await supabaseRpc('admin_clear_series_password',{p_series_id:id},token);
     if(newCover&&old.cover_key) await env.MANGA_STORAGE.delete(old.cover_key);
     return redirect(`/admin/series/${id}?success=`+encodeURIComponent('Đã lưu thay đổi.'));

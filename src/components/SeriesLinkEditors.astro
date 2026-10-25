@@ -1,0 +1,35 @@
+---
+import {RAW_PLATFORMS,displayRawLinks} from '../lib/seriesLinks';
+const {series=null,choices=[]}=Astro.props;
+const links=series?displayRawLinks(series):[];
+const related=Array.isArray(series?.related_series_ids)?series.related_series_ids:[];
+---
+<div class="series-link-admin-block" data-series-link-editor>
+ <div class="field"><span>Link mua raw</span></div>
+ <div data-raw-rows>
+  {(links.length?links:[{platform:'CMOA',url:''}]).map((link:any)=><div class="raw-platform-row">
+   <label class="field"><span>Nền tảng</span><select name="raw_platform">{RAW_PLATFORMS.map(p=><option value={p} selected={link.platform===p}>{p}</option>)}</select></label>
+   <label class="field"><span>Đường dẫn truyện</span><input name="raw_link_url" type="url" maxlength="1000" value={link.url} placeholder="https://..."/></label>
+   <button type="button" class="button secondary" data-remove-raw aria-label="Xóa nền tảng">×</button>
+  </div>)}
+ </div>
+ <button type="button" class="button secondary" data-add-raw>+ Thêm nền tảng</button>
+ <small class="meta">Chỉ nền tảng có link mới hiển thị ở trang truyện.</small>
+ <div class="field" style="margin-top:20px"><span>Các tác phẩm liên quan</span></div>
+ <div class="related-series-select"><select data-related-choice aria-label="Chọn truyện liên quan"><option value="">— Chọn truyện trên website —</option>{choices.filter((s:any)=>s.id!==series?.id).map((s:any)=><option value={s.id}>{s.title}</option>)}</select><button type="button" class="button secondary" data-add-related>+ Thêm truyện</button></div>
+ <div data-related-list>
+  {related.map((id:string)=><div class="related-admin-row" data-related-id={id}><input type="hidden" name="related_series_id" value={id}/><span>{choices.find((s:any)=>s.id===id)?.title||'Truyện không còn tồn tại'}</span><button type="button" class="button secondary" data-related-up title="Lên">↑</button><button type="button" class="button secondary" data-related-down title="Xuống">↓</button><button type="button" class="button secondary" data-related-remove title="Xóa">×</button></div>)}
+ </div>
+ <small class="meta">Có thể chọn nhiều truyện và thay đổi thứ tự. Chỉ hiện các truyện còn được đăng công khai.</small>
+</div>
+<script>
+ document.querySelectorAll('[data-series-link-editor]').forEach(root=>{
+  if(!(root instanceof HTMLElement)||root.dataset.ready)return;root.dataset.ready='1';
+  const raw=root.querySelector('[data-raw-rows]'),add=root.querySelector('[data-add-raw]');
+  add?.addEventListener('click',()=>{if(!raw||raw.children.length>=20)return;const first=raw.firstElementChild;if(!first)return;const clone=first.cloneNode(true);if(!(clone instanceof HTMLElement))return;const sel=clone.querySelector('select'),inp=clone.querySelector('input');if(sel)sel.value='CMOA';if(inp)inp.value='';raw.appendChild(clone)});
+  raw?.addEventListener('click',e=>{const btn=(e.target as Element).closest('[data-remove-raw]');if(btn&&raw.children.length>1)btn.closest('.raw-platform-row')?.remove()});
+  const list=root.querySelector('[data-related-list]'),select=root.querySelector('[data-related-choice]');
+  root.querySelector('[data-add-related]')?.addEventListener('click',()=>{if(!(select instanceof HTMLSelectElement)||!list||!select.value||list.children.length>=30)return;const id=select.value;if([...list.children].some(el=>el.getAttribute('data-related-id')===id))return;const name=select.selectedOptions[0]?.textContent||'';const div=document.createElement('div');div.className='related-admin-row';div.dataset.relatedId=id;const hidden=document.createElement('input');hidden.type='hidden';hidden.name='related_series_id';hidden.value=id;const span=document.createElement('span');span.textContent=name;div.append(hidden,span);for(const [attr,txt] of [['data-related-up','↑'],['data-related-down','↓'],['data-related-remove','×']]){const b=document.createElement('button');b.type='button';b.className='button secondary';b.setAttribute(attr,'');b.textContent=txt;div.append(b)}list.append(div);select.value=''});
+  list?.addEventListener('click',e=>{const btn=(e.target as Element).closest('button'),row=btn?.closest('.related-admin-row');if(!btn||!row||!list)return;if(btn.hasAttribute('data-related-remove'))row.remove();else if(btn.hasAttribute('data-related-up')&&row.previousElementSibling)list.insertBefore(row,row.previousElementSibling);else if(btn.hasAttribute('data-related-down')&&row.nextElementSibling)list.insertBefore(row.nextElementSibling,row)});
+ });
+</script>

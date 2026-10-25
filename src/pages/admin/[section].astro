@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AdminSidebar from '../../components/AdminSidebar.astro';
+import SeriesLinkEditors from '../../components/SeriesLinkEditors.astro';
 import { getAdminSeriesList, getAllAdminChapters, statusLabel, getSiteSetting, getAdminMembers, getAuthors, getGenres, getTags, getAdminSeriesComments, getServiceSiteSetting, getAllChapterStats, getCommentMemberRewards } from '../../lib/supabase';
 import { requireAdminSession } from '../../lib/auth';
 export const prerender=false;
@@ -16,6 +17,7 @@ const success=Astro.url.searchParams.get('success');const error=Astro.url.search
 
 let rows:any[]=[]; const chapterCounts=new Map<string,number>(); const latestChapterAt=new Map<string,number>(); const seriesViews=new Map<string,number>();
 const adminRankIconMap:any={mam_trang:'🌱',trang_non:'🌙',trang_tron:'🌕',anh_sao:'✨',sao_sang:'🌟',tinh_nguyet:'💫'}; let adminCommentRewardMap=new Map<string,any>();
+let relatedChoices:any[]=[];
 let announcementHtml=''; let adHtml=''; let socialLinks:any={}; let members:any[]=[]; let membersError=''; let adminComments:any[]=[]; let commentsError=''; let authors:any[]=[]; let genresManaged:any[]=[]; let tagsManaged:any[]=[];
 
 try{
@@ -52,6 +54,7 @@ try{
     authors=a.status==='fulfilled'?a.value:[];
     genresManaged=g.status==='fulfilled'?g.value:[];
     tagsManaged=t.status==='fulfilled'?t.value:[];
+    relatedChoices=await getAdminSeriesList(token).catch(()=>[]);
   }
 }catch{}
 const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội',ads:'Quảng cáo','add-series':'Thêm truyện',series:'Quản lý truyện',comments:'Quản lý bình luận',members:'Quản lý thành viên',authors:'Quản lý tác giả',genres:'Quản lý thể loại',tags:'Quản lý Tag'};
@@ -98,7 +101,7 @@ const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội'
     <label class="field admin-series-full-row"><span>Tác giả</span><input name="author" maxlength="500" list="author-suggestions"/><datalist id="author-suggestions">{authors.map(a=><option value={a.name}/>)}</datalist></label>
     <div class="field genre-picker-field admin-series-full-row"><span>Thể loại</span><div class="genre-bubble-picker" data-genre-picker>{genresManaged.length===0?<span class="meta">Chưa tải được danh sách thể loại hoặc chưa có thể loại. Kiểm tra mục Quản lý thể loại.</span>:genresManaged.map(g=><label class="genre-bubble"><input type="checkbox" name="genres" value={g.name}/><span>{g.name}</span></label>)}</div></div>
     <div class="field genre-picker-field admin-series-full-row" data-admin-tag-editor><span>Tag</span><div class="genre-bubble-picker tag-bubble-picker" data-tag-bubbles>{tagsManaged.map(t=><label class="genre-bubble"><input type="checkbox" name="tags" value={t.name}/><span>{t.name}</span></label>)}</div><div class="admin-tag-entry"><input type="text" data-tag-input maxlength="1000" placeholder="Nhập Tag mới, cách nhau bằng dấu phẩy…" autocomplete="off"/><button type="button" class="button secondary" data-tag-add>Thêm Tag</button></div><small class="meta">Chọn Tag có sẵn hoặc nhập nhiều Tag, ngăn cách bằng dấu phẩy. Tag mới sẽ được lưu vào Quản lý Tag khi lưu truyện.</small></div>
-    <div class="admin-raw-links"><label class="field"><span>Link mua raw — CMOA</span><input name="raw_cmoa_url" type="url" maxlength="1000" placeholder="https://www.cmoa.jp/..."/></label><label class="field"><span>Link mua raw — RENTA</span><input name="raw_renta_url" type="url" maxlength="1000" placeholder="https://renta.papy.co.jp/..."/></label><small class="meta admin-raw-links-help">Chỉ nền tảng có link mới hiển thị ở trang truyện.</small></div><label class="field"><span>Loại truyện</span><select name="type"><option value="">— Chưa chọn —</option><option value="Manga">Manga</option><option value="Manhwa">Manhwa</option><option value="Manhua">Manhua</option><option value="Novel">Novel</option><option value="Other">Khác</option></select></label>
+    <SeriesLinkEditors choices={relatedChoices}/><label class="field"><span>Loại truyện</span><select name="type"><option value="">— Chưa chọn —</option><option value="Manga">Manga</option><option value="Manhwa">Manhwa</option><option value="Manhua">Manhua</option><option value="Novel">Novel</option><option value="Other">Khác</option></select></label>
     <label class="field"><span>Trạng thái *</span><select name="status" required><option value="ongoing">Đang tiến hành</option><option value="completed">Hoàn thành</option><option value="hiatus">Tạm ngưng</option><option value="dropped">Drop</option><option value="upcoming">Sắp ra mắt</option></select></label><label class="field"><span>Quyền đọc *</span><select name="access_type" id="new_access_type" required><option value="public">Public</option><option value="password">Khóa mật khẩu cả bộ</option><option value="member">Thành viên</option></select></label><label class="field" id="new_series_password_field" hidden><span>Mật khẩu truyện *</span><input name="series_password" type="password" minlength="4" autocomplete="new-password"/></label>
   </div>
   <div class="field rich-field"><span>Giới thiệu</span><div class="comment-editor-shell admin-comment-editor-shell" data-admin-rich-editor><div class="comment-toolbar"><button type="button" data-admin-comment-cmd="bold"><strong>B</strong></button><button type="button" data-admin-comment-cmd="italic"><em>I</em></button><button type="button" data-admin-comment-cmd="underline"><u>U</u></button><button type="button" data-admin-comment-cmd="strikeThrough"><s>S</s></button><button type="button" data-admin-comment-action="upper">AA</button><button type="button" data-admin-comment-cmd="insertUnorderedList">• List</button><button type="button" data-admin-comment-cmd="insertOrderedList">1. List</button><button type="button" data-admin-comment-block="blockquote">❞</button><button type="button" data-admin-comment-block="code">&lt;/&gt;</button><button type="button" data-admin-comment-action="clear">Tx</button></div><div class="comment-editor admin-comment-editor" contenteditable="true" data-placeholder="Nhập phần giới thiệu..." spellcheck="true"></div><textarea class="comment-source admin-comment-source" name="description" maxlength="20000" hidden></textarea></div></div>
