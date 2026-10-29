@@ -6,11 +6,15 @@ import { richTextToHtml, commentRichTextToHtml } from '../lib/richText';
 export const prerender=false;
 let allSeries:any[]=[]; let updated:any[]=[]; let allChapters:any[]=[]; let error='';
 let latestChapter=new Map<string,number>();
+let lastPublished=new Map<string,number>();
+const newChapterWindowMs=48*60*60*1000;
+const newChapterCutoff=Date.now()-newChapterWindowMs;
+const hasNewChapter=(id:string)=>{const published=lastPublished.get(id);return published!==undefined&&published>=newChapterCutoff&&published<=Date.now()};
 try{
   const [seriesRows,chapterRows]=await Promise.all([getSeriesList(),getAllPublicChapters()]);
   allSeries=seriesRows;
   allChapters=chapterRows;
-  const lastPublished=new Map<string,number>();
+
   for(const ch of allChapters){
     const when=new Date(ch.published_at||ch.created_at).getTime();
     if(!lastPublished.has(ch.series_id)||when>(lastPublished.get(ch.series_id)||0)) lastPublished.set(ch.series_id,when);
@@ -25,7 +29,8 @@ const recentMore=updated.slice(32).map(item=>({
   title:item.title,
   cover_key:item.cover_key,
   status:item.status,
-  latest_chapter:latestChapter.has(item.id)?latestChapter.get(item.id):null
+  latest_chapter:latestChapter.has(item.id)?latestChapter.get(item.id):null,
+  has_new_chapter:hasNewChapter(item.id)
 }));
 const upcomingSeries=[...allSeries].filter(x=>x.status==='upcoming').sort((a,b)=>new Date(b.updated_at||b.created_at||0).getTime()-new Date(a.updated_at||a.created_at||0).getTime()).slice(0,8);
 // Top lượt xem: cộng lượt xem của các chapter đã công khai theo từng truyện.
@@ -185,7 +190,7 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
 
 <div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Mới cập nhật</h2></div>
 {recent.length?<>
-<section class="grid home-section-content" data-recent-grid>{recent.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{latestChapter.has(item.id)?`Chap ${latestChapter.get(item.id)} · `:''}{statusLabel(item.status)}</div></div></a>)}</section>
+<section class="grid home-section-content" data-recent-grid>{recent.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{hasNewChapter(item.id)&&<img class="chapter-new-ribbon" src="/chapter-new.png" alt="NEW - Có chapter mới trong 48 giờ" loading="lazy" />}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{latestChapter.has(item.id)?`Chap ${latestChapter.get(item.id)} · `:''}{statusLabel(item.status)}</div></div></a>)}</section>
 {recentMore.length>0&&<div class="home-more-bottom"><button class="home-more-button" type="button" data-home-load-more>Xem thêm <span aria-hidden="true">↓</span></button></div>}
 <script type="application/json" id="recent-more-data" set:html={JSON.stringify(recentMore).replace(/</g,'\\u003c')}></script>
 </>:<div class="empty-state">Chưa có truyện.</div>}
@@ -384,9 +389,10 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
         link.className='card';
         link.href=`/manga/${encodeURIComponent(item.slug)}`;
         const badge=badgeText[item.status]?`<span class="cover-badge ${badgeClass[item.status]||''}">${badgeText[item.status]}</span>`:'';
+        const newRibbon=item.has_new_chapter?`<img class="chapter-new-ribbon" src="/chapter-new.png" alt="NEW - Có chapter mới trong 48 giờ" loading="lazy">`:"";
         const cover=item.cover_key?`<img src="/api/cover/${encodeURIComponent(item.id)}" alt="Bìa ${esc(item.title)}" loading="lazy" decoding="async">`:`<span>${esc(item.title)}</span>`;
         const latest=item.latest_chapter!==null&&item.latest_chapter!==undefined?`Chap ${esc(item.latest_chapter)} · `:'';
-        link.innerHTML=`<div class="cover card-cover">${badge}${cover}</div><div class="card-body"><h3>${esc(item.title)}</h3><div class="meta">${latest}${esc(statusText[item.status]||item.status||'')}</div></div>`;
+        link.innerHTML=`<div class="cover card-cover">${badge}${newRibbon}${cover}</div><div class="card-body"><h3>${esc(item.title)}</h3><div class="meta">${latest}${esc(statusText[item.status]||item.status||'')}</div></div>`;
         fragment.appendChild(link);
       });
       recentGrid.appendChild(fragment);

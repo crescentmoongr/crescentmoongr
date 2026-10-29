@@ -60,6 +60,18 @@ textarea{width:100%;padding:11px 12px;border:1px solid #dec5d3;border-radius:10p
   display:block;
   object-fit:cover;
 }
+/* v12.93: NEW ribbon on recently published chapter covers (48 hours). */
+.card .card-cover img.chapter-new-ribbon{
+  position:absolute;
+  z-index:3;
+  top:0;
+  right:0;
+  width:68px;
+  height:68px;
+  object-fit:contain;
+  pointer-events:none;
+}
+@media(max-width:560px){.card .card-cover img.chapter-new-ribbon{width:54px;height:54px}}
 .cover-badge{
   position:absolute;
   z-index:2;
