@@ -60,18 +60,26 @@ textarea{width:100%;padding:11px 12px;border:1px solid #dec5d3;border-radius:10p
   display:block;
   object-fit:cover;
 }
-/* v12.93: NEW ribbon on recently published chapter covers (48 hours). */
-.card .card-cover img.chapter-new-ribbon{
-  position:absolute;
-  z-index:3;
-  top:0;
-  right:0;
-  width:68px;
-  height:68px;
-  object-fit:contain;
-  pointer-events:none;
+/* v12.94: compact NEW badge beside the latest chapter, for 48 hours. */
+[data-recent-grid] .card-body .meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
+[data-recent-grid] .recent-chapter-number{font-weight:600;}
+[data-recent-grid] .recent-new-tag{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  overflow:hidden;isolation:isolate;padding:2px 7px;border-radius:5px;
+  background:#f52f4e;color:#fff;font-size:.67rem;line-height:1.45;
+  font-weight:750;letter-spacing:.045em;box-shadow:0 1px 5px rgba(245,47,78,.2);
 }
-@media(max-width:560px){.card .card-cover img.chapter-new-ribbon{width:54px;height:54px}}
+[data-recent-grid] .recent-new-tag::after{
+  content:"";position:absolute;inset:-40%;pointer-events:none;
+  background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.85) 49%,transparent 63%);
+  transform:translateX(-125%) rotate(10deg);
+  animation:recent-new-sparkle 2.8s ease-in-out infinite;
+}
+@keyframes recent-new-sparkle{
+  0%,38%{transform:translateX(-125%) rotate(10deg)}
+  68%,100%{transform:translateX(125%) rotate(10deg)}
+}
+@media(prefers-reduced-motion:reduce){[data-recent-grid] .recent-new-tag::after{animation:none;}}
 .cover-badge{
   position:absolute;
   z-index:2;
