@@ -4035,3 +4035,7 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .related-works-item:hover{color:#ac87c5}.related-works-index{color:#bd76a5;font-weight:600;min-width:20px}
 .related-works-section{margin-bottom:24px}
 @media(max-width:600px){.raw-platform-row{grid-template-columns:minmax(90px,20fr) minmax(0,80fr) auto;gap:6px}.raw-platform-row .button{padding:8px}.related-series-select{flex-wrap:wrap}}
+
+/* v12.95: animated star GIFs flank the latest chapter / NEW label. */
+[data-recent-grid] .recent-new-star{width:16px;height:16px;object-fit:contain;flex:none;vertical-align:middle;}
+[data-recent-grid] .recent-new-separator{font-weight:500;color:#9b7d8b;}
