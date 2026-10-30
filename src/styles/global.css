@@ -4064,3 +4064,18 @@ button.home-more-button:hover span{transform:translateY(2px);}
   .manga-head{grid-template-columns:300px minmax(0,1fr);gap:36px;}
   .manga-head .manga-detail-cover{width:300px;max-width:100%;aspect-ratio:2/3;}
 }
+
+
+/* v13.01 — fix legacy max-width:270px overriding the 300×450 cover. */
+@media (min-width:701px){
+  .manga-head{grid-template-columns:300px minmax(0,1fr);gap:36px;}
+  .manga-head .manga-cover-wrap{width:300px;max-width:100%;}
+  .manga-head .manga-detail-cover{
+    width:300px;
+    max-width:300px;
+    height:450px;
+    aspect-ratio:2/3;
+    flex:none;
+  }
+  .manga-head .manga-detail-cover img{width:100%;height:100%;object-fit:cover;}
+}
