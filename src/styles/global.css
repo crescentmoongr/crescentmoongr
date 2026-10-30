@@ -4052,3 +4052,15 @@ button.home-more-button:hover span{transform:translateY(2px);}
   .manga-head{grid-template-columns:375px minmax(0,1fr);gap:36px;}
   .manga-head .manga-detail-cover{width:375px;max-width:100%;aspect-ratio:3/4;}
 }
+
+/* v12.99 — balance the cover height with the adjacent series information. */
+@media (min-width: 701px){
+  .manga-head{grid-template-columns:270px minmax(0,1fr);gap:36px;}
+  .manga-head .manga-detail-cover{width:270px;max-width:100%;aspect-ratio:3/4;}
+}
+
+/* v13.00: desktop detail cover at 300 x 450 (2:3). Mobile unchanged. */
+@media (min-width:701px){
+  .manga-head{grid-template-columns:300px minmax(0,1fr);gap:36px;}
+  .manga-head .manga-detail-cover{width:300px;max-width:100%;aspect-ratio:2/3;}
+}
