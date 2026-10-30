@@ -4046,36 +4046,3 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .series-alternative-title{margin:0 0 18px;color:#907b8b;font-size:.95rem;font-style:italic;line-height:1.5;overflow-wrap:anywhere}
 .series-alternative-title span{font-weight:600}
 @media(max-width:700px){.manga-info h1{margin-bottom:10px}.series-alternative-title{text-align:center;margin-bottom:18px}}
-
-/* v12.98 — detail cover 375 × 500 on desktop (3:4), responsive on mobile. */
-@media (min-width: 701px){
-  .manga-head{grid-template-columns:375px minmax(0,1fr);gap:36px;}
-  .manga-head .manga-detail-cover{width:375px;max-width:100%;aspect-ratio:3/4;}
-}
-
-/* v12.99 — balance the cover height with the adjacent series information. */
-@media (min-width: 701px){
-  .manga-head{grid-template-columns:270px minmax(0,1fr);gap:36px;}
-  .manga-head .manga-detail-cover{width:270px;max-width:100%;aspect-ratio:3/4;}
-}
-
-/* v13.00: desktop detail cover at 300 x 450 (2:3). Mobile unchanged. */
-@media (min-width:701px){
-  .manga-head{grid-template-columns:300px minmax(0,1fr);gap:36px;}
-  .manga-head .manga-detail-cover{width:300px;max-width:100%;aspect-ratio:2/3;}
-}
-
-
-/* v13.01 — fix legacy max-width:270px overriding the 300×450 cover. */
-@media (min-width:701px){
-  .manga-head{grid-template-columns:300px minmax(0,1fr);gap:36px;}
-  .manga-head .manga-cover-wrap{width:300px;max-width:100%;}
-  .manga-head .manga-detail-cover{
-    width:300px;
-    max-width:300px;
-    height:450px;
-    aspect-ratio:2/3;
-    flex:none;
-  }
-  .manga-head .manga-detail-cover img{width:100%;height:100%;object-fit:cover;}
-}
