@@ -4046,3 +4046,30 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .series-alternative-title{margin:0 0 18px;color:#907b8b;font-size:.95rem;font-style:italic;line-height:1.5;overflow-wrap:anywhere}
 .series-alternative-title span{font-weight:600}
 @media(max-width:700px){.manga-info h1{margin-bottom:10px}.series-alternative-title{text-align:center;margin-bottom:18px}}
+
+/* v13.02 — Desktop series cover: exactly 290 × 396.65px.
+   Keep mobile sizing unchanged. This replaces legacy v12.98–v13.01 overrides. */
+@media (min-width:701px) {
+  .manga-head {
+    grid-template-columns:290px minmax(0,1fr);
+    gap:40px;
+  }
+  .manga-head .manga-cover-wrap {
+    width:290px;
+    max-width:290px;
+    height:396.65px;
+  }
+  .manga-head .manga-detail-cover {
+    box-sizing:border-box;
+    width:290px;
+    max-width:290px;
+    height:396.65px;
+    aspect-ratio:auto;
+    flex:none;
+  }
+  .manga-head .manga-detail-cover > img {
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+}
