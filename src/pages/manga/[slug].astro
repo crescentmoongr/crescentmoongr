@@ -84,6 +84,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
 
   <div class="manga-info">
     <h1>{series.title}</h1>
+    {series.alternative_title&&<p class="series-alternative-title"><span>Tên khác:</span> {series.alternative_title}</p>}
 
     <div class="series-info-list">
       <div class="series-info-row"><span class="series-info-icon">✎</span><span><b>Tác giả:</b> {seriesAuthors.length?seriesAuthors.map((name,i)=><>{i>0?', ':''}<a class="taxonomy-inline-link" href={`/author/${slugifyTaxonomy(name)}`}>{name}</a></>):'Chưa cập nhật'}</span></div>
