@@ -306,3 +306,28 @@ export async function setMyMemberIdentity(token:string,nameStyle:string|null,ach
 export async function adminResetUserPassword(userId:string,password:string){ const {url,serviceKey}=serviceConfig(); const r=await fetch(`${url}/auth/v1/admin/users/${encodeURIComponent(userId)}`,{method:'PUT',headers:{apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,'Content-Type':'application/json'},body:JSON.stringify({password})}); if(!r.ok) throw new Error(`Supabase Auth ${r.status}: ${await r.text()}`); return r.json(); }
 export type AchievementProgress = { read_count:number; night_count:number; fast_count:number; bookmark_count:number; comment_day_count:number };
 export async function getMyAchievementProgress(token:string){ const r=await supabaseRpc<AchievementProgress[]>('get_my_achievement_progress',{},token); return r?.[0]??{read_count:0,night_count:0,fast_count:0,bookmark_count:0,comment_day_count:0}; }
+
+
+/** Counts and current-user likes; service key never leaves the server. */
+export async function getCommentLikeStates(ids:number[],userId?:string|null):Promise<Record<number,{count:number;liked:boolean}>>{
+  const unique=[...new Set(ids.filter(x=>Number.isSafeInteger(x)&&x>0))];
+  const result:Record<number,{count:number;liked:boolean}>={};
+  if(!unique.length)return result;
+  const {url,serviceKey}=serviceConfig();
+  // Chunk to avoid excessively long PostgREST URLs.
+  for(let offset=0;offset<unique.length;offset+=100){
+    const chunk=unique.slice(offset,offset+100);
+    const r=await fetch(`${url}/rest/v1/comment_likes?select=comment_id,user_id&comment_id=in.(${chunk.join(',')})`,{
+      headers:{apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,Accept:'application/json'},
+      cache:'no-store'
+    });
+    if(!r.ok)throw new Error(`Comment likes ${r.status}: ${await r.text()}`);
+    const rows=await r.json() as Array<{comment_id:number;user_id:string}>;
+    for(const row of rows){
+      const state=result[row.comment_id]??(result[row.comment_id]={count:0,liked:false});
+      state.count++;
+      if(userId&&row.user_id===userId)state.liked=true;
+    }
+  }
+  return result;
+}

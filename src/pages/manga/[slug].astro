@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import {displayRawLinks} from '../../lib/seriesLinks';
-import { getChapters,getSeriesBySlug,statusLabel,getSeriesUserState,getReadingHistory,getChapterReads,getSeriesComments,getChapterStats,getSeriesList,getCommentMemberRewards,getMyMemberRewards } from '../../lib/supabase';
+import { getChapters,getSeriesBySlug,statusLabel,getSeriesUserState,getReadingHistory,getChapterReads,getSeriesComments,getChapterStats,getSeriesList,getCommentMemberRewards,getMyMemberRewards,getCommentLikeStates } from '../../lib/supabase';
 import { getSession } from '../../lib/auth';
 import { richTextToHtml,commentRichTextToHtml } from '../../lib/richText';
 import { slugifyTaxonomy } from '../../lib/slug';
@@ -59,6 +59,7 @@ const sortReplies=(items:CommentNode[])=>{
   items.forEach(x=>sortReplies(x.replies));
 };
 commentRoots.forEach(root=>sortReplies(root.replies));
+const commentLikeStates=await getCommentLikeStates(comments.map(c=>Number(c.id)),session?.user.id).catch(()=>({} as Record<number,{count:number;liked:boolean}>));
 const commentRewards=await getCommentMemberRewards(comments.map(c=>c.user_id).filter(Boolean)).catch(()=>[]);
 const commentRewardMap=new Map(commentRewards.map((r:any)=>[r.user_id,r]));
 const rankIconMap:any={mam_trang:'🌱',trang_non:'🌙',trang_tron:'🌕',anh_sao:'✨',sao_sang:'🌟',tinh_nguyet:'💫'};
@@ -207,10 +208,15 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
                   </form>}
               </div>
               <div class="comment-body" set:html={commentRichTextToHtml(c.body)}></div>
-              {session && String(session.user.username||'').trim() && Number(c.depth||0)<9 &&
-                <div class="comment-reply-actions">
-                  <button type="button" class="comment-reply-toggle" data-reply-toggle={`reply-${c.id}`}><img src="/reply.png" alt="" aria-hidden="true" class="comment-reply-icon"/> Trả lời</button>
-                </div>}
+              <div class="comment-reply-actions">
+                {session && String(session.user.username||'').trim() && Number(c.depth||0)<9 &&
+                  <button type="button" class="comment-reply-toggle" data-reply-toggle={`reply-${c.id}`}><img src="/reply.png" alt="" aria-hidden="true" class="comment-reply-icon"/> Trả lời</button>}
+                <button type="button" class:list={['comment-like-toggle',(commentLikeStates[Number(c.id)]?.liked?'is-liked':'')]} data-comment-like={c.id} data-series-id={series.id} aria-pressed={!!commentLikeStates[Number(c.id)]?.liked} aria-label="Thích bình luận">
+                  <span class="comment-like-heart" aria-hidden="true">{commentLikeStates[Number(c.id)]?.liked?'♥':'♡'}</span>
+                  <span>Thích</span>
+                  <span class="comment-like-count">{commentLikeStates[Number(c.id)]?.count||0}</span>
+                </button>
+              </div>
               {session && String(session.user.username||'').trim() && Number(c.depth||0)<9 &&
                 <form method="POST" action="/api/comments/create" class="comment-form comment-reply-form" data-comment-form id={`reply-${c.id}`} hidden>
                   <input type="hidden" name="series_id" value={series.id}/>
@@ -325,6 +331,28 @@ function setupCommentForm(commentForm){
 }
 
 document.querySelectorAll('[data-comment-form]').forEach(setupCommentForm);
+
+document.querySelectorAll('[data-comment-like]').forEach(btn=>{
+  btn.addEventListener('click',async()=>{
+    if(btn.dataset.busy==='1')return;
+    const id=btn.dataset.commentLike;
+    const seriesId=btn.dataset.seriesId;
+    btn.dataset.busy='1';
+    btn.disabled=true;
+    try{
+      const response=await fetch('/api/comments/like',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({comment_id:Number(id),series_id:seriesId})});
+      if(response.status===401){window.location.href='/login?next='+encodeURIComponent(location.pathname+'#comments');return;}
+      const data=await response.json();
+      if(!response.ok)throw new Error(data.error||'Không thể thả tim bình luận.');
+      btn.classList.toggle('is-liked',!!data.liked);
+      btn.setAttribute('aria-pressed',String(!!data.liked));
+      const heart=btn.querySelector('.comment-like-heart');if(heart)heart.textContent=data.liked?'♥':'♡';
+      const count=btn.querySelector('.comment-like-count');if(count)count.textContent=String(data.count);
+      btn.classList.remove('like-pop');void btn.offsetWidth;btn.classList.add('like-pop');
+    }catch(e){alert(e instanceof Error?e.message:'Không thể thả tim bình luận.');}
+    finally{btn.disabled=false;delete btn.dataset.busy;}
+  });
+});
 
 document.querySelectorAll('[data-reply-toggle]').forEach(btn=>{
   btn.addEventListener('click',()=>{

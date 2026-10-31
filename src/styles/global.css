@@ -4077,3 +4077,14 @@ button.home-more-button:hover span{transform:translateY(2px);}
 /* v13.03 — custom reply icon */
 .comment-reply-toggle{display:inline-flex;align-items:center;gap:5px}
 .comment-reply-icon{width:15px;height:15px;object-fit:contain;flex:none}
+
+/* v13.04: comment hearts next to reply action */
+.comment-reply-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.comment-like-toggle{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;padding:3px 0;color:#a46f98;font:inherit;font-size:.84rem;font-weight:600;cursor:pointer}
+.comment-like-toggle:hover,.comment-like-toggle.is-liked{color:#e45296}
+.comment-like-toggle:disabled{opacity:.6;cursor:wait}
+.comment-like-heart{font-size:1.22em;line-height:1;color:#e45296}
+.comment-like-count{font-size:.88em;color:#a98a9e;font-weight:500}
+.comment-like-toggle.like-pop .comment-like-heart{animation:comment-heart-pop .3s ease-out}
+@keyframes comment-heart-pop{0%{transform:scale(.8)}55%{transform:scale(1.4)}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.comment-like-toggle.like-pop .comment-like-heart{animation:none}}
