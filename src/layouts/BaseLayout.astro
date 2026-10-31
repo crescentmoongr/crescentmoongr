@@ -422,7 +422,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   const render=()=>{
     if(!(notifList instanceof HTMLElement))return;
     const seen=getSeen();
-    const unread=items.filter(x=>x?.id&&((x.type==='comment_reply'||x.type==='achievement')?!x.is_read:!seen.includes(x.id))).length;
+    const unread=items.filter(x=>x?.id&&((x.type==='comment_reply'||x.type==='comment_like'||x.type==='achievement')?!x.is_read:!seen.includes(x.id))).length;
 
     if(badge instanceof HTMLElement){
       badge.textContent=unread>=21?'20+':String(unread);
@@ -439,7 +439,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
     }
 
     for(const item of items){
-      const isUnread=(item.type==='comment_reply'||item.type==='achievement')?!item.is_read:!seen.includes(item.id);
+      const isUnread=(item.type==='comment_reply'||item.type==='comment_like'||item.type==='achievement')?!item.is_read:!seen.includes(item.id);
       const link=document.createElement('a');
       link.className=`notification-item${isUnread?' is-unread':''}`;
       link.href=String(item.href||'/');
@@ -467,6 +467,10 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
         title.innerHTML=`<strong></strong> đã trả lời bình luận của bạn`;
         title.querySelector('strong').textContent=String(item.actor_name||'Thành viên');
         chapter.textContent=String(item.preview||item.title||'').trim();
+      }else if(item.type==='comment_like'){
+        title.innerHTML=`<strong></strong> đã thích bình luận của bạn ❤️`;
+        title.querySelector('strong').textContent=String(item.actor_name||'Thành viên');
+        chapter.textContent=String(item.title||'Truyện');
       }else if(item.type==='achievement'){
         title.textContent='🎉 Bạn đã đạt Danh hiệu mới!';
         chapter.textContent=`${String(item.title||'Danh hiệu')} — Xem tại Tài khoản`;
@@ -493,6 +497,9 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
         if(item.type==='comment_reply'&&item.notification_id){
           item.is_read=true; render();
           fetch('/api/notifications/read',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({id:item.notification_id})}).catch(()=>{});
+        }else if(item.type==='comment_like'&&item.notification_id){
+          item.is_read=true;render();
+          fetch('/api/notifications/read',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({type:'comment_like',id:item.notification_id})}).catch(()=>{});
         }else if(item.type==='achievement'&&item.notification_id){
           item.is_read=true;render();
           fetch('/api/notifications/read',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({type:'achievement',id:item.notification_id})}).catch(()=>{});
@@ -528,12 +535,13 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 
   if(markAll instanceof HTMLButtonElement){
     markAll.addEventListener('click',()=>{
-      saveSeen(items.filter(x=>x.type!=='comment_reply'&&x.type!=='achievement').map(x=>x.id).filter(Boolean));
+      saveSeen(items.filter(x=>x.type!=='comment_reply'&&x.type!=='comment_like'&&x.type!=='achievement').map(x=>x.id).filter(Boolean));
       const hasReplies=items.some(x=>x.type==='comment_reply'&&!x.is_read);
+      const hasLikes=items.some(x=>x.type==='comment_like'&&!x.is_read);
       const hasAchievements=items.some(x=>x.type==='achievement'&&!x.is_read);
-      items.forEach(x=>{if(x.type==='comment_reply'||x.type==='achievement')x.is_read=true});
+      items.forEach(x=>{if(x.type==='comment_reply'||x.type==='comment_like'||x.type==='achievement')x.is_read=true});
       render();
-      if(hasReplies||hasAchievements)fetch('/api/notifications/read',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({all:true})}).catch(()=>{});
+      if(hasReplies||hasLikes||hasAchievements)fetch('/api/notifications/read',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({all:true})}).catch(()=>{});
     });
   }
 
