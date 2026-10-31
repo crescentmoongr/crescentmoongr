@@ -4073,3 +4073,7 @@ button.home-more-button:hover span{transform:translateY(2px);}
     object-fit:cover;
   }
 }
+
+/* v13.03 — custom reply icon */
+.comment-reply-toggle{display:inline-flex;align-items:center;gap:5px}
+.comment-reply-icon{width:15px;height:15px;object-fit:contain;flex:none}

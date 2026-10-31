@@ -209,7 +209,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
               <div class="comment-body" set:html={commentRichTextToHtml(c.body)}></div>
               {session && String(session.user.username||'').trim() && Number(c.depth||0)<9 &&
                 <div class="comment-reply-actions">
-                  <button type="button" class="comment-reply-toggle" data-reply-toggle={`reply-${c.id}`}>↩ Trả lời</button>
+                  <button type="button" class="comment-reply-toggle" data-reply-toggle={`reply-${c.id}`}><img src="/reply.png" alt="" aria-hidden="true" class="comment-reply-icon"/> Trả lời</button>
                 </div>}
               {session && String(session.user.username||'').trim() && Number(c.depth||0)<9 &&
                 <form method="POST" action="/api/comments/create" class="comment-form comment-reply-form" data-comment-form id={`reply-${c.id}`} hidden>
