@@ -45,6 +45,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
+  <meta name="cm-build-version" content="13.07" />
   <meta name="viewport" content="width=device-width" />
 
   <!-- Google Analytics 4 -->
@@ -618,4 +619,37 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
 })();
 </script>
 
+<script is:inline>
+(() => {
+  const CURRENT = document.querySelector('meta[name="cm-build-version"]')?.content || '';
+  if (!CURRENT) return;
+  const isReader = /^\/read\//.test(location.pathname);
+  let checking = false;
+  let reloaded = false;
+  document.addEventListener('input', event => {
+    if (event.target instanceof HTMLElement && event.target.matches('textarea,input,[contenteditable="true"]')) event.target.dataset.cmDirty = '1';
+  }, {capture:true});
+  const hasDraft = () => !!document.querySelector('[data-cm-dirty="1"]');
+  async function check() {
+    if (checking || reloaded || document.hidden) return;
+    checking = true;
+    try {
+      const res = await fetch('/api/site-version?ts=' + Date.now(), {cache:'no-store',credentials:'same-origin'});
+      if (!res.ok) return;
+      const {version} = await res.json();
+      if (!version || version === CURRENT) return;
+      // Do not interrupt chapter reading, admin editing or unsaved inputs.
+      if (isReader || location.pathname.startsWith('/admin') || hasDraft()) return;
+      const key = 'cm:auto-reloaded:' + version;
+      if (sessionStorage.getItem(key) === '1') return;
+      sessionStorage.setItem(key, '1');
+      reloaded = true;
+      location.reload();
+    } catch { /* retry next time */ }
+    finally { checking = false; }
+  }
+  window.setInterval(check, 5 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+})();
+</script>
 </body></html>
