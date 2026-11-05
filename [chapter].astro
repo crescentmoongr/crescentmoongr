@@ -9,12 +9,12 @@ const {slug,chapter}=Astro.params; if(!slug||!chapter) return Astro.redirect('/'
 const series=await getSeriesBySlug(slug); const current=series?await getChapter(series.id,chapter):null; if(!series||!current) return new Response('Không tìm thấy chapter.',{status:404});
 const readerSession=ensureReaderSession(Astro.cookies);
 let allowed=series.access_type==='public';
-if(series.access_type==='password') allowed=await isSeriesUnlocked(readerSession,series.id);
+if(series.access_type==='password') allowed=await isSeriesUnlocked(Astro.cookies,series.id);
 const accountUser=await getSessionUser(Astro.cookies);
 if(series.access_type==='member') allowed=!!accountUser;
 const isNovel=String(series.type||'').toLowerCase()==='novel';
 const pages=allowed&&!isNovel?await getPublicChapterPages(current.id):[];
-const rendered=allowed&&!isNovel?await Promise.all(pages.map(async pg=>({ ...pg, url:await signPageUrl(pg.id,series.id,current.id,readerSession,300) }))):[];
+const rendered=allowed&&!isNovel?await Promise.all(pages.map(async pg=>({ ...pg, url:await signPageUrl(pg.id,series.id,current.id,readerSession) }))):[];
 const novelHtml=allowed&&isNovel?novelRichTextToHtml(current.content_html):'';
 const unlockError=Astro.url.searchParams.get('unlock_error');
 
@@ -25,9 +25,9 @@ const nextChapter=currentIndex>=0?chapterList[currentIndex-1]||null:null;
 
 ---
 <BaseLayout title={`${series.title} - Chapter ${current.chapter_number} | Crescent Moon Translation`} description={`Đọc ${series.title} - Chapter ${current.chapter_number} tại Crescent Moon Translation.`} image={series.cover_key?`/api/og-cover/${series.id}`:"/social-preview.png"} imageAlt={`Bìa truyện ${series.title} - Chapter ${current.chapter_number}`} ogType="article">
-<h1>{series.title} — Chapter {current.chapter_number}</h1>
-{!allowed&&series.access_type==='password'?<section class="lock-panel"><h2>🔒 Truyện cần mật khẩu</h2><p class="description">Chỉ cần nhập một lần để mở toàn bộ chapter của bộ này trong 12 giờ</p>
-<p class="description">Lấy gợi ý mở khóa truyện ở mục <a href="/password"><strong>Mật khẩu</strong></a> tại menu web.</p>{unlockError&&<div class="notice error">{unlockError}</div>}<form method="POST" action="/api/series-unlock"><input type="hidden" name="slug" value={series.slug}/><input type="hidden" name="return_to" value={`/read/${series.slug}/${current.chapter_number}`}/><label class="field"><span>Mật khẩu</span><input name="password" type="password" required autocomplete="current-password"/></label><button class="button" type="submit">Mở khóa truyện</button></form></section>:!allowed&&series.access_type==='member'?<section class="lock-panel"><h2>🔒 Truyện dành cho thành viên</h2><p class="description">Đăng nhập tài khoản để đọc bộ truyện này.</p><a class="button" href={`/login?next=${encodeURIComponent(`/read/${series.slug}/${current.chapter_number}`)}`}>Đăng nhập</a></section>:<><div class="reader-nav"><a class="button secondary" href={`/manga/${series.slug}`}>← Danh sách chapter</a><span class="meta">{isNovel?'Novel':`${pages.length} trang`}</span></div><div data-reader-view data-chapter-id={current.id}></div>{isNovel?(novelHtml?<article class="novel-reader-content rich-content" set:html={novelHtml}></article>:<div class="empty-state">Chapter chưa có nội dung.</div>):(pages.length?<div class="reader-pages" data-protected-reader data-series-id={series.id} data-chapter-id={current.id}>{rendered.map(pg=><div class="reader-canvas-wrap" data-page={pg.page_number}><canvas class="reader-canvas" data-src={pg.url} aria-label={`Trang ${pg.page_number}`}></canvas><div class="reader-loading">Đang tải trang {pg.page_number}…</div></div>)}</div>:<div class="empty-state">Chapter chưa có ảnh.</div>)}</>}
+<h1>{series.title} — Chapter {current.chapter_number}</h1>{current.title&&<div class="reader-chapter-title">{current.title}</div>}
+{!allowed&&series.access_type==='password'?<section class="lock-panel"><h2>🔒 Truyện cần mật khẩu</h2><p class="description">Chỉ cần nhập một lần để mở toàn bộ chapter của bộ này trong 48 giờ</p>
+<p class="description">Lấy gợi ý mở khóa truyện ở mục <a href="/password"><strong>Mật khẩu</strong></a> tại menu web.</p>{unlockError&&<div class="notice error">{unlockError}</div>}<form method="POST" action="/api/series-unlock"><input type="hidden" name="slug" value={series.slug}/><input type="hidden" name="return_to" value={`/read/${series.slug}/${current.chapter_number}`}/><label class="field"><span>Mật khẩu</span><input name="password" type="password" required autocomplete="current-password"/></label><button class="button" type="submit">Mở khóa truyện</button></form></section>:!allowed&&series.access_type==='member'?<section class="lock-panel"><h2>🔒 Truyện dành cho thành viên</h2><p class="description">Đăng nhập tài khoản để đọc bộ truyện này.</p><a class="button" href={`/login?next=${encodeURIComponent(`/read/${series.slug}/${current.chapter_number}`)}`}>Đăng nhập</a></section>:<><div class="reader-nav"><a class="button secondary" href={`/manga/${series.slug}`}>← Danh sách chapter</a><span class="meta">{isNovel?'Novel':`${pages.length} trang`}</span></div><div data-reader-view data-chapter-id={current.id}></div>{isNovel?(novelHtml?<article class="novel-reader-content rich-content" set:html={novelHtml}></article>:<div class="empty-state">Chapter chưa có nội dung.</div>):(pages.length?<div class="reader-pages" data-protected-reader data-series-id={series.id} data-chapter-id={current.id}>{rendered.map(pg=><div class="reader-canvas-wrap" data-page={pg.page_number} data-page-id={pg.id}><canvas class="reader-canvas" data-src={pg.url} aria-label={`Trang ${pg.page_number}`}></canvas><div class="reader-loading">Đang tải trang {pg.page_number}…</div></div>)}</div>:<div class="empty-state">Chapter chưa có ảnh.</div>)}</>}
 {allowed&&accountUser&&<div class="reading-progress-marker" data-reading-progress data-series-id={series.id} data-chapter-id={current.id}></div>}
 
 {allowed&&
@@ -51,6 +51,25 @@ const nextChapter=currentIndex>=0?chapterList[currentIndex-1]||null:null;
 
   <a class="reader-bottom-info" href={`/manga/${series.slug}`} aria-label="Thông tin truyện" title="Thông tin truyện"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10.5v6"/><circle cx="12" cy="7.5" r=".8"/></svg></a>
 </nav>}
+{allowed&&<div id="reader-protection-notice" class="reader-protection-notice" role="alert" aria-live="assertive" aria-hidden="true">
+  <div class="reader-protection-card">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="M12 7v5"/><circle cx="12" cy="16" r=".7" fill="currentColor" stroke="none"/></svg>
+    <strong>Không thể thực hiện thao tác này!</strong>
+    <p>Tính năng lưu ảnh, sao chép và tải trang đã được khóa để bảo vệ bản quyền của nhóm dịch.</p>
+    <small>Crescent Moon Translation Group ♡</small>
+  </div>
+</div>}
+<style>
+.reader-protection-notice{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(37,22,43,.36);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,visibility .18s ease}
+.reader-protection-notice.is-visible{opacity:1;visibility:visible;pointer-events:auto}
+.reader-protection-card{width:min(100%,510px);padding:30px 26px;border-radius:18px;border:1px solid #f0d6e6;background:#fffafdf5;box-shadow:0 18px 55px rgba(67,35,64,.18);text-align:center;color:#352b35}
+.reader-protection-card svg{display:block;width:32px;height:32px;margin:0 auto 15px;color:#c779a8}
+.reader-protection-card strong{display:block;font-size:18px;line-height:1.5}
+.reader-protection-card p{margin:10px 0 14px;font-size:14px;line-height:1.65}
+.reader-protection-card small{font-size:12px;color:#827783}
+@media(max-width:480px){.reader-protection-card{padding:25px 18px}.reader-protection-card strong{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.reader-protection-notice{transition:none}}
+</style>
 </BaseLayout>
 <script>
 const chapterJump=document.querySelector('[data-chapter-jump]');
@@ -61,29 +80,162 @@ if(chapterJump instanceof HTMLSelectElement){
   });
 }
 
+const reader=document.querySelector('[data-protected-reader]');
 const viewMarker=document.querySelector('[data-reader-view]');
 if(viewMarker instanceof HTMLElement){
-  fetch('/api/stats/view',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({chapter_id:viewMarker.dataset.chapterId})}).catch(()=>{});
+  const chapterId=viewMarker.dataset.chapterId||'';
+  if(chapterId){
+    try{
+      const key=`cm:view:${chapterId}`;
+      const now=Date.now();
+      const last=Number(localStorage.getItem(key)||0);
+      // Gần kiểu page-view của Analytics, nhưng chặn F5/spam cùng chapter trong 60 giây.
+      if(!Number.isFinite(last)||now-last>=60_000){
+        // Ghi dấu trước để nhiều tab/reload sát nhau không bắn nhiều request.
+        localStorage.setItem(key,String(now));
+        fetch('/api/stats/view',{
+          method:'POST',credentials:'same-origin',keepalive:true,
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({chapter_id:chapterId})
+        }).then(r=>{if(!r.ok)localStorage.removeItem(key)}).catch(()=>localStorage.removeItem(key));
+      }
+    }catch{}
+  }
 }
-const reader=document.querySelector('[data-protected-reader]');
 const progress=document.querySelector('[data-reading-progress]');
 if(progress instanceof HTMLElement){
   fetch('/api/library/progress',{
     method:'POST',
     credentials:'same-origin',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({series_id:progress.dataset.seriesId,chapter_id:progress.dataset.chapterId})
+    body:JSON.stringify({series_id:progress.dataset.seriesId,chapter_id:progress.dataset.chapterId,time_zone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Asia/Ho_Chi_Minh'})
   }).catch(()=>{});
 }
 const wraps=[...document.querySelectorAll('.reader-canvas-wrap')];
+const protectedReader=document.querySelector('[data-protected-reader]');
+let refreshPromise=null;
+const refreshLinks=()=>{
+  if(refreshPromise)return refreshPromise;
+  const parts=location.pathname.split('/').filter(Boolean);
+  refreshPromise=fetch('/api/reader/refresh-pages',{
+    method:'POST',credentials:'same-origin',cache:'no-store',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({slug:decodeURIComponent(parts[1]||''),chapter:decodeURIComponent(parts[2]||'')})
+  }).then(async r=>{
+    const result=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(result.error||'Không thể cấp lại liên kết ảnh.');
+    const urls=new Map((result.pages||[]).map(p=>[String(p.id),p.url]));
+    for(const wrap of wraps){
+      const canvas=wrap.querySelector('canvas');
+      const url=urls.get(String(wrap.dataset.pageId||''));
+      if(canvas instanceof HTMLCanvasElement&&url)canvas.dataset.src=url;
+    }
+  }).finally(()=>{refreshPromise=null});
+  return refreshPromise;
+};
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const decodePage=async(blob,canvas)=>{
+  if(typeof createImageBitmap==='function'){
+    let bitmap;
+    try{
+      bitmap=await createImageBitmap(blob);
+      canvas.width=bitmap.width;canvas.height=bitmap.height;
+      const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('canvas-context');
+      ctx.drawImage(bitmap,0,0);return;
+    }catch(err){console.warn('[Reader] bitmap fallback',err)}
+    finally{bitmap?.close()}
+  }
+  const url=URL.createObjectURL(blob);
+  try{
+    const img=new Image();img.decoding='async';
+    await new Promise((resolve,reject)=>{
+      img.onload=resolve;img.onerror=()=>reject(new Error('image-decode'));
+      img.src=url;
+    });
+    canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+    const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('canvas-context');
+    ctx.drawImage(img,0,0);
+  }finally{URL.revokeObjectURL(url)}
+};
 const loadPage=async(wrap)=>{
   if(!(wrap instanceof HTMLElement)||wrap.dataset.loaded==='1'||wrap.dataset.loading==='1')return;
-  wrap.dataset.loading='1'; const canvas=wrap.querySelector('canvas'); const loading=wrap.querySelector('.reader-loading');
+  const canvas=wrap.querySelector('canvas');const loading=wrap.querySelector('.reader-loading');
   if(!(canvas instanceof HTMLCanvasElement))return;
-  try{const src=canvas.dataset.src||''; const res=await fetch(src,{credentials:'same-origin',cache:'no-store',headers:{'X-Crescent-Reader':'1'}}); if(!res.ok)throw new Error(String(res.status)); const blob=await res.blob(); const img=await createImageBitmap(blob); canvas.width=img.width; canvas.height=img.height; const ctx=canvas.getContext('2d',{alpha:false}); if(!ctx)throw new Error('canvas'); ctx.drawImage(img,0,0); img.close(); wrap.dataset.loaded='1'; if(loading instanceof HTMLElement)loading.remove();}catch{if(loading instanceof HTMLElement)loading.textContent='Không tải được ảnh. Hãy tải lại trang.'}finally{delete wrap.dataset.loading}
+  wrap.dataset.loading='1';delete wrap.dataset.failed;
+  if(loading instanceof HTMLElement)loading.textContent='Đang tải ảnh…';
+  let reason='unknown';
+  try{
+    for(let attempt=0;attempt<3;attempt++){
+      try{
+        const src=canvas.dataset.src||'';if(!src)throw new Error('missing-url');
+        const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),20000);
+        let res;
+        try{res=await fetch(src,{credentials:'same-origin',cache:'no-store',headers:{'X-Crescent-Reader':'1'},signal:controller.signal})}
+        finally{clearTimeout(timer)}
+        if(!res.ok)throw new Error('http-'+res.status);
+        const blob=await res.blob();if(!blob.size)throw new Error('empty-image');
+        await decodePage(blob,canvas);
+        wrap.dataset.loaded='1';if(loading instanceof HTMLElement)loading.remove();return;
+      }catch(err){
+        reason=err instanceof Error?err.message:String(err);
+        console.warn('[Reader] retry',{page:wrap.dataset.pageId,attempt:attempt+1,reason});
+        if(attempt===2)break;
+        if(['http-401','http-403','missing-url'].includes(reason)){
+          try{await refreshLinks()}catch(e){console.warn('[Reader] refresh failed',e)}
+        }
+        await wait((attempt+1)*700);
+      }
+    }
+    throw new Error(reason);
+  }catch(err){
+    wrap.dataset.failed='1';
+    if(loading instanceof HTMLElement)loading.textContent='Không tải được ảnh. Vui lòng mở lại chapter nếu lỗi tiếp diễn.';
+    console.error('[Reader] failed after 3 attempts',{page:wrap.dataset.pageId,reason},err);
+  }finally{delete wrap.dataset.loading}
 };
-const io=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting){loadPage(e.target);io.unobserve(e.target)}},{rootMargin:'1400px 0px'}); wraps.forEach(w=>io.observe(w));
-document.addEventListener('contextmenu',e=>{if(e.target instanceof Element&&e.target.closest('[data-protected-reader]'))e.preventDefault()});
-document.addEventListener('dragstart',e=>{if(e.target instanceof Element&&e.target.closest('[data-protected-reader]'))e.preventDefault()});
-document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['s','u'].includes(e.key.toLowerCase())&&document.querySelector('[data-protected-reader]'))e.preventDefault()});
+const io=new IntersectionObserver(entries=>{
+  for(const e of entries)if(e.isIntersecting){loadPage(e.target);io.unobserve(e.target)}
+},{rootMargin:'1400px 0px'});
+wraps.forEach(w=>io.observe(w));
+// Reader-only deterrents. Browser extensions can bypass client-side handlers.
+const protectionNotice=document.getElementById('reader-protection-notice');
+let protectionTimer;
+const showProtectionNotice=()=>{
+  if(!(protectionNotice instanceof HTMLElement))return;
+  protectionNotice.classList.add('is-visible');
+  protectionNotice.setAttribute('aria-hidden','false');
+  window.clearTimeout(protectionTimer);
+  protectionTimer=window.setTimeout(()=>{
+    protectionNotice.classList.remove('is-visible');
+    protectionNotice.setAttribute('aria-hidden','true');
+  },3000);
+};
+if(protectionNotice){
+  protectionNotice.addEventListener('click',()=>{
+    protectionNotice.classList.remove('is-visible');
+    protectionNotice.setAttribute('aria-hidden','true');
+    window.clearTimeout(protectionTimer);
+  });
+  document.addEventListener('contextmenu',e=>{
+    e.preventDefault();
+    showProtectionNotice();
+  },{capture:true});
+  document.addEventListener('dragstart',e=>{
+    if(e.target instanceof Element&&e.target.closest('[data-protected-reader]')){
+      e.preventDefault();showProtectionNotice();
+    }
+  },{capture:true});
+  document.addEventListener('keydown',e=>{
+    const key=e.key.toLowerCase();
+    const ctrl=e.ctrlKey||e.metaKey;
+    const protectedKey=e.key==='F12'||(ctrl&&e.shiftKey&&['i','j','c'].includes(key))||(ctrl&&['u','s','p'].includes(key));
+    const copyingReader=ctrl&&['c','x'].includes(key)&&(
+      e.target instanceof Element&&!!e.target.closest('[data-protected-reader],.novel-reader-content') ||
+      window.getSelection()?.anchorNode?.parentElement?.closest('.novel-reader-content')
+    );
+    if(protectedKey||copyingReader){
+      e.preventDefault();e.stopPropagation();showProtectionNotice();
+    }
+  },{capture:true});
+}
 </script>
