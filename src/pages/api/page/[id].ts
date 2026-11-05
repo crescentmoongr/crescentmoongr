@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
-import { supabaseGet, type ChapterPage } from '../../../lib/supabase';
+import { supabaseGet, getSeriesById, type ChapterPage } from '../../../lib/supabase';
 import { getReaderSession, verifyPageSignature } from '../../../lib/readerSecurity';
 export const prerender=false;
 
@@ -18,6 +18,8 @@ export const GET:APIRoute=async({params,url,cookies,request})=>{
   const ref=request.headers.get('referer'); if(ref){try{if(new URL(ref).host!==url.host) return new Response('Forbidden',{status:403})}catch{return new Response('Forbidden',{status:403})}}
   if(!allowed(session||'none')) return new Response('Too many requests',{status:429,headers:{'Retry-After':'60'}});
   if(!await verifyPageSignature(id,seriesId,chapterId,session,exp,sig)) return new Response('Expired or invalid image token',{status:403});
+  // A signed URL must not bypass the series visibility switch.
+  if(!await getSeriesById(seriesId)) return new Response('Not found',{status:404});
   const rows=await supabaseGet<ChapterPage[]>(`chapter_pages?select=id,chapter_id,page_number,object_key,created_at&id=eq.${encodeURIComponent(id)}&chapter_id=eq.${encodeURIComponent(chapterId)}&limit=1`);
   const pg=rows[0]; if(!pg) return new Response('Not found',{status:404});
   const o=await env.MANGA_STORAGE.get(pg.object_key); if(!o) return new Response('Not found',{status:404});
