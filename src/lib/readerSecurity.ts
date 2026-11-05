@@ -3,6 +3,7 @@ import { env } from 'cloudflare:workers';
 const COOKIE = 'cm_reader_session';
 const UNLOCK_COOKIE_PREFIX = 'cm_unlock_';
 const UNLOCK_TTL = 48 * 60 * 60;
+const READER_SESSION_MAX_AGE = 400 * 24 * 60 * 60; // browser persistent-cookie cap
 let cachedKey: CryptoKey | null = null;
 let cachedUnlockKey: CryptoKey | null = null;
 
@@ -48,8 +49,9 @@ export function ensureReaderSession(cookies: any) {
   let id = cookies.get(COOKIE)?.value || '';
   if (!/^[A-Za-z0-9_-]{20,80}$/.test(id)) {
     id = randomToken(24);
-    cookies.set(COOKIE, id, { httpOnly: true, secure: true, sameSite: 'lax', path: '/', maxAge: UNLOCK_TTL });
   }
+  // Renew even existing 48-hour cookies on the next chapter visit.
+  cookies.set(COOKIE, id, { httpOnly: true, secure: true, sameSite: 'lax', path: '/', maxAge: READER_SESSION_MAX_AGE });
   return id;
 }
 export function getReaderSession(cookies: any) {
@@ -80,13 +82,14 @@ export async function isSeriesUnlocked(cookies: any, seriesId: string) {
   } catch { return false; }
 }
 export async function signPageUrl(pageId: number, seriesId: string, chapterId: string, sessionId: string, ttlSec = 300) {
-  const exp = Math.floor(Date.now() / 1000) + ttlSec;
+  // 0 is a permanent token marker; still HMAC-bound to the reader session.
+  const exp = 0;
   const payload = `${pageId}.${seriesId}.${chapterId}.${sessionId}.${exp}`;
   const sig = new Uint8Array(await crypto.subtle.sign('HMAC', await signingKey(), new TextEncoder().encode(payload)));
   return `/api/page/${pageId}?e=${exp}&s=${b64url(sig)}&c=${encodeURIComponent(chapterId)}&m=${encodeURIComponent(seriesId)}`;
 }
 export async function verifyPageSignature(pageId: string, seriesId: string, chapterId: string, sessionId: string, exp: number, signature: string) {
-  if (!sessionId || !signature || !Number.isFinite(exp) || exp < Math.floor(Date.now()/1000) || exp > Math.floor(Date.now()/1000) + 600) return false;
+  if (!sessionId || !signature || !Number.isSafeInteger(exp) || exp < 0 || (exp !== 0 && (exp < Math.floor(Date.now()/1000) || exp > Math.floor(Date.now()/1000) + 600))) return false;
   const payload = `${pageId}.${seriesId}.${chapterId}.${sessionId}.${exp}`;
   try {
     return await crypto.subtle.verify('HMAC', await signingKey(), decodeB64url(signature), new TextEncoder().encode(payload));

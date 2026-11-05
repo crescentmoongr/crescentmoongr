@@ -4,19 +4,11 @@ import { supabaseGet, getSeriesById, type ChapterPage } from '../../../lib/supab
 import { getReaderSession, verifyPageSignature } from '../../../lib/readerSecurity';
 export const prerender=false;
 
-const buckets=new Map<string,{n:number,t:number}>();
-function allowed(session:string){
-  const now=Date.now(); let x=buckets.get(session);
-  if(!x||now-x.t>60000){x={n:0,t:now};buckets.set(session,x)}
-  x.n++; return x.n<=180;
-}
-
 export const GET:APIRoute=async({params,url,cookies,request})=>{
   const id=params.id||''; const chapterId=url.searchParams.get('c')||''; const seriesId=url.searchParams.get('m')||'';
   const exp=Number(url.searchParams.get('e')||'0'); const sig=url.searchParams.get('s')||''; const session=getReaderSession(cookies);
   const site=request.headers.get('Sec-Fetch-Site'); if(site && !['same-origin','same-site','none'].includes(site)) return new Response('Forbidden',{status:403});
   const ref=request.headers.get('referer'); if(ref){try{if(new URL(ref).host!==url.host) return new Response('Forbidden',{status:403})}catch{return new Response('Forbidden',{status:403})}}
-  if(!allowed(session||'none')) return new Response('Too many requests',{status:429,headers:{'Retry-After':'60'}});
   if(!await verifyPageSignature(id,seriesId,chapterId,session,exp,sig)) return new Response('Expired or invalid image token',{status:403});
   // A signed URL must not bypass the series visibility switch.
   if(!await getSeriesById(seriesId)) return new Response('Not found',{status:404});
