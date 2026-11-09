@@ -157,9 +157,21 @@ const decodePage=async(blob,canvas)=>{
       img.onload=resolve;img.onerror=()=>reject(new Error('image-decode'));
       img.src=url;
     });
-    canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+    if(!img.naturalWidth||!img.naturalHeight)throw new Error('invalid-image-size');
+    // Cap mobile Canvas backing-store memory; retain the full image in one Canvas.
+    let width=img.naturalWidth,height=img.naturalHeight;
+    if(isMobileReader()){
+      const maxWidth=1600,maxHeight=4096,maxPixels=4_000_000;
+      const scale=Math.min(1,maxWidth/width,maxHeight/height,Math.sqrt(maxPixels/(width*height)));
+      width=Math.max(1,Math.floor(width*scale));
+      height=Math.max(1,Math.floor(height*scale));
+    }
+    canvas.width=width;canvas.height=height;
     const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('canvas-context');
-    ctx.drawImage(img,0,0);
+    if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
+    ctx.drawImage(img,0,0,width,height);
+    if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
+    if(canvas.width!==width||canvas.height!==height)throw new Error('canvas-size-mismatch');
   }finally{URL.revokeObjectURL(url)}
 };
 const loadPage=async(wrap)=>{
