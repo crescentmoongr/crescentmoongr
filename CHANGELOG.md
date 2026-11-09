@@ -1,3 +1,10 @@
+
+## v13.14 — Mobile split Canvas (2026-11-09)
+- Mobile/tablet: render tall chapter images in adjacent 3000px-high Canvas segments at original pixel resolution; no 1600px/4096px/4MP downscaling.
+- Desktop decoding and Canvas remain unchanged. R2 objects and image upload pipeline are not modified.
+- Keep v13.13 Worker diagnostics, image authorization and retry logic.
+- Note: Safari must still decode the original image, and very wide or exceptionally large source images can still exhaust device memory.
+
 # CHANGELOG — Crescent Reader
 
 Lịch sử cập nhật được lưu nguyên văn từ các README phiên bản cũ.

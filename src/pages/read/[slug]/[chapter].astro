@@ -139,7 +139,50 @@ const isMobileReader=()=>typeof navigator!=='undefined'&&(
   /Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle/i.test(navigator.userAgent)||
   (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)
 );
+// Mobile only: preserve original image resolution, splitting tall pages into
+// multiple vertically adjacent Canvas elements. Source objects in R2 stay intact.
+const clearExtraCanvases=(canvas)=>{
+  const wrap=canvas.parentElement;
+  if(!wrap)return;
+  wrap.querySelectorAll('canvas.reader-canvas-part').forEach(part=>part.remove());
+};
+const drawMobileCanvasParts=(img,canvas)=>{
+  const width=img.naturalWidth,height=img.naturalHeight;
+  const chunkHeight=3000;
+  const wrap=canvas.parentElement;
+  if(!wrap)throw new Error('canvas-wrapper');
+  clearExtraCanvases(canvas);
+  // The existing wrapper is a CSS grid; switch to normal flow so slices stack.
+  wrap.style.display='block';
+  const parts=[];
+  try{
+    for(let top=0;top<height;top+=chunkHeight){
+      const part=top===0?canvas:document.createElement('canvas');
+      const h=Math.min(chunkHeight,height-top);
+      part.width=width;part.height=h;
+      part.style.display='block';part.style.width='100%';part.style.height='auto';
+      part.style.margin='0';part.style.padding='0';part.style.border='0';
+      part.style.verticalAlign='top';
+      if(top!==0){
+        part.className='reader-canvas reader-canvas-part';
+        part.setAttribute('aria-hidden','true');
+      }
+      const ctx=part.getContext('2d',{alpha:false});
+      if(!ctx)throw new Error('canvas-context');
+      if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
+      // Crop from the decoded source without scaling or changing the source image.
+      ctx.drawImage(img,0,top,width,h,0,0,width,h);
+      if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
+      if(top!==0){wrap.insertBefore(part,wrap.querySelector('.reader-loading'));parts.push(part)}
+    }
+  }catch(err){
+    clearExtraCanvases(canvas);
+    canvas.width=0;canvas.height=0;
+    throw err;
+  }
+};
 const decodePage=async(blob,canvas)=>{
+  clearExtraCanvases(canvas);
   if(!isMobileReader()&&typeof createImageBitmap==='function'){
     let bitmap;
     try{
@@ -158,20 +201,15 @@ const decodePage=async(blob,canvas)=>{
       img.src=url;
     });
     if(!img.naturalWidth||!img.naturalHeight)throw new Error('invalid-image-size');
-    // Cap mobile Canvas backing-store memory; retain the full image in one Canvas.
-    let width=img.naturalWidth,height=img.naturalHeight;
     if(isMobileReader()){
-      const maxWidth=1600,maxHeight=4096,maxPixels=4_000_000;
-      const scale=Math.min(1,maxWidth/width,maxHeight/height,Math.sqrt(maxPixels/(width*height)));
-      width=Math.max(1,Math.floor(width*scale));
-      height=Math.max(1,Math.floor(height*scale));
+      drawMobileCanvasParts(img,canvas);
+      return;
     }
-    canvas.width=width;canvas.height=height;
+    canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
     const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('canvas-context');
     if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
-    ctx.drawImage(img,0,0,width,height);
+    ctx.drawImage(img,0,0);
     if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
-    if(canvas.width!==width||canvas.height!==height)throw new Error('canvas-size-mismatch');
   }finally{URL.revokeObjectURL(url)}
 };
 const loadPage=async(wrap)=>{
