@@ -233,3 +233,9 @@ Base: v13.10 Image Recovery.
 
 **Kiểm thử:** Đây là thay đổi mã nguồn; chưa xác nhận hoạt động trên thiết bị thực tế hoặc build/deploy Cloudflare.
 
+
+
+## v13.12 — Mobile Canvas Memory Optimization
+- Mobile Canvas giới hạn 1600 px rộng, 4096 px cao, tối đa 4 triệu pixel; giữ tỷ lệ và toàn bộ nội dung trong một Canvas.
+- Desktop giữ nguyên v13.11. Kiểm tra kích thước, context lost sau khi vẽ.
+- Không thay đổi SQL, API hay cơ chế bảo vệ ảnh.
