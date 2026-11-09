@@ -189,7 +189,7 @@ const loadPage=async(wrap)=>{
         let res;
         try{res=await fetch(src,{credentials:'same-origin',cache:'no-store',headers:{'X-Crescent-Reader':'1'},signal:controller.signal})}
         finally{clearTimeout(timer)}
-        if(!res.ok)throw new Error('http-'+res.status);
+        if(!res.ok)throw new Error('HTTP_'+res.status+'_'+(res.headers.get('X-CM-Image-Error')||'UNKNOWN').replace(/[^A-Z0-9_]/g,''));
         const blob=await res.blob();if(!blob.size)throw new Error('empty-image');
         await decodePage(blob,canvas);
         wrap.dataset.loaded='1';if(loading instanceof HTMLElement)loading.remove();return;
@@ -197,8 +197,12 @@ const loadPage=async(wrap)=>{
         reason=err instanceof Error?err.message:String(err);
         console.warn('[Reader] retry',{page:wrap.dataset.pageId,attempt:attempt+1,reason});
         if(attempt===2)break;
-        if(['http-401','http-403','missing-url'].includes(reason)){
-          try{await refreshLinks()}catch(e){console.warn('[Reader] refresh failed',e)}
+        if(/^HTTP_(401|403)_/.test(reason)||reason==='missing-url'){
+          try{await refreshLinks()}catch(e){
+            const message=e instanceof Error?e.message:'unknown';
+            console.warn('[Reader] refresh failed',message);
+            reason+=' / REFRESH_FAILED';
+          }
         }
         await wait((attempt+1)*700);
       }
@@ -206,7 +210,14 @@ const loadPage=async(wrap)=>{
     throw new Error(reason);
   }catch(err){
     wrap.dataset.failed='1';
-    if(loading instanceof HTMLElement)loading.textContent='Không tải được ảnh. Vui lòng mở lại chapter nếu lỗi tiếp diễn.';
+    if(loading instanceof HTMLElement){
+      const code=reason.startsWith('HTTP_')?reason:
+        reason==='AbortError'?'TIMEOUT':
+        /decode|image-size/i.test(reason)?'DECODE':
+        /canvas|context/i.test(reason)?'CANVAS':
+        /fetch|network|load failed/i.test(reason)?'NETWORK':'OTHER';
+      loading.textContent='Không tải được ảnh ('+code+'). Vui lòng mở lại chapter nếu lỗi tiếp diễn.';
+    }
     console.error('[Reader] failed after 3 attempts',{page:wrap.dataset.pageId,reason},err);
   }finally{delete wrap.dataset.loading}
 };

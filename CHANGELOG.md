@@ -239,3 +239,10 @@ Base: v13.10 Image Recovery.
 - Mobile Canvas giới hạn 1600 px rộng, 4096 px cao, tối đa 4 triệu pixel; giữ tỷ lệ và toàn bộ nội dung trong một Canvas.
 - Desktop giữ nguyên v13.11. Kiểm tra kích thước, context lost sau khi vẽ.
 - Không thay đổi SQL, API hay cơ chế bảo vệ ảnh.
+
+
+## v13.13 — Worker & Reader Diagnostics
+- Worker image responses add safe error codes in `X-CM-Image-Error` (no token or cookie data).
+- Reader displays diagnostic code after failed image attempts.
+- Refresh endpoint recreates a missing reader session only after verifying chapter access.
+- Existing HMAC, access checks and Canvas display remain unchanged. No SQL.
