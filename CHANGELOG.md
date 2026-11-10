@@ -1,3 +1,9 @@
+## v13.17 — Admin monthly views access and month picker
+- Add SQL to grant service_role SELECT on monthly aggregates; no reset of existing views.
+- Show more accurate 403/404 messages, log Supabase error details on server only.
+- Replace locale-dependent month input with numeric MM/YYYY selector.
+- Align selector and button on one row, including mobile.
+
 ## v13.16 — Thống kê lượt xem theo tháng
 - Admin > Thống kê lượt xem: chọn tháng, tìm truyện, xếp hạng view, tổng view tích lũy.
 - SQL trigger ghi số view tăng thêm theo tháng Việt Nam khi chapter_stats được cập nhật; không thay đổi API đếm view hiện tại.

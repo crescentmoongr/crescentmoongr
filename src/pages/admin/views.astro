@@ -12,6 +12,8 @@ const vnNow=`${vnParts.find(p=>p.type==='year')?.value}-${vnParts.find(p=>p.type
 const requested=Astro.url.searchParams.get('month')||vnNow;
 const month=/^\d{4}-(0[1-9]|1[0-2])$/.test(requested)?requested:vnNow;
 const monthStart=month+'-01';
+const monthOptions=Array.from({length:36},(_,i)=>{const [y,m]=vnNow.split('-').map(Number);const d=new Date(Date.UTC(y,m-1-i,1));const value=`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;return {value,label:`${String(d.getUTCMonth()+1).padStart(2,'0')}/${d.getUTCFullYear()}`};});
+if(!monthOptions.some(o=>o.value===month))monthOptions.push({value:month,label:`${month.slice(5)}/${month.slice(0,4)}`});
 let entries:{id:string;title:string;slug:string;views:number;total:number}[]=[];
 let error='';
 try {
@@ -27,7 +29,7 @@ try {
   const response=await fetch(`${url}/rest/v1/series_monthly_views?select=series_id,view_count&month_start=eq.${monthStart}&limit=10000`,{
     headers:{apikey:key,Authorization:`Bearer ${key}`,Accept:'application/json'},
   });
-  if(!response.ok)throw new Error('Chưa đọc được thống kê tháng. Hãy chạy file SQL v13.16 trong Supabase trước khi deploy. ('+response.status+')');
+  if(!response.ok){const detail=(await response.text()).slice(0,350);console.error('[Admin views] Supabase monthly views',response.status,detail);throw new Error(response.status===403?'Không có quyền đọc thống kê tháng (403). Hãy chạy SQL bổ sung quyền v13.17 trong Supabase.':response.status===404?'Không tìm thấy bảng thống kê tháng (404). Hãy chạy SQL v13.16 trước.':`Không đọc được thống kê tháng (HTTP ${response.status}).`);}
   const monthly=await response.json() as {series_id:string;view_count:number}[];
   const byId=new Map(monthly.map(r=>[r.series_id,Number(r.view_count||0)]));
   entries=series.map(s=>({id:s.id,title:s.title,slug:s.slug,views:byId.get(s.id)||0,total:lifetime.get(s.id)||0})).sort((a,b)=>b.views-a.views||a.title.localeCompare(b.title));
@@ -44,7 +46,7 @@ const max=Math.max(1,...entries.map(x=>x.views));
   <div class="admin-dashboard-content">
     <section class="admin-card admin-wide admin-anchor-section">
       <div class="section-title"><div><h2>📊 Thống kê lượt xem</h2><p class="meta">Mỗi lần mở chapter được tính theo cơ chế hiện tại (chặn đếm lại trong 60 giây trên cùng trình duyệt). Tháng tính theo giờ Việt Nam.</p></div></div>
-      <form method="GET" action="/admin/views" class="view-month-form"><label class="field"><span>Chọn tháng</span><input type="month" name="month" value={month} required/></label><button class="button" type="submit">Xem thống kê</button></form>
+      <form method="GET" action="/admin/views" class="view-month-form"><label class="field"><span>Chọn tháng</span><select name="month" required>{monthOptions.map(o=><option value={o.value} selected={o.value===month}>{o.label}</option>)}</select></label><button class="button" type="submit">Xem thống kê</button></form>
       {error?<div class="notice error">{error}</div>:<>
         <div class="view-stat-cards"><div><span>Lượt xem trong tháng</span><strong>{fmt(sum)}</strong></div><div><span>Truyện có lượt xem</span><strong>{fmt(active)}</strong></div><div><span>Tổng số truyện</span><strong>{fmt(entries.length)}</strong></div></div>
         <label class="field view-search"><span>Tìm tên truyện</span><input type="search" placeholder="Nhập tên truyện..." data-view-search/></label>
@@ -56,7 +58,7 @@ const max=Math.max(1,...entries.map(x=>x.views));
   </div>
 </div>
 <style>
-.view-month-form{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:16px 0 22px}.view-month-form .field{min-width:190px}
+.view-month-form{display:flex;align-items:flex-end;gap:12px;flex-wrap:nowrap;margin:16px 0 22px}.view-month-form .field{min-width:0;width:190px;flex:0 1 190px;margin:0}.view-month-form select{width:100%;min-height:44px}.view-month-form .button{min-height:44px;white-space:nowrap;flex-shrink:0;margin:0}@media(max-width:420px){.view-month-form{gap:8px}.view-month-form .field{flex:1 1 0;width:auto}.view-month-form .button{padding-inline:12px}}
 .view-stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:20px}
 .view-stat-cards>div{padding:16px;border:1px solid #f4d8e6;border-radius:12px;background:#fff7fb;display:flex;flex-direction:column;gap:8px}
 .view-stat-cards span{font-size:13px;color:#76586a}.view-stat-cards strong{font-size:24px;color:#c33c80}
