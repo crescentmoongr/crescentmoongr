@@ -1,3 +1,8 @@
+## v13.16 — Thống kê lượt xem theo tháng
+- Admin > Thống kê lượt xem: chọn tháng, tìm truyện, xếp hạng view, tổng view tích lũy.
+- SQL trigger ghi số view tăng thêm theo tháng Việt Nam khi chapter_stats được cập nhật; không thay đổi API đếm view hiện tại.
+- Cần chạy supabase-v13-16-monthly-views.sql một lần trước khi deploy. Không thể khôi phục lịch sử theo tháng trước đó.
+
 
 ## v13.15 — Desktop tall-image Canvas splitting
 - Desktop: keep a single full-resolution Canvas for images up to 4096 px high. For images taller than 4096 px, draw consecutive full-resolution Canvas segments up to 3000 px high each.

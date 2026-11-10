@@ -1,0 +1,71 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdminSidebar from '../../components/AdminSidebar.astro';
+import { requireAdminSession } from '../../lib/auth';
+import { getAdminSeriesList, getAllAdminChapters, getAllChapterStats } from '../../lib/supabase';
+import { env } from 'cloudflare:workers';
+export const prerender=false;
+const adminSession=await requireAdminSession(Astro.cookies);
+if(!adminSession) return Astro.redirect('/login?next=/admin/views');
+const vnParts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit'}).formatToParts(new Date());
+const vnNow=`${vnParts.find(p=>p.type==='year')?.value}-${vnParts.find(p=>p.type==='month')?.value}`;
+const requested=Astro.url.searchParams.get('month')||vnNow;
+const month=/^\d{4}-(0[1-9]|1[0-2])$/.test(requested)?requested:vnNow;
+const monthStart=month+'-01';
+let entries:{id:string;title:string;slug:string;views:number;total:number}[]=[];
+let error='';
+try {
+  const [series,chapters,stats]=await Promise.all([
+    getAdminSeriesList(adminSession.token),getAllAdminChapters(adminSession.token),getAllChapterStats(adminSession.token)
+  ]);
+  const chapterToSeries=new Map(chapters.map(c=>[c.id,c.series_id]));
+  const lifetime=new Map<string,number>();
+  for(const s of stats){const id=chapterToSeries.get(s.chapter_id);if(id)lifetime.set(id,(lifetime.get(id)||0)+Number(s.view_count||0));}
+  const url=String(env.SUPABASE_URL||'').replace(/\/$/,'');
+  const key=String(env.SUPABASE_SERVICE_ROLE_KEY||'');
+  if(!url||!key)throw new Error('Thiếu cấu hình Supabase service role trên Worker.');
+  const response=await fetch(`${url}/rest/v1/series_monthly_views?select=series_id,view_count&month_start=eq.${monthStart}&limit=10000`,{
+    headers:{apikey:key,Authorization:`Bearer ${key}`,Accept:'application/json'},
+  });
+  if(!response.ok)throw new Error('Chưa đọc được thống kê tháng. Hãy chạy file SQL v13.16 trong Supabase trước khi deploy. ('+response.status+')');
+  const monthly=await response.json() as {series_id:string;view_count:number}[];
+  const byId=new Map(monthly.map(r=>[r.series_id,Number(r.view_count||0)]));
+  entries=series.map(s=>({id:s.id,title:s.title,slug:s.slug,views:byId.get(s.id)||0,total:lifetime.get(s.id)||0})).sort((a,b)=>b.views-a.views||a.title.localeCompare(b.title));
+}catch(e){error=e instanceof Error?e.message:'Không tải được thống kê.';}
+const sum=entries.reduce((n,s)=>n+s.views,0);
+const active=entries.filter(s=>s.views>0).length;
+const fmt=(n:number)=>n.toLocaleString('vi-VN');
+const max=Math.max(1,...entries.map(x=>x.views));
+---
+<BaseLayout title="Thống kê lượt xem — Admin — Crescent Moon">
+<section class="admin-card admin-wide"><div class="admin-top"><div><h1>Admin</h1><p class="meta">Đăng nhập: {adminSession.user.email}</p></div></div></section>
+<div class="admin-dashboard-layout wp-admin-layout">
+  <AdminSidebar active="views"/>
+  <div class="admin-dashboard-content">
+    <section class="admin-card admin-wide admin-anchor-section">
+      <div class="section-title"><div><h2>📊 Thống kê lượt xem</h2><p class="meta">Mỗi lần mở chapter được tính theo cơ chế hiện tại (chặn đếm lại trong 60 giây trên cùng trình duyệt). Tháng tính theo giờ Việt Nam.</p></div></div>
+      <form method="GET" action="/admin/views" class="view-month-form"><label class="field"><span>Chọn tháng</span><input type="month" name="month" value={month} required/></label><button class="button" type="submit">Xem thống kê</button></form>
+      {error?<div class="notice error">{error}</div>:<>
+        <div class="view-stat-cards"><div><span>Lượt xem trong tháng</span><strong>{fmt(sum)}</strong></div><div><span>Truyện có lượt xem</span><strong>{fmt(active)}</strong></div><div><span>Tổng số truyện</span><strong>{fmt(entries.length)}</strong></div></div>
+        <label class="field view-search"><span>Tìm tên truyện</span><input type="search" placeholder="Nhập tên truyện..." data-view-search/></label>
+        <div class="view-list">{entries.map((s,i)=><div class="view-row" data-view-row data-search={s.title.toLowerCase()}><div class="view-row-head"><span><b>{i+1}.</b> <a href={`/admin/series/${s.id}`}>{s.title}</a></span><strong>{fmt(s.views)} view</strong></div><div class="view-bar"><div style={`width:${s.views/max*100}%`}></div></div><small class="meta">Tổng view tích lũy: {fmt(s.total)}</small></div>)}</div>
+        {entries.length===0&&<div class="empty-state">Chưa có truyện.</div>}
+        <p class="meta">Số liệu theo tháng bắt đầu được ghi từ khi chạy SQL v13.16; không thể phân bổ chính xác view cũ vào các tháng trước.</p>
+      </>}
+    </section>
+  </div>
+</div>
+<style>
+.view-month-form{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:16px 0 22px}.view-month-form .field{min-width:190px}
+.view-stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:20px}
+.view-stat-cards>div{padding:16px;border:1px solid #f4d8e6;border-radius:12px;background:#fff7fb;display:flex;flex-direction:column;gap:8px}
+.view-stat-cards span{font-size:13px;color:#76586a}.view-stat-cards strong{font-size:24px;color:#c33c80}
+.view-search{margin:12px 0}.view-list{display:grid;gap:12px}.view-row{padding:13px;border:1px solid #eee1e8;border-radius:12px}
+.view-row-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.view-row-head strong{color:#c33c80}
+.view-bar{height:8px;background:#f5eaf0;border-radius:20px;overflow:hidden;margin:9px 0 5px}.view-bar>div{height:100%;background:#e879a6;border-radius:20px}
+</style>
+<script>
+const search=document.querySelector('[data-view-search]');
+search?.addEventListener('input',()=>{const q=(search instanceof HTMLInputElement?search.value:'').toLowerCase().trim();document.querySelectorAll('[data-view-row]').forEach(el=>{if(el instanceof HTMLElement)el.hidden=!(el.dataset.search||'').includes(q);});});
+</script>
+</BaseLayout>
