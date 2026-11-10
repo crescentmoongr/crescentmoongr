@@ -139,16 +139,15 @@ const isMobileReader=()=>typeof navigator!=='undefined'&&(
   /Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle/i.test(navigator.userAgent)||
   (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)
 );
-// Mobile only: preserve original image resolution, splitting tall pages into
+// Mobile and tall desktop pages: preserve original image resolution, splitting into
 // multiple vertically adjacent Canvas elements. Source objects in R2 stay intact.
 const clearExtraCanvases=(canvas)=>{
   const wrap=canvas.parentElement;
   if(!wrap)return;
   wrap.querySelectorAll('canvas.reader-canvas-part').forEach(part=>part.remove());
 };
-const drawMobileCanvasParts=(img,canvas)=>{
-  const width=img.naturalWidth,height=img.naturalHeight;
-  const chunkHeight=3000;
+const drawCanvasParts=(img,canvas,chunkHeight)=>{
+  const width=img.naturalWidth||img.width,height=img.naturalHeight||img.height;
   const wrap=canvas.parentElement;
   if(!wrap)throw new Error('canvas-wrapper');
   clearExtraCanvases(canvas);
@@ -187,9 +186,14 @@ const decodePage=async(blob,canvas)=>{
     let bitmap;
     try{
       bitmap=await createImageBitmap(blob);
-      canvas.width=bitmap.width;canvas.height=bitmap.height;
-      const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('canvas-context');
-      ctx.drawImage(bitmap,0,0);return;
+      if(bitmap.height>4096){
+        drawCanvasParts(bitmap,canvas,3000);
+      }else{
+        canvas.width=bitmap.width;canvas.height=bitmap.height;
+        const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('canvas-context');
+        ctx.drawImage(bitmap,0,0);
+      }
+      return;
     }catch(err){console.warn('[Reader] bitmap fallback',err)}
     finally{bitmap?.close()}
   }
@@ -202,14 +206,18 @@ const decodePage=async(blob,canvas)=>{
     });
     if(!img.naturalWidth||!img.naturalHeight)throw new Error('invalid-image-size');
     if(isMobileReader()){
-      drawMobileCanvasParts(img,canvas);
+      drawCanvasParts(img,canvas,3000);
       return;
     }
-    canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
-    const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('canvas-context');
-    if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
-    ctx.drawImage(img,0,0);
-    if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
+    if(img.naturalHeight>4096){
+      drawCanvasParts(img,canvas,3000);
+    }else{
+      canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+      const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('canvas-context');
+      if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
+      ctx.drawImage(img,0,0);
+      if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
+    }
   }finally{URL.revokeObjectURL(url)}
 };
 const loadPage=async(wrap)=>{

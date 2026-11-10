@@ -1,4 +1,10 @@
 
+## v13.15 — Desktop tall-image Canvas splitting
+- Desktop: keep a single full-resolution Canvas for images up to 4096 px high. For images taller than 4096 px, draw consecutive full-resolution Canvas segments up to 3000 px high each.
+- Mobile: retain v13.14 Canvas splitting (3000 px segments). No resizing, cropping of uploaded R2 originals, or changes to Worker/security.
+- Desktop createImageBitmap path and Image() fallback both support splitting.
+
+
 ## v13.14 — Mobile split Canvas (2026-11-09)
 - Mobile/tablet: render tall chapter images in adjacent 3000px-high Canvas segments at original pixel resolution; no 1600px/4096px/4MP downscaling.
 - Desktop decoding and Canvas remain unchanged. R2 objects and image upload pipeline are not modified.
