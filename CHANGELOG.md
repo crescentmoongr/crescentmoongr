@@ -1,3 +1,8 @@
+## v13.18 — Bộ lọc thống kê theo năm và tháng
+- Admin → Thống kê lượt xem: chọn **năm** ở ô trên, chọn **tháng (01–12)** ở ô dưới.
+- Giữ nguyên tham số truy vấn `month=YYYY-MM` và toàn bộ cơ chế thống kê hiện có.
+- Không thay đổi Worker, database hoặc SQL; không cần chạy SQL mới.
+
 ## v13.17 — Admin monthly views access and month picker
 - Add SQL to grant service_role SELECT on monthly aggregates; no reset of existing views.
 - Show more accurate 403/404 messages, log Supabase error details on server only.

@@ -12,8 +12,12 @@ const vnNow=`${vnParts.find(p=>p.type==='year')?.value}-${vnParts.find(p=>p.type
 const requested=Astro.url.searchParams.get('month')||vnNow;
 const month=/^\d{4}-(0[1-9]|1[0-2])$/.test(requested)?requested:vnNow;
 const monthStart=month+'-01';
-const monthOptions=Array.from({length:36},(_,i)=>{const [y,m]=vnNow.split('-').map(Number);const d=new Date(Date.UTC(y,m-1-i,1));const value=`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;return {value,label:`${String(d.getUTCMonth()+1).padStart(2,'0')}/${d.getUTCFullYear()}`};});
-if(!monthOptions.some(o=>o.value===month))monthOptions.push({value:month,label:`${month.slice(5)}/${month.slice(0,4)}`});
+const [selectedYear,selectedMonth]=month.split('-').map(Number);
+const currentYear=Number(vnNow.slice(0,4));
+const yearOptions=Array.from({length:Math.max(4,currentYear-2024+1)},(_,i)=>currentYear-i);
+if(!yearOptions.includes(selectedYear))yearOptions.push(selectedYear);
+yearOptions.sort((a,b)=>b-a);
+const monthOptions=Array.from({length:12},(_,i)=>({value:String(i+1).padStart(2,'0'),label:String(i+1).padStart(2,'0')}));
 let entries:{id:string;title:string;slug:string;views:number;total:number}[]=[];
 let error='';
 try {
@@ -46,7 +50,14 @@ const max=Math.max(1,...entries.map(x=>x.views));
   <div class="admin-dashboard-content">
     <section class="admin-card admin-wide admin-anchor-section">
       <div class="section-title"><div><h2>📊 Thống kê lượt xem</h2><p class="meta">Mỗi lần mở chapter được tính theo cơ chế hiện tại (chặn đếm lại trong 60 giây trên cùng trình duyệt). Tháng tính theo giờ Việt Nam.</p></div></div>
-      <form method="GET" action="/admin/views" class="view-month-form"><label class="field"><span>Chọn tháng</span><select name="month" required>{monthOptions.map(o=><option value={o.value} selected={o.value===month}>{o.label}</option>)}</select></label><button class="button" type="submit">Xem thống kê</button></form>
+      <form method="GET" action="/admin/views" class="view-month-form" data-view-month-form>
+        <div class="view-date-fields">
+          <label class="field"><span>Chọn năm</span><select data-view-year required>{yearOptions.map(y=><option value={y} selected={y===selectedYear}>{y}</option>)}</select></label>
+          <label class="field"><span>Chọn tháng</span><select data-view-month required>{monthOptions.map(o=><option value={o.value} selected={Number(o.value)===selectedMonth}>{o.label}</option>)}</select></label>
+        </div>
+        <input type="hidden" name="month" value={month} data-view-month-value/>
+        <button class="button" type="submit">Xem thống kê</button>
+      </form>
       {error?<div class="notice error">{error}</div>:<>
         <div class="view-stat-cards"><div><span>Lượt xem trong tháng</span><strong>{fmt(sum)}</strong></div><div><span>Truyện có lượt xem</span><strong>{fmt(active)}</strong></div><div><span>Tổng số truyện</span><strong>{fmt(entries.length)}</strong></div></div>
         <label class="field view-search"><span>Tìm tên truyện</span><input type="search" placeholder="Nhập tên truyện..." data-view-search/></label>
@@ -58,7 +69,12 @@ const max=Math.max(1,...entries.map(x=>x.views));
   </div>
 </div>
 <style>
-.view-month-form{display:flex;align-items:flex-end;gap:12px;flex-wrap:nowrap;margin:16px 0 22px}.view-month-form .field{min-width:0;width:190px;flex:0 1 190px;margin:0}.view-month-form select{width:100%;min-height:44px}.view-month-form .button{min-height:44px;white-space:nowrap;flex-shrink:0;margin:0}@media(max-width:420px){.view-month-form{gap:8px}.view-month-form .field{flex:1 1 0;width:auto}.view-month-form .button{padding-inline:12px}}
+.view-month-form{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:16px 0 22px}
+.view-date-fields{display:flex;flex-direction:column;gap:10px;width:190px;max-width:100%}
+.view-date-fields .field{min-width:0;width:100%;margin:0}
+.view-date-fields select{width:100%;min-height:44px}
+.view-month-form .button{min-height:44px;white-space:nowrap;flex-shrink:0;margin:0}
+@media(max-width:420px){.view-month-form{gap:8px}.view-date-fields{flex:1 1 150px}.view-month-form .button{padding-inline:12px}}
 .view-stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:20px}
 .view-stat-cards>div{padding:16px;border:1px solid #f4d8e6;border-radius:12px;background:#fff7fb;display:flex;flex-direction:column;gap:8px}
 .view-stat-cards span{font-size:13px;color:#76586a}.view-stat-cards strong{font-size:24px;color:#c33c80}
@@ -67,6 +83,20 @@ const max=Math.max(1,...entries.map(x=>x.views));
 .view-bar{height:8px;background:#f5eaf0;border-radius:20px;overflow:hidden;margin:9px 0 5px}.view-bar>div{height:100%;background:#e879a6;border-radius:20px}
 </style>
 <script>
+const dateForm=document.querySelector('[data-view-month-form]');
+if(dateForm instanceof HTMLFormElement){
+  const year=dateForm.querySelector('[data-view-year]');
+  const monthSelect=dateForm.querySelector('[data-view-month]');
+  const value=dateForm.querySelector('[data-view-month-value]');
+  const updateMonth=()=>{
+    if(year instanceof HTMLSelectElement&&monthSelect instanceof HTMLSelectElement&&value instanceof HTMLInputElement)
+      value.value=`${year.value}-${monthSelect.value}`;
+  };
+  year?.addEventListener('change',updateMonth);
+  monthSelect?.addEventListener('change',updateMonth);
+  dateForm.addEventListener('submit',updateMonth);
+  updateMonth();
+}
 const search=document.querySelector('[data-view-search]');
 search?.addEventListener('input',()=>{const q=(search instanceof HTMLInputElement?search.value:'').toLowerCase().trim();document.querySelectorAll('[data-view-row]').forEach(el=>{if(el instanceof HTMLElement)el.hidden=!(el.dataset.search||'').includes(q);});});
 </script>
