@@ -149,7 +149,7 @@ const clearExtraCanvases=(canvas)=>{
 const drawCanvasParts=(img,canvas,chunkHeight)=>{
   const width=img.naturalWidth||img.width,height=img.naturalHeight||img.height;
   const wrap=canvas.parentElement;
-  if(!wrap)throw new Error('canvas-wrapper');
+  if(!wrap)throw new Error('CANVAS_WRAPPER');
   clearExtraCanvases(canvas);
   // The existing wrapper is a CSS grid; switch to normal flow so slices stack.
   wrap.style.display='block';
@@ -167,11 +167,11 @@ const drawCanvasParts=(img,canvas,chunkHeight)=>{
         part.setAttribute('aria-hidden','true');
       }
       const ctx=part.getContext('2d',{alpha:false});
-      if(!ctx)throw new Error('canvas-context');
-      if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
+      if(!ctx)throw new Error('CANVAS_CONTEXT');
+      if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('CANVAS_CONTEXT_LOST');
       // Crop from the decoded source without scaling or changing the source image.
-      ctx.drawImage(img,0,top,width,h,0,0,width,h);
-      if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
+      try{ctx.drawImage(img,0,top,width,h,0,0,width,h)}catch(e){throw new Error('CANVAS_DRAW_'+(e instanceof Error?e.name:'UNKNOWN'))}
+      if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('CANVAS_CONTEXT_LOST');
       if(top!==0){wrap.insertBefore(part,wrap.querySelector('.reader-loading'));parts.push(part)}
     }
   }catch(err){
@@ -190,8 +190,8 @@ const decodePage=async(blob,canvas)=>{
         drawCanvasParts(bitmap,canvas,3000);
       }else{
         canvas.width=bitmap.width;canvas.height=bitmap.height;
-        const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('canvas-context');
-        ctx.drawImage(bitmap,0,0);
+        const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('CANVAS_CONTEXT');
+        try{ctx.drawImage(bitmap,0,0)}catch(e){throw new Error('CANVAS_DRAW_'+(e instanceof Error?e.name:'UNKNOWN'))}
       }
       return;
     }catch(err){console.warn('[Reader] bitmap fallback',err)}
@@ -206,17 +206,17 @@ const decodePage=async(blob,canvas)=>{
     });
     if(!img.naturalWidth||!img.naturalHeight)throw new Error('invalid-image-size');
     if(isMobileReader()){
-      drawCanvasParts(img,canvas,3000);
+      try{drawCanvasParts(img,canvas,3000)}finally{img.removeAttribute('src')}
       return;
     }
     if(img.naturalHeight>4096){
       drawCanvasParts(img,canvas,3000);
     }else{
       canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
-      const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('canvas-context');
-      if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
-      ctx.drawImage(img,0,0);
-      if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('canvas-context-lost');
+      const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('CANVAS_CONTEXT');
+      if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('CANVAS_CONTEXT_LOST');
+      try{ctx.drawImage(img,0,0)}catch(e){throw new Error('CANVAS_DRAW_'+(e instanceof Error?e.name:'UNKNOWN'))}
+      if(typeof ctx.isContextLost==='function'&&ctx.isContextLost())throw new Error('CANVAS_CONTEXT_LOST');
     }
   }finally{URL.revokeObjectURL(url)}
 };
@@ -260,16 +260,41 @@ const loadPage=async(wrap)=>{
       const code=reason.startsWith('HTTP_')?reason:
         reason==='AbortError'?'TIMEOUT':
         /decode|image-size/i.test(reason)?'DECODE':
-        /canvas|context/i.test(reason)?'CANVAS':
+        /canvas|context/i.test(reason)?reason.replace(/[^A-Za-z0-9_]/g,'_').slice(0,64):
         /fetch|network|load failed/i.test(reason)?'NETWORK':'OTHER';
       loading.textContent='Không tải được ảnh ('+code+'). Vui lòng mở lại chapter nếu lỗi tiếp diễn.';
     }
     console.error('[Reader] failed after 3 attempts',{page:wrap.dataset.pageId,reason},err);
   }finally{delete wrap.dataset.loading}
 };
+// Serialize mobile image fetch + decode + Canvas draw to avoid Safari memory spikes.
+// Desktop retains the existing parallel loading behavior.
+const mobileQueue=[];
+let mobileQueueBusy=false;
+const processMobileQueue=async()=>{
+  if(mobileQueueBusy)return;
+  mobileQueueBusy=true;
+  try{
+    while(mobileQueue.length){
+      // Prefer the nearest page to the viewport when readers scroll quickly.
+      mobileQueue.sort((a,b)=>Math.abs(a.getBoundingClientRect().top)-Math.abs(b.getBoundingClientRect().top));
+      const wrap=mobileQueue.shift();
+      if(wrap?.isConnected)await loadPage(wrap);
+      // Give Safari a rendering opportunity between large images.
+      await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
+    }
+  }finally{mobileQueueBusy=false}
+};
 const io=new IntersectionObserver(entries=>{
-  for(const e of entries)if(e.isIntersecting){loadPage(e.target);io.unobserve(e.target)}
-},{rootMargin:'1400px 0px'});
+  for(const e of entries){
+    if(!e.isIntersecting)continue;
+    io.unobserve(e.target);
+    if(isMobileReader()){
+      if(!mobileQueue.includes(e.target))mobileQueue.push(e.target);
+      void processMobileQueue();
+    }else{void loadPage(e.target)}
+  }
+},{rootMargin:isMobileReader()?'400px 0px':'1400px 0px'});
 wraps.forEach(w=>io.observe(w));
 // Reader-only deterrents. Browser extensions can bypass client-side handlers.
 const protectionNotice=document.getElementById('reader-protection-notice');

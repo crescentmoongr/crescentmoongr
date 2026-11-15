@@ -1,3 +1,10 @@
+## v13.19 - Safari mobile memory / Canvas diagnostics
+
+- Serialize mobile image fetch/decode/draw to one page at a time, prioritize viewport proximity, and reduce mobile prefetch distance.
+- Release temporary image source after mobile draw; preserve original R2 objects and full-resolution split canvases.
+- Show more specific Canvas error codes instead of generic CANVAS.
+- Desktop image loading and Worker remain unchanged.
+
 ## v13.18 — Bộ lọc thống kê theo năm và tháng
 - Admin → Thống kê lượt xem: chọn **năm** ở ô trên, chọn **tháng (01–12)** ở ô dưới.
 - Giữ nguyên tham số truy vấn `month=YYYY-MM` và toàn bộ cơ chế thống kê hiện có.
