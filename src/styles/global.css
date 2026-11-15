@@ -4088,3 +4088,17 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .comment-like-toggle.like-pop .comment-like-heart{animation:comment-heart-pop .3s ease-out}
 @keyframes comment-heart-pop{0%{transform:scale(.8)}55%{transform:scale(1.4)}100%{transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.comment-like-toggle.like-pop .comment-like-heart{animation:none}}
+
+/* v13.22 — pastel ombre homepage latest-series pagination */
+#home-recent-heading{scroll-margin-top:90px}
+.home-recent-pagination{display:flex;flex-direction:column;align-items:center;gap:11px;margin:24px auto 8px}
+.home-recent-pagination-controls{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap}
+.home-recent-page-btn,.home-recent-page-select{appearance:none;-webkit-appearance:none;min-width:35px;height:36px;padding:0 10px;border-radius:11px;border:1px solid rgba(226,140,188,.34);background:linear-gradient(135deg,rgba(255,247,251,.98),rgba(250,237,250,.95));color:#97618a;font-family:inherit;font-size:13px;font-weight:600;line-height:1;box-shadow:0 3px 10px rgba(205,133,181,.08);cursor:pointer;transition:background .18s,box-shadow .18s,transform .18s}
+.home-recent-page-btn:hover:not(:disabled),.home-recent-page-select:hover{background:linear-gradient(135deg,#fce2ee,#edddfb);box-shadow:0 4px 12px rgba(203,129,184,.19);transform:translateY(-1px)}
+.home-recent-page-btn.is-active{color:#fff;border-color:#d69aca;background:linear-gradient(135deg,#ee9bc4 0%,#d9a4df 55%,#b7b8f1 100%);box-shadow:0 5px 14px rgba(204,135,198,.28)}
+.home-recent-page-btn:disabled{opacity:.38;cursor:not-allowed}
+.home-recent-page-btn:focus-visible,.home-recent-page-select:focus-visible{outline:3px solid rgba(230,140,196,.45);outline-offset:2px}
+.home-recent-page-dots{padding:0 2px;color:#b68fa9}
+.home-recent-page-select{min-width:54px;padding:0 8px;margin-left:3px;text-align:center}
+.home-recent-pagination-summary{margin:0;color:#a2789c;font-size:.85rem;font-weight:500;text-align:center}
+@media(max-width:560px){#home-recent-heading{scroll-margin-top:70px}.home-recent-pagination-controls{gap:5px}.home-recent-page-btn,.home-recent-page-select{min-width:32px;height:34px;padding:0 8px;font-size:12px}.home-recent-pagination-summary{font-size:.78rem}}

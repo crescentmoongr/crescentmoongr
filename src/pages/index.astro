@@ -22,8 +22,8 @@ try{
   }
   updated=[...seriesRows].filter(x=>x.status!=='upcoming'&&lastPublished.has(x.id)).sort((a,b)=>(lastPublished.get(b.id)||0)-(lastPublished.get(a.id)||0));
 }catch(e){error=e instanceof Error?e.message:'Không thể tải dữ liệu.'}
-const recent=updated.slice(0,32);
-const recentMore=updated.slice(32).map(item=>({
+const recent=updated.slice(0,12);
+const recentPages=updated.map(item=>({
   id:item.id,
   slug:item.slug,
   title:item.title,
@@ -188,11 +188,14 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
 </section>
 </>}
 
-<div class="section-title home-section-head"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Mới cập nhật</h2></div>
-{recent.length?<>
-<section class="grid home-section-content" data-recent-grid>{recent.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{hasNewChapter(item.id)&&<img class="recent-new-star" src="/icons8-star.gif" alt="" aria-hidden="true" />}{latestChapter.has(item.id)?<span class="recent-chapter-number">{`Chap ${latestChapter.get(item.id)}`}</span>:null}{hasNewChapter(item.id)?<><span class="recent-new-separator" aria-hidden="true">-</span><span class="recent-new-tag" aria-label="Chapter mới trong 48 giờ">NEW</span><img class="recent-new-star" src="/icons8-star.gif" alt="" aria-hidden="true" /></>:<span>{statusLabel(item.status)}</span>}</div></div></a>)}</section>
-{recentMore.length>0&&<div class="home-more-bottom"><button class="home-more-button" type="button" data-home-load-more>Xem thêm <span aria-hidden="true">↓</span></button></div>}
-<script type="application/json" id="recent-more-data" set:html={JSON.stringify(recentMore).replace(/</g,'\\u003c')}></script>
+<div class="section-title home-section-head" id="home-recent-heading"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Mới cập nhật</h2></div>
+{recent.length? <>
+<section class="grid home-section-content" data-recent-grid aria-label="Danh sách truyện mới cập nhật">{recent.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{hasNewChapter(item.id)&&<img class="recent-new-star" src="/icons8-star.gif" alt="" aria-hidden="true" />}{latestChapter.has(item.id)?<span class="recent-chapter-number">{`Chap ${latestChapter.get(item.id)}`}</span>:null}{hasNewChapter(item.id)?<><span class="recent-new-separator" aria-hidden="true">-</span><span class="recent-new-tag" aria-label="Chapter mới trong 48 giờ">NEW</span><img class="recent-new-star" src="/icons8-star.gif" alt="" aria-hidden="true" /></>:<span>{statusLabel(item.status)}</span>}</div></div></a>)}</section>
+<nav class="home-recent-pagination" aria-label="Phân trang truyện mới cập nhật" data-recent-pagination>
+  <div class="home-recent-pagination-controls" data-recent-page-controls></div>
+  <p class="home-recent-pagination-summary" data-recent-page-summary aria-live="polite">Hiển thị 1–{Math.min(12,recentPages.length)} trong {recentPages.length} truyện</p>
+</nav>
+<script type="application/json" id="recent-pages-data" set:html={JSON.stringify(recentPages).replace(/</g,'\\u003c')}></script>
 </>:<div class="empty-state">Chưa có truyện.</div>}
 
 {latestComments.length>0&&<>
@@ -368,37 +371,84 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
     next?.addEventListener('click',()=>track.scrollBy({left:step(),behavior:'smooth'}));
   });
 
-  const loadMoreButton=document.querySelector('[data-home-load-more]');
+  // v13.22: client-side pagination for "Mới cập nhật"; no document navigation.
   const recentGrid=document.querySelector('[data-recent-grid]');
-  const recentDataNode=document.getElementById('recent-more-data');
-  if(loadMoreButton&&recentGrid&&recentDataNode){
-    let remaining=[];
-    try{remaining=JSON.parse(recentDataNode.textContent||'[]')}catch{}
-    let offset=0;
-    const batchSize=32;
+  const recentDataNode=document.getElementById('recent-pages-data');
+  const pagination=document.querySelector('[data-recent-pagination]');
+  const pageControls=pagination?.querySelector('[data-recent-page-controls]');
+  const pageSummary=pagination?.querySelector('[data-recent-page-summary]');
+  if(recentGrid&&recentDataNode&&pagination&&pageControls&&pageSummary){
+    let items=[];
+    try{items=JSON.parse(recentDataNode.textContent||'[]')}catch{}
+    const pageSize=12;
+    const pageCount=Math.max(1,Math.ceil(items.length/pageSize));
+    let currentPage=1;
     const statusText={completed:'Hoàn thành',ongoing:'Đang tiến hành',hiatus:'Tạm ngưng',dropped:'Đã drop',upcoming:'Sắp ra mắt'};
     const badgeText={completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP',upcoming:'UPCOMING'};
     const badgeClass={completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop',upcoming:'upcoming'};
     const esc=(value)=>String(value??'').replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-    loadMoreButton.addEventListener('click',()=>{
-      const batch=remaining.slice(offset,offset+batchSize);
-      if(!batch.length){loadMoreButton.closest('.home-more-bottom')?.remove();return}
-      const fragment=document.createDocumentFragment();
-      batch.forEach((item)=>{
-        const link=document.createElement('a');
-        link.className='card';
-        link.href=`/manga/${encodeURIComponent(item.slug)}`;
-        const badge=badgeText[item.status]?`<span class="cover-badge ${badgeClass[item.status]||''}">${badgeText[item.status]}</span>`:'';
-        const cover=item.cover_key?`<img src="/api/cover/${encodeURIComponent(item.id)}" alt="Bìa ${esc(item.title)}" loading="lazy" decoding="async">`:`<span>${esc(item.title)}</span>`;
-        const latest=item.latest_chapter!==null&&item.latest_chapter!==undefined?`<span class="recent-chapter-number">Chap ${esc(item.latest_chapter)}</span>`:'';
-        const metaSuffix=item.has_new_chapter?`<span class="recent-new-separator" aria-hidden="true">-</span><span class="recent-new-tag" aria-label="Chapter mới trong 48 giờ">NEW</span><img class="recent-new-star" src="/icons8-star.gif" alt="" aria-hidden="true">`:`<span>${esc(statusText[item.status]||item.status||'')}</span>`;
-        link.innerHTML=`<div class="cover card-cover">${badge}${cover}</div><div class="card-body"><h3>${esc(item.title)}</h3><div class="meta">${item.has_new_chapter?`<img class="recent-new-star" src="/icons8-star.gif" alt="" aria-hidden="true">`:``}${latest}${metaSuffix}</div></div>`;
-        fragment.appendChild(link);
-      });
-      recentGrid.appendChild(fragment);
-      offset+=batch.length;
-      if(offset>=remaining.length)loadMoreButton.closest('.home-more-bottom')?.remove();
-    });
+    const makeCard=(item)=>{
+      const link=document.createElement('a');
+      link.className='card';
+      link.href=`/manga/${encodeURIComponent(item.slug)}`;
+      const badge=badgeText[item.status]?`<span class="cover-badge ${badgeClass[item.status]||''}">${badgeText[item.status]}</span>`:'';
+      const cover=item.cover_key?`<img src="/api/cover/${encodeURIComponent(item.id)}" alt="Bìa ${esc(item.title)}" loading="lazy" decoding="async">`:`<span>${esc(item.title)}</span>`;
+      const latest=item.latest_chapter!==null&&item.latest_chapter!==undefined?`<span class="recent-chapter-number">Chap ${esc(item.latest_chapter)}</span>`:'';
+      const suffix=item.has_new_chapter?`<span class="recent-new-separator" aria-hidden="true">-</span><span class="recent-new-tag" aria-label="Chapter mới trong 48 giờ">NEW</span><img class="recent-new-star" src="/icons8-star.gif" alt="" aria-hidden="true">`:`<span>${esc(statusText[item.status]||item.status||'')}</span>`;
+      link.innerHTML=`<div class="cover card-cover">${badge}${cover}</div><div class="card-body"><h3>${esc(item.title)}</h3><div class="meta">${item.has_new_chapter?`<img class="recent-new-star" src="/icons8-star.gif" alt="" aria-hidden="true">`:''}${latest}${suffix}</div></div>`;
+      return link;
+    };
+    const btn=(label,page,opts={})=>{
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='home-recent-page-btn'+(opts.active?' is-active':'');
+      button.textContent=label;
+      button.disabled=!!opts.disabled;
+      button.setAttribute('aria-label',opts.aria||`Trang ${page}`);
+      if(opts.active)button.setAttribute('aria-current','page');
+      button.addEventListener('click',()=>renderPage(page,true));
+      pageControls.appendChild(button);
+    };
+    const renderControls=()=>{
+      pageControls.replaceChildren();
+      btn('‹',currentPage-1,{disabled:currentPage===1,aria:'Trang trước'});
+      const shown=new Set([1,pageCount,currentPage-1,currentPage,currentPage+1]);
+      const pages=[...shown].filter(p=>p>=1&&p<=pageCount).sort((a,b)=>a-b);
+      let prev=0;
+      for(const page of pages){
+        if(page-prev>1){
+          if(page-prev===2)btn(String(prev+1),prev+1);
+          else {const dots=document.createElement('span');dots.className='home-recent-page-dots';dots.textContent='…';dots.setAttribute('aria-hidden','true');pageControls.appendChild(dots)}
+        }
+        btn(String(page),page,{active:page===currentPage});
+        prev=page;
+      }
+      btn('›',currentPage+1,{disabled:currentPage===pageCount,aria:'Trang sau'});
+      const select=document.createElement('select');
+      select.className='home-recent-page-select';
+      select.setAttribute('aria-label','Chọn trang mới cập nhật');
+      for(let i=1;i<=pageCount;i++){
+        const option=document.createElement('option');option.value=String(i);option.textContent=String(i);select.appendChild(option);
+      }
+      select.value=String(currentPage);
+      select.addEventListener('change',()=>renderPage(Number(select.value),true));
+      pageControls.appendChild(select);
+    };
+    const renderPage=(page,scroll)=>{
+      if(!Number.isInteger(page)||page<1||page>pageCount)return;
+      if(page!==currentPage){
+        const fragment=document.createDocumentFragment();
+        items.slice((page-1)*pageSize,page*pageSize).forEach(item=>fragment.appendChild(makeCard(item)));
+        recentGrid.replaceChildren(fragment);
+      }
+      currentPage=page;
+      renderControls();
+      const start=items.length?(page-1)*pageSize+1:0;
+      pageSummary.textContent=`Hiển thị ${start}–${Math.min(page*pageSize,items.length)} trong ${items.length} truyện`;
+      if(scroll)document.getElementById('home-recent-heading')?.scrollIntoView({behavior:'smooth',block:'start'});
+    };
+    renderPage(1,false);
   }
+
 </script>
 </BaseLayout>
