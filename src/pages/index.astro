@@ -424,15 +424,6 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
         prev=page;
       }
       btn('›',currentPage+1,{disabled:currentPage===pageCount,aria:'Trang sau'});
-      const select=document.createElement('select');
-      select.className='home-recent-page-select';
-      select.setAttribute('aria-label','Chọn trang mới cập nhật');
-      for(let i=1;i<=pageCount;i++){
-        const option=document.createElement('option');option.value=String(i);option.textContent=String(i);select.appendChild(option);
-      }
-      select.value=String(currentPage);
-      select.addEventListener('change',()=>renderPage(Number(select.value),true));
-      pageControls.appendChild(select);
     };
     const renderPage=(page,scroll)=>{
       if(!Number.isInteger(page)||page<1||page>pageCount)return;
