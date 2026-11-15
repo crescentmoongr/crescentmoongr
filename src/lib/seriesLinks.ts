@@ -1,4 +1,4 @@
-export const RAW_PLATFORMS=['CMOA','RENTA','LEZHIN','TAPPYTOON'] as const;
+export const RAW_PLATFORMS=['CMOA','RENTA','LEZHIN','TAPPYTOON','COICOMI','DLSITE'] as const;
 export type RawLink={platform:string;url:string};
 export function parseRawLinks(form:FormData):RawLink[]{
  const names=form.getAll('raw_platform').map(String),urls=form.getAll('raw_link_url').map(String);
