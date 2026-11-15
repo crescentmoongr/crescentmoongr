@@ -144,7 +144,7 @@ const isMobileReader=()=>typeof navigator!=='undefined'&&(
 const clearExtraCanvases=(canvas)=>{
   const wrap=canvas.parentElement;
   if(!wrap)return;
-  wrap.querySelectorAll('canvas.reader-canvas-part').forEach(part=>part.remove());
+  wrap.querySelectorAll('canvas.reader-canvas-part').forEach(part=>{part.width=0;part.height=0;part.remove()});
 };
 const drawCanvasParts=(img,canvas,chunkHeight)=>{
   const width=img.naturalWidth||img.width,height=img.naturalHeight||img.height;
@@ -220,12 +220,69 @@ const decodePage=async(blob,canvas)=>{
     }
   }finally{URL.revokeObjectURL(url)}
 };
+// Mobile-only Canvas lifecycle: keep nearby pages, release off-screen backing stores.
+// Source files, signed URLs and chapter-view counters are not changed.
+const mobileCanvasMaxPages=5;
+const mobileCanvasMaxPixels=24_000_000;
+let mobileCleanupFrame=0;
+const distanceFromViewport=(wrap)=>{
+  const r=wrap.getBoundingClientRect();
+  return r.bottom<0?-r.bottom:r.top>innerHeight?r.top-innerHeight:0;
+};
+const releaseCanvasPage=(wrap)=>{
+  if(wrap.dataset.loaded!=='1'||wrap.dataset.loading==='1')return false;
+  const canvas=wrap.querySelector('canvas.reader-canvas:not(.reader-canvas-part)');
+  if(!(canvas instanceof HTMLCanvasElement))return false;
+  // Preserve the rendered page height while its backing stores are released.
+  const pageHeight=wrap.getBoundingClientRect().height;
+  if(pageHeight<=0)return false;
+  wrap.style.minHeight=pageHeight+'px';
+  clearExtraCanvases(canvas);
+  canvas.width=0;canvas.height=0;
+  canvas.style.display='none';
+  wrap.dataset.loaded='0';wrap.dataset.evicted='1';
+  delete wrap.dataset.canvasPixels;
+  return true;
+};
+const trimMobileCanvases=(exclude)=>{
+  if(!isMobileReader())return;
+  const loaded=wraps.filter(w=>w.dataset.loaded==='1'&&w.dataset.loading!=='1'&&w!==exclude);
+  // Pages currently visible must never be evicted, even on short viewports.
+  const candidates=loaded.filter(w=>distanceFromViewport(w)>innerHeight*1.5)
+    .sort((a,b)=>distanceFromViewport(b)-distanceFromViewport(a));
+  let count=loaded.length+(exclude?.dataset.loaded==='1'?1:0);
+  let pixels=loaded.reduce((n,w)=>n+Number(w.dataset.canvasPixels||0),0)+Number(exclude?.dataset.canvasPixels||0);
+  for(const wrap of candidates){
+    if(count<=mobileCanvasMaxPages&&pixels<=mobileCanvasMaxPixels)break;
+    const p=Number(wrap.dataset.canvasPixels||0);
+    if(releaseCanvasPage(wrap)){count--;pixels-=p}
+  }
+};
+const scheduleMobileCleanup=()=>{
+  if(!isMobileReader()||mobileCleanupFrame)return;
+  mobileCleanupFrame=requestAnimationFrame(()=>{
+    mobileCleanupFrame=0;
+    trimMobileCanvases();
+    // Re-observe released pages; they will be re-rendered only when nearby.
+    for(const wrap of wraps){
+      if(wrap.dataset.evicted==='1'&&wrap.dataset.loading!=='1'){
+        const d=distanceFromViewport(wrap);
+        if(d<innerHeight+400){
+          delete wrap.dataset.evicted;
+          if(!mobileQueue.includes(wrap))mobileQueue.push(wrap);
+          void processMobileQueue();
+        }
+      }
+    }
+  });
+};
 const loadPage=async(wrap)=>{
   if(!(wrap instanceof HTMLElement)||wrap.dataset.loaded==='1'||wrap.dataset.loading==='1')return;
   const canvas=wrap.querySelector('canvas');const loading=wrap.querySelector('.reader-loading');
   if(!(canvas instanceof HTMLCanvasElement))return;
   wrap.dataset.loading='1';delete wrap.dataset.failed;
-  if(loading instanceof HTMLElement)loading.textContent='Đang tải ảnh…';
+  if(isMobileReader()){trimMobileCanvases(wrap);canvas.style.display='block';}
+  if(loading instanceof HTMLElement){loading.style.display='';loading.textContent='Đang tải ảnh…';}
   let reason='unknown';
   try{
     for(let attempt=0;attempt<3;attempt++){
@@ -238,10 +295,23 @@ const loadPage=async(wrap)=>{
         if(!res.ok)throw new Error('HTTP_'+res.status+'_'+(res.headers.get('X-CM-Image-Error')||'UNKNOWN').replace(/[^A-Z0-9_]/g,''));
         const blob=await res.blob();if(!blob.size)throw new Error('empty-image');
         await decodePage(blob,canvas);
-        wrap.dataset.loaded='1';if(loading instanceof HTMLElement)loading.remove();return;
+        wrap.dataset.loaded='1';delete wrap.dataset.evicted;
+        if(isMobileReader()){
+          wrap.dataset.canvasPixels=String([...wrap.querySelectorAll('canvas')].reduce((n,c)=>n+c.width*c.height,0));
+          // A restored page keeps its original vertical space; no chapter-view event fires.
+          wrap.style.minHeight='';
+          scheduleMobileCleanup();
+        }
+        if(loading instanceof HTMLElement)loading.style.display='none';return;
       }catch(err){
         reason=err instanceof Error?err.message:String(err);
         console.warn('[Reader] retry',{page:wrap.dataset.pageId,attempt:attempt+1,reason});
+        if(isMobileReader()&&/CANVAS_CONTEXT|CANVAS_DRAW|CANVAS_CONTEXT_LOST/i.test(reason)){
+          // Free distant Canvas stores before retrying a failed 2D context allocation.
+          for(const old of wraps.filter(w=>w!==wrap&&w.dataset.loaded==='1'&&distanceFromViewport(w)>innerHeight).sort((a,b)=>distanceFromViewport(b)-distanceFromViewport(a))){
+            releaseCanvasPage(old);
+          }
+        }
         if(attempt===2)break;
         if(/^HTTP_(401|403)_/.test(reason)||reason==='missing-url'){
           try{await refreshLinks()}catch(e){
@@ -265,7 +335,10 @@ const loadPage=async(wrap)=>{
       loading.textContent='Không tải được ảnh ('+code+'). Vui lòng mở lại chapter nếu lỗi tiếp diễn.';
     }
     console.error('[Reader] failed after 3 attempts',{page:wrap.dataset.pageId,reason},err);
-  }finally{delete wrap.dataset.loading}
+  }finally{
+    delete wrap.dataset.loading;
+    if(isMobileReader())scheduleMobileCleanup();
+  }
 };
 // Serialize mobile image fetch + decode + Canvas draw to avoid Safari memory spikes.
 // Desktop retains the existing parallel loading behavior.
@@ -279,7 +352,10 @@ const processMobileQueue=async()=>{
       // Prefer the nearest page to the viewport when readers scroll quickly.
       mobileQueue.sort((a,b)=>Math.abs(a.getBoundingClientRect().top)-Math.abs(b.getBoundingClientRect().top));
       const wrap=mobileQueue.shift();
-      if(wrap?.isConnected)await loadPage(wrap);
+      if(wrap?.isConnected){
+        if(wrap.dataset.evicted==='1'&&distanceFromViewport(wrap)>innerHeight+400)continue;
+        await loadPage(wrap);
+      }
       // Give Safari a rendering opportunity between large images.
       await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
     }
@@ -296,6 +372,11 @@ const io=new IntersectionObserver(entries=>{
   }
 },{rootMargin:isMobileReader()?'400px 0px':'1400px 0px'});
 wraps.forEach(w=>io.observe(w));
+if(isMobileReader()){
+  window.addEventListener('scroll',scheduleMobileCleanup,{passive:true});
+  window.addEventListener('resize',scheduleMobileCleanup,{passive:true});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)scheduleMobileCleanup()});
+}
 // Reader-only deterrents. Browser extensions can bypass client-side handlers.
 const protectionNotice=document.getElementById('reader-protection-notice');
 let protectionTimer;

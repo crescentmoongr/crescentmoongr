@@ -1,3 +1,11 @@
+## v13.20 — Mobile Canvas lifecycle (2026-11-15)
+
+- On mobile, cap retained Canvas pages at about five and 24 million backing pixels, releasing distant off-screen canvases.
+- Preserve the scroll position with a placeholder height; restore pages automatically when scrolling back.
+- On Canvas context errors, release distant backing stores before retrying.
+- Keep R2 originals, signed image requests, chapter view counting and desktop rendering unchanged.
+- No SQL migration.
+
 ## v13.19 - Safari mobile memory / Canvas diagnostics
 
 - Serialize mobile image fetch/decode/draw to one page at a time, prioritize viewport proximity, and reduce mobile prefetch distance.
