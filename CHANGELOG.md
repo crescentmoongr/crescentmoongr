@@ -1,6 +1,7 @@
-# Crescent Reader v13.26 — Vietnamese Login Errors
+# Crescent Reader v13.27 — Comment Like Diagnostics
 
-- Thay thông báo `Invalid login credentials` bằng: `Tài khoản hoặc mật khẩu không đúng. Vui lòng kiểm tra lại nhé!`
-- Không hiển thị lỗi kỹ thuật Supabase trực tiếp cho người dùng khi đăng nhập thất bại.
-- Giữ nguyên xác thực, cookie, session và các tính năng v13.25.
-- Không cần SQL.
+- Separate diagnostic codes for session lookup, comment lookup, RPC toggle and unexpected errors.
+- Log a short stage-specific error message on the Worker without logging credentials.
+- Preserve successful toggles when the follow-up count query fails.
+- No database schema changes or SQL required. Existing likes are untouched.
+- Based on v13.26. Verify by deploying and checking Network > Response `code`.
