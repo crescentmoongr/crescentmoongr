@@ -301,42 +301,69 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
     if(slides.length<2)return;
     let active=0;
     let timer;
-    let transitionTimer;
+    let transitionAnimations=[];
     let touchStartX=0;
     const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
     const show=(next)=>{
       const target=(next+slides.length)%slides.length;
       if(target===active)return;
-      // Clear any previous transition so rapid arrow/dot clicks cannot leave a ghost slide.
-      if(transitionTimer)window.clearTimeout(transitionTimer);
+      transitionAnimations.forEach(animation=>animation.cancel());
+      transitionAnimations=[];
       const previous=active;
-      const direction=target===((active+slides.length-1)%slides.length)?'back':'forward';
-      slides.forEach((slide,index)=>{
-        slide.classList.remove('is-entering','is-leaving','from-back','from-forward');
-        if(index!==previous&&index!==target){slide.classList.remove('is-active');slide.setAttribute('aria-hidden','true');}
-      });
+      const direction=target===((active+slides.length-1)%slides.length)?-1:1;
       const outgoing=slides[previous];
       const incoming=slides[target];
-      outgoing.classList.remove('is-active');
-      outgoing.classList.add('is-leaving',direction==='back'?'from-back':'from-forward');
-      outgoing.setAttribute('aria-hidden','true');
-      incoming.classList.add('is-active','is-entering',direction==='back'?'from-back':'from-forward');
-      incoming.setAttribute('aria-hidden','false');
+      slides.forEach((slide,index)=>{
+        slide.classList.remove('is-entering','is-leaving','from-back','from-forward');
+        slide.classList.toggle('is-active',index===target);
+        slide.setAttribute('aria-hidden',index===target?'false':'true');
+        slide.style.removeProperty('z-index');
+      });
       active=target;
       dots.forEach((dot,index)=>{
         const current=index===active;
         dot.classList.toggle('is-active',current);
         dot.setAttribute('aria-current',current?'true':'false');
       });
-      const cleanup=()=>{
-        slides.forEach((slide,index)=>{
-          slide.classList.remove('is-entering','is-leaving','from-back','from-forward');
-          slide.classList.toggle('is-active',index===active);
-          slide.setAttribute('aria-hidden',index===active?'false':'true');
-        });
-      };
-      if(reducedMotion.matches)cleanup();
-      else transitionTimer=window.setTimeout(cleanup,620);
+      if(reducedMotion.matches)return;
+      // Animate both full slides explicitly; CSS-only transitions can be
+      // skipped when visibility and active state change in the same frame.
+      outgoing.classList.add('is-leaving');
+      outgoing.style.zIndex='2';
+      incoming.style.zIndex='3';
+      const distance=Math.min(Math.max(slider.clientWidth*0.48,180),540);
+      const duration=680;
+      if(typeof incoming.animate==='function'){
+        const easing='cubic-bezier(.22,1,.36,1)';
+        const oldAnimation=outgoing.animate([
+          {opacity:1,transform:'translate3d(0,0,0)',filter:'blur(0px)'},
+          {opacity:0,transform:`translate3d(${-direction*distance}px,0,0)`,filter:'blur(5px)'}
+        ],{duration,easing,fill:'both'});
+        const newAnimation=incoming.animate([
+          {opacity:0,transform:`translate3d(${direction*distance}px,0,0)`,filter:'blur(6px)'},
+          {opacity:1,transform:'translate3d(0,0,0)',filter:'blur(0px)'}
+        ],{duration,easing,fill:'both'});
+        transitionAnimations=[oldAnimation,newAnimation];
+        newAnimation.finished.then(()=>{
+          if(active!==target||!transitionAnimations.includes(newAnimation))return;
+          transitionAnimations.forEach(animation=>animation.cancel());
+          transitionAnimations=[];
+          outgoing.classList.remove('is-leaving');
+          outgoing.style.removeProperty('z-index');
+          incoming.style.removeProperty('z-index');
+        }).catch(()=>{});
+      }else{
+        // Older browsers: CSS keyframes are the fallback.
+        outgoing.classList.add(direction===1?'from-forward':'from-back');
+        incoming.classList.add('is-entering',direction===1?'from-forward':'from-back');
+        window.setTimeout(()=>{
+          if(active!==target)return;
+          outgoing.classList.remove('is-leaving','from-forward','from-back');
+          incoming.classList.remove('is-entering','from-forward','from-back');
+          outgoing.style.removeProperty('z-index');
+          incoming.style.removeProperty('z-index');
+        },duration+60);
+      }
     };
     const stop=()=>{if(timer)window.clearInterval(timer)};
     const start=()=>{stop();timer=window.setInterval(()=>show(active+1),5000)};

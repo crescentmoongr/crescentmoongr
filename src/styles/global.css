@@ -4110,8 +4110,8 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .favorite-hero-slide.is-entering.from-back{animation-name:cmHeroEnterBack}
 .favorite-hero-slide.is-leaving.from-forward{animation:cmHeroLeaveForward .56s ease both}
 .favorite-hero-slide.is-leaving.from-back{animation:cmHeroLeaveBack .56s ease both}
-@keyframes cmHeroEnterForward{from{opacity:0;transform:translateX(38px);filter:blur(5px)}to{opacity:1;transform:translateX(0);filter:blur(0)}}
-@keyframes cmHeroEnterBack{from{opacity:0;transform:translateX(-38px);filter:blur(5px)}to{opacity:1;transform:translateX(0);filter:blur(0)}}
-@keyframes cmHeroLeaveForward{from{opacity:1;transform:translateX(0);filter:blur(0)}to{opacity:0;transform:translateX(-28px);filter:blur(4px)}}
-@keyframes cmHeroLeaveBack{from{opacity:1;transform:translateX(0);filter:blur(0)}to{opacity:0;transform:translateX(28px);filter:blur(4px)}}
+@keyframes cmHeroEnterForward{from{opacity:0;transform:translateX(48%);filter:blur(5px)}to{opacity:1;transform:translateX(0);filter:blur(0)}}
+@keyframes cmHeroEnterBack{from{opacity:0;transform:translateX(-48%);filter:blur(5px)}to{opacity:1;transform:translateX(0);filter:blur(0)}}
+@keyframes cmHeroLeaveForward{from{opacity:1;transform:translateX(0);filter:blur(0)}to{opacity:0;transform:translateX(-48%);filter:blur(4px)}}
+@keyframes cmHeroLeaveBack{from{opacity:1;transform:translateX(0);filter:blur(0)}to{opacity:0;transform:translateX(48%);filter:blur(4px)}}
 @media(prefers-reduced-motion:reduce){.favorite-hero-slide.is-entering,.favorite-hero-slide.is-leaving{animation:none!important;transition:none!important}}

@@ -1,6 +1,6 @@
-# Crescent Reader v13.28 — Featured Hero Transition
+# v13.29 — Hero slide transition fix
 
-- Homepage featured carousel: directional horizontal slide combined with fade and subtle blur (~560 ms).
-- Preserves autoplay, previous/next buttons, dots, and touch swipe.
-- Handles rapid navigation without leaving stale slides; respects reduced-motion preference.
-- No database migration. Other source behavior unchanged from v13.27.
+- Replace the subtle 38px transition with an explicit horizontal slide and fade animation (680ms) using the Web Animations API.
+- Animate outgoing and incoming slides independently; preserve arrows, dots, swipe and autoplay.
+- Retain CSS fallback and respect reduced-motion preferences.
+- No SQL changes.
