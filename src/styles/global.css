@@ -4102,3 +4102,16 @@ button.home-more-button:hover span{transform:translateY(2px);}
 
 .home-recent-pagination-summary{margin:0;color:#a2789c;font-size:.85rem;font-weight:500;text-align:center}
 @media(max-width:560px){#home-recent-heading{scroll-margin-top:70px}.home-recent-pagination-controls{gap:5px}.home-recent-page-btn,.home-recent-page-select{min-width:32px;height:34px;padding:0 8px;font-size:12px}.home-recent-pagination-summary{font-size:.78rem}}
+
+/* v13.28: gentle directional slide + fade for homepage featured series. */
+.favorite-hero-slide.is-active{z-index:2}
+.favorite-hero-slide.is-leaving{visibility:visible;pointer-events:none;z-index:1;opacity:1;transform:translateX(0)}
+.favorite-hero-slide.is-entering{visibility:visible;pointer-events:auto;animation:cmHeroEnterForward .56s cubic-bezier(.22,1,.36,1) both}
+.favorite-hero-slide.is-entering.from-back{animation-name:cmHeroEnterBack}
+.favorite-hero-slide.is-leaving.from-forward{animation:cmHeroLeaveForward .56s ease both}
+.favorite-hero-slide.is-leaving.from-back{animation:cmHeroLeaveBack .56s ease both}
+@keyframes cmHeroEnterForward{from{opacity:0;transform:translateX(38px);filter:blur(5px)}to{opacity:1;transform:translateX(0);filter:blur(0)}}
+@keyframes cmHeroEnterBack{from{opacity:0;transform:translateX(-38px);filter:blur(5px)}to{opacity:1;transform:translateX(0);filter:blur(0)}}
+@keyframes cmHeroLeaveForward{from{opacity:1;transform:translateX(0);filter:blur(0)}to{opacity:0;transform:translateX(-28px);filter:blur(4px)}}
+@keyframes cmHeroLeaveBack{from{opacity:1;transform:translateX(0);filter:blur(0)}to{opacity:0;transform:translateX(28px);filter:blur(4px)}}
+@media(prefers-reduced-motion:reduce){.favorite-hero-slide.is-entering,.favorite-hero-slide.is-leaving{animation:none!important;transition:none!important}}

@@ -301,19 +301,42 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
     if(slides.length<2)return;
     let active=0;
     let timer;
+    let transitionTimer;
     let touchStartX=0;
+    const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
     const show=(next)=>{
-      active=(next+slides.length)%slides.length;
+      const target=(next+slides.length)%slides.length;
+      if(target===active)return;
+      // Clear any previous transition so rapid arrow/dot clicks cannot leave a ghost slide.
+      if(transitionTimer)window.clearTimeout(transitionTimer);
+      const previous=active;
+      const direction=target===((active+slides.length-1)%slides.length)?'back':'forward';
       slides.forEach((slide,index)=>{
-        const current=index===active;
-        slide.classList.toggle('is-active',current);
-        slide.setAttribute('aria-hidden',current?'false':'true');
+        slide.classList.remove('is-entering','is-leaving','from-back','from-forward');
+        if(index!==previous&&index!==target){slide.classList.remove('is-active');slide.setAttribute('aria-hidden','true');}
       });
+      const outgoing=slides[previous];
+      const incoming=slides[target];
+      outgoing.classList.remove('is-active');
+      outgoing.classList.add('is-leaving',direction==='back'?'from-back':'from-forward');
+      outgoing.setAttribute('aria-hidden','true');
+      incoming.classList.add('is-active','is-entering',direction==='back'?'from-back':'from-forward');
+      incoming.setAttribute('aria-hidden','false');
+      active=target;
       dots.forEach((dot,index)=>{
         const current=index===active;
         dot.classList.toggle('is-active',current);
         dot.setAttribute('aria-current',current?'true':'false');
       });
+      const cleanup=()=>{
+        slides.forEach((slide,index)=>{
+          slide.classList.remove('is-entering','is-leaving','from-back','from-forward');
+          slide.classList.toggle('is-active',index===active);
+          slide.setAttribute('aria-hidden',index===active?'false':'true');
+        });
+      };
+      if(reducedMotion.matches)cleanup();
+      else transitionTimer=window.setTimeout(cleanup,620);
     };
     const stop=()=>{if(timer)window.clearInterval(timer)};
     const start=()=>{stop();timer=window.setInterval(()=>show(active+1),5000)};

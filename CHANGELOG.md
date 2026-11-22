@@ -1,7 +1,6 @@
-# Crescent Reader v13.27 — Comment Like Diagnostics
+# Crescent Reader v13.28 — Featured Hero Transition
 
-- Separate diagnostic codes for session lookup, comment lookup, RPC toggle and unexpected errors.
-- Log a short stage-specific error message on the Worker without logging credentials.
-- Preserve successful toggles when the follow-up count query fails.
-- No database schema changes or SQL required. Existing likes are untouched.
-- Based on v13.26. Verify by deploying and checking Network > Response `code`.
+- Homepage featured carousel: directional horizontal slide combined with fade and subtle blur (~560 ms).
+- Preserves autoplay, previous/next buttons, dots, and touch swipe.
+- Handles rapid navigation without leaving stale slides; respects reduced-motion preference.
+- No database migration. Other source behavior unchanged from v13.27.
