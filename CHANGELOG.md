@@ -1,6 +1,6 @@
-# v13.29 — Hero slide transition fix
+# Crescent Reader v13.30 — Hero transition timing
 
-- Replace the subtle 38px transition with an explicit horizontal slide and fade animation (680ms) using the Web Animations API.
-- Animate outgoing and incoming slides independently; preserve arrows, dots, swipe and autoplay.
-- Retain CSS fallback and respect reduced-motion preferences.
+- Increased hero slide animation duration from 680ms to 1500ms for clearly visible horizontal movement and fade.
+- Updated CSS fallback animation duration to match.
+- Increased auto-advance interval from 5 to 7 seconds.
 - No SQL changes.

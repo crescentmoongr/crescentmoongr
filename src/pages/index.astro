@@ -332,9 +332,9 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
       outgoing.style.zIndex='2';
       incoming.style.zIndex='3';
       const distance=Math.min(Math.max(slider.clientWidth*0.48,180),540);
-      const duration=680;
+      const duration=1500;
       if(typeof incoming.animate==='function'){
-        const easing='cubic-bezier(.22,1,.36,1)';
+        const easing='cubic-bezier(.45,0,.55,1)';
         const oldAnimation=outgoing.animate([
           {opacity:1,transform:'translate3d(0,0,0)',filter:'blur(0px)'},
           {opacity:0,transform:`translate3d(${-direction*distance}px,0,0)`,filter:'blur(5px)'}
@@ -366,7 +366,7 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
       }
     };
     const stop=()=>{if(timer)window.clearInterval(timer)};
-    const start=()=>{stop();timer=window.setInterval(()=>show(active+1),5000)};
+    const start=()=>{stop();timer=window.setInterval(()=>show(active+1),7000)};
     dots.forEach((dot)=>dot.addEventListener('click',()=>{show(Number(dot.dataset.index||0));start()}));
     prev?.addEventListener('click',(event)=>{event.preventDefault();show(active-1);start()});
     next?.addEventListener('click',(event)=>{event.preventDefault();show(active+1);start()});
