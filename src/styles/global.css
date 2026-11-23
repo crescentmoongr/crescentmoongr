@@ -4115,3 +4115,17 @@ button.home-more-button:hover span{transform:translateY(2px);}
 @keyframes cmHeroLeaveForward{from{opacity:1;transform:translateX(0);filter:blur(0)}to{opacity:0;transform:translateX(-48%);filter:blur(4px)}}
 @keyframes cmHeroLeaveBack{from{opacity:1;transform:translateX(0);filter:blur(0)}to{opacity:0;transform:translateX(48%);filter:blur(4px)}}
 @media(prefers-reduced-motion:reduce){.favorite-hero-slide.is-entering,.favorite-hero-slide.is-leaving{animation:none!important;transition:none!important}}
+
+/* v13.31 — per-chapter reactions, pastel pink/lavender ombre */
+.chapter-reactions{margin:34px auto 24px;padding:22px 16px;text-align:center;border:1px solid #eed7e9;border-radius:20px;background:rgba(255,250,254,.87);max-width:950px}
+.chapter-reactions h2{font-size:19px;margin:0 0 6px;color:#6c426c}.chapter-reactions>p{margin:0 0 15px;color:#8a6c83}
+.chapter-reaction-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.chapter-reaction{border:0;background:transparent;cursor:pointer;min-width:0;color:inherit;padding:0;font:inherit}
+.chapter-reaction-pill{display:flex;align-items:center;justify-content:center;gap:7px;min-height:43px;border-radius:24px;border:1px solid #edc9e4;background:#fffafd;transition:background .28s ease,border-color .28s ease,box-shadow .28s ease,transform .28s ease}
+.chapter-reaction:hover .chapter-reaction-pill,.chapter-reaction:focus-visible .chapter-reaction-pill{background:linear-gradient(115deg,#ffd5e9,#e5d4ff);border-color:#cb89d8;box-shadow:0 5px 16px #dba7d94d;transform:translateY(-2px)}
+.chapter-reaction.is-selected .chapter-reaction-pill{background:linear-gradient(115deg,#ffe0ef,#e8d8ff);border-color:#c58ad8;box-shadow:0 0 0 1px #dfaddd,0 3px 12px #dba7d94d}
+.chapter-reaction:active .chapter-reaction-pill{transform:scale(.95)}.chapter-reaction:disabled{opacity:.6;cursor:wait}
+.chapter-reaction-label{display:block;margin-top:8px;font-size:12px}.chapter-reaction-status{min-height:1.2em;font-size:13px;color:#a04b7e}
+.chapter-shared-comments{margin-top:26px}
+@media(max-width:600px){.chapter-reaction-grid{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:16px}.chapter-reactions{padding:18px 10px}}
+@media(prefers-reduced-motion:reduce){.chapter-reaction-pill{transition:none}}

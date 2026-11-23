@@ -3,7 +3,9 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { getChapter,getSeriesBySlug,getPublicChapterPages,getChapters } from '../../../lib/supabase';
 import { ensureReaderSession,isSeriesUnlocked,signPageUrl } from '../../../lib/readerSecurity';
 import { getSessionUser } from '../../../lib/auth';
-import { novelRichTextToHtml } from '../../../lib/richText';
+import { novelRichTextToHtml,commentRichTextToHtml } from '../../../lib/richText';
+import {getSeriesComments,getCommentLikeStates,getCommentMemberRewards,getMyMemberRewards} from '../../../lib/supabase';
+import {getSession} from '../../../lib/auth';
 export const prerender=false;
 const {slug,chapter}=Astro.params; if(!slug||!chapter) return Astro.redirect('/');
 const series=await getSeriesBySlug(slug); const current=series?await getChapter(series.id,chapter):null; if(!series||!current) return new Response('Không tìm thấy chapter.',{status:404});
@@ -23,12 +25,169 @@ const currentIndex=chapterList.findIndex(ch=>ch.id===current.id);
 const previousChapter=currentIndex>=0?chapterList[currentIndex+1]||null:null;
 const nextChapter=currentIndex>=0?chapterList[currentIndex-1]||null:null;
 
+
+const session=await getSession(Astro.cookies);
+let comments:any[]=[];
+if(allowed){try{comments=await getSeriesComments(series.id)}catch{}}
+let ownRewards:any=null;if(session){try{ownRewards=await getMyMemberRewards(session.token)}catch{}}
+type CommentNode = any & { replies: CommentNode[] };
+const commentMap=new Map<number,CommentNode>();
+for(const c of comments) commentMap.set(Number(c.id),{...c,replies:[]});
+const commentRoots:CommentNode[]=[];
+for(const c of commentMap.values()){
+  const parentId=c.parent_id==null?null:Number(c.parent_id);
+  const parent=parentId==null?null:commentMap.get(parentId);
+  if(parent && Number(c.depth||0)>0) parent.replies.push(c);
+  else commentRoots.push(c);
+}
+// Show newest top-level comments first, while keeping replies in their existing chronological order.
+commentRoots.sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
+const sortReplies=(items:CommentNode[])=>{
+  items.sort((a,b)=>new Date(a.created_at).getTime()-new Date(b.created_at).getTime());
+  items.forEach(x=>sortReplies(x.replies));
+};
+commentRoots.forEach(root=>sortReplies(root.replies));
+const commentLikeStates=await getCommentLikeStates(comments.map(c=>Number(c.id)),session?.user.id).catch(()=>({} as Record<number,{count:number;liked:boolean}>));
+const commentRewards=await getCommentMemberRewards(comments.map(c=>c.user_id).filter(Boolean)).catch(()=>[]);
+const commentRewardMap=new Map(commentRewards.map((r:any)=>[r.user_id,r]));
+const rankIconMap:any={mam_trang:'🌱',trang_non:'🌙',trang_tron:'🌕',anh_sao:'✨',sao_sang:'🌟',tinh_nguyet:'💫'};
+const threadedComments:any[]=[];
+const flattenComments=(items:CommentNode[],level=0)=>{
+  for(const c of items){
+    threadedComments.push({...c,displayDepth:Math.min(level,9)});
+    if(c.replies?.length) flattenComments(c.replies,level+1);
+  }
+};
+flattenComments(commentRoots);
+const commentError=Astro.url.searchParams.get('comment_error');
+const commentSuccess=Astro.url.searchParams.get('comment')==='success';
 ---
 <BaseLayout title={`${series.title} - Chapter ${current.chapter_number} | Crescent Moon Translation`} description={`Đọc ${series.title} - Chapter ${current.chapter_number} tại Crescent Moon Translation.`} image={series.cover_key?`/api/og-cover/${series.id}`:"/social-preview.png"} imageAlt={`Bìa truyện ${series.title} - Chapter ${current.chapter_number}`} ogType="article">
 <h1>{series.title} — Chapter {current.chapter_number}</h1>{current.title&&<div class="reader-chapter-title">{current.title}</div>}
 {!allowed&&series.access_type==='password'?<section class="lock-panel"><h2>🔒 Truyện cần mật khẩu</h2><p class="description">Chỉ cần nhập một lần để mở toàn bộ chapter của bộ này trong 48 giờ</p>
 <p class="description">Lấy gợi ý mở khóa truyện ở mục <a href="/password"><strong>Mật khẩu</strong></a> tại menu web.</p>{unlockError&&<div class="notice error">{unlockError}</div>}<form method="POST" action="/api/series-unlock"><input type="hidden" name="slug" value={series.slug}/><input type="hidden" name="return_to" value={`/read/${series.slug}/${current.chapter_number}`}/><label class="field"><span>Mật khẩu</span><input name="password" type="password" required autocomplete="current-password"/></label><button class="button" type="submit">Mở khóa truyện</button></form></section>:!allowed&&series.access_type==='member'?<section class="lock-panel"><h2>🔒 Truyện dành cho thành viên</h2><p class="description">Đăng nhập tài khoản để đọc bộ truyện này.</p><a class="button" href={`/login?next=${encodeURIComponent(`/read/${series.slug}/${current.chapter_number}`)}`}>Đăng nhập</a></section>:<><div class="reader-nav"><a class="button secondary" href={`/manga/${series.slug}`}>← Danh sách chapter</a><span class="meta">{isNovel?'Novel':`${pages.length} trang`}</span></div><div data-reader-view data-chapter-id={current.id}></div>{isNovel?(novelHtml?<article class="novel-reader-content rich-content" set:html={novelHtml}></article>:<div class="empty-state">Chapter chưa có nội dung.</div>):(pages.length?<div class="reader-pages" data-protected-reader data-series-id={series.id} data-chapter-id={current.id}>{rendered.map(pg=><div class="reader-canvas-wrap" data-page={pg.page_number} data-page-id={pg.id}><canvas class="reader-canvas" data-src={pg.url} aria-label={`Trang ${pg.page_number}`}></canvas><div class="reader-loading">Đang tải trang {pg.page_number}…</div></div>)}</div>:<div class="empty-state">Chapter chưa có ảnh.</div>)}</>}
 {allowed&&accountUser&&<div class="reading-progress-marker" data-reading-progress data-series-id={series.id} data-chapter-id={current.id}></div>}
+
+
+{allowed&&<section class="chapter-reactions" data-chapter-reactions data-chapter-id={current.id} data-authenticated={session?'1':'0'}>
+  <h2>Bạn thấy chapter này thế nào?</h2><p>Chọn những cảm xúc của cậu nhé 💕</p>
+  <div class="chapter-reaction-grid">{[
+    ['support','👍','Ủng hộ'],['happy','😄','Vui'],['love','😍','Yêu thích'],['surprised','😮','Ngạc nhiên'],['angry','😡','Tức giận'],['sad','😢','Buồn']
+  ].map(([key,emoji,label])=><button type="button" class="chapter-reaction" data-reaction={key} aria-pressed="false"><span class="chapter-reaction-pill"><span aria-hidden="true">{emoji}</span> <strong data-count>0</strong></span><span class="chapter-reaction-label">{label}</span></button>)}</div>
+  <p class="chapter-reaction-status" data-reaction-status aria-live="polite"></p>
+</section>}
+{allowed&&<div class="chapter-shared-comments"><section class="comments-section" id="comments">
+  <div class="section-title"><h2 class="major-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Bình luận</h2><span class="meta">{comments.length} bình luận</span></div>
+  {commentSuccess&&<div class="notice success">Đã gửi bình luận.</div>}
+  {commentError&&<div class="notice error">{commentError}</div>}
+
+  {session && !String(session.user.username||'').trim()
+    ? <div class="comment-login-note">💬 Vui lòng <a href="/account?username_required=1#profile">bổ sung Username</a> trước khi bình luận.</div>
+    : session
+    ? <form method="POST" action="/api/comments/create" class="comment-form" data-comment-form>
+        <input type="hidden" name="series_id" value={series.id}/>
+        <input type="hidden" name="return_to" value={`/read/${series.slug}/${current.chapter_number}`}/>
+        <div class="comment-author-line">Bình luận với tư cách <span class="comment-member-identity"><span class="member-rank-icon">{session.user.role==='admin'?'👑':rankIconMap[ownRewards?.rank_key]||''}</span><strong class={session.user.role==='admin'?'admin-celestial-gold':''}>{session.user.display_name||session.user.username||'Thành viên'}</strong></span></div>
+
+        <div class="comment-editor-shell">
+          <div class="comment-toolbar" role="toolbar" aria-label="Định dạng bình luận">
+            <button type="button" data-comment-cmd="bold" title="In đậm"><strong>B</strong></button>
+            <button type="button" data-comment-cmd="italic" title="In nghiêng"><em>I</em></button>
+            <button type="button" data-comment-cmd="underline" title="Gạch chân"><u>U</u></button>
+            <button type="button" data-comment-cmd="strikeThrough" title="Gạch ngang"><s>S</s></button>
+            <button type="button" data-comment-action="upper" title="IN HOA">AA</button>
+            <button type="button" data-comment-cmd="insertUnorderedList" title="Danh sách chấm">• List</button>
+            <button type="button" data-comment-cmd="insertOrderedList" title="Danh sách số">1. List</button>
+            <button type="button" data-comment-block="blockquote" title="Trích dẫn">❞</button>
+            <button type="button" data-comment-block="code" title="Code">&lt;/&gt;</button>
+            <button type="button" data-comment-action="clear" title="Xóa định dạng">Tx</button>
+          </div>
+          <div class="comment-editor" contenteditable="true" data-placeholder="Viết bình luận..." spellcheck="true"></div>
+          <textarea class="comment-source" name="body" maxlength="8000" hidden required></textarea>
+        </div>
+
+        <div class="comment-rules">
+          <strong>📌 Lưu ý khi bình luận:</strong>
+          <ul>
+            <li>Không dùng từ ngữ thô tục, xúc phạm cá nhân, tổ chức hoặc nhân vật trong truyện.</li>
+            <li>Không spam link, quảng cáo hoặc chia sẻ nội dung độc hại.</li>
+            <li>Vui lòng giữ cuộc trò chuyện lịch sự và tôn trọng người khác.</li>
+          </ul>
+        </div>
+
+        <div class="comment-form-footer"><button class="button" type="submit">Gửi bình luận</button></div>
+      </form>
+    : <div class="comment-login-note">💬 <a href={`/login?next=${encodeURIComponent(`/read/${series.slug}/${current.chapter_number}#comments`)}`}>Đăng nhập</a> để tham gia bình luận.</div>}
+
+  {comments.length===0
+  ? <div class="empty-state comments-empty">Chưa có bình luận nào.</div>
+  : <div class="comment-list comment-thread-list">
+      {threadedComments.map(c=>
+        <div class={`comment-thread-node comment-depth-${Math.min(Number(c.displayDepth||0),9)}`}>
+          <article class="comment-item" id={`comment-${c.id}`}>
+            <div class="comment-avatar">
+              {c.avatar_key
+                ? <img src={`/api/avatar/${c.user_id}`} alt={`Avatar ${c.display_name||c.username||'Thành viên'}`} loading="lazy"/>
+                : <span aria-hidden="true">☾</span>}
+            </div>
+            <div class="comment-content">
+              <div class="comment-head">
+                <div>
+                  <span class="comment-member-identity"><span class="member-rank-icon">{c.role==='admin'?'👑':rankIconMap[(commentRewardMap.get(c.user_id) as any)?.rank_key]||''}</span><strong class:list={[c.role==='admin'?'admin-celestial-gold':'',c.role==='admin'?'admin-celestial-gold':'',c.role!=='admin'&&(commentRewardMap.get(c.user_id) as any)?.name_style?`member-name-${(commentRewardMap.get(c.user_id) as any).name_style}`:'']}>{c.display_name||c.username||'Thành viên'}</strong>{c.role!=='admin'&&(commentRewardMap.get(c.user_id) as any)?.active_achievement&&<span class="comment-achievement-badge">{(commentRewardMap.get(c.user_id) as any).active_achievement}</span>}</span>
+                  <span class="meta"> · {new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(c.created_at))}</span>
+                </div>
+                {session&&(session.user.id===c.user_id||session.user.role==='admin')&&
+                  <form method="POST" action="/api/comments/delete" onsubmit="return confirm('Xóa bình luận này? Các trả lời bên dưới cũng sẽ bị xóa.');">
+                    <input type="hidden" name="id" value={c.id}/>
+                    <input type="hidden" name="return_to" value={`/read/${series.slug}/${current.chapter_number}`}/>
+                    <button class="comment-delete" type="submit">Xóa</button>
+                  </form>}
+              </div>
+              <div class="comment-body" set:html={commentRichTextToHtml(c.body)}></div>
+              <div class="comment-reply-actions">
+                {session && String(session.user.username||'').trim() && Number(c.depth||0)<9 &&
+                  <button type="button" class="comment-reply-toggle" data-reply-toggle={`reply-${c.id}`}><img src="/reply.png" alt="" aria-hidden="true" class="comment-reply-icon"/> Trả lời</button>}
+                <button type="button" class:list={['comment-like-toggle',(commentLikeStates[Number(c.id)]?.liked?'is-liked':'')]} data-comment-like={c.id} data-series-id={series.id} aria-pressed={!!commentLikeStates[Number(c.id)]?.liked} aria-label="Thích bình luận">
+                  <span class="comment-like-heart" aria-hidden="true">{commentLikeStates[Number(c.id)]?.liked?'♥':'♡'}</span>
+                  <span>Thích</span>
+                  <span class="comment-like-count">{commentLikeStates[Number(c.id)]?.count||0}</span>
+                </button>
+              </div>
+              {session && String(session.user.username||'').trim() && Number(c.depth||0)<9 &&
+                <form method="POST" action="/api/comments/create" class="comment-form comment-reply-form" data-comment-form id={`reply-${c.id}`} hidden>
+                  <input type="hidden" name="series_id" value={series.id}/>
+                  <input type="hidden" name="parent_id" value={c.id}/>
+                  <input type="hidden" name="return_to" value={`/read/${series.slug}/${current.chapter_number}`}/>
+                  <div class="replying-to">Trả lời <span class="comment-member-identity"><span class="member-rank-icon">{c.role==='admin'?'👑':rankIconMap[(commentRewardMap.get(c.user_id) as any)?.rank_key]||''}</span><strong class={c.role==='admin'?'admin-celestial-gold':''}>{c.display_name||c.username||'Thành viên'}</strong></span></div>
+                  <div class="comment-editor-shell">
+                    <div class="comment-toolbar" role="toolbar" aria-label="Định dạng trả lời">
+                      <button type="button" data-comment-cmd="bold"><strong>B</strong></button>
+                      <button type="button" data-comment-cmd="italic"><em>I</em></button>
+                      <button type="button" data-comment-cmd="underline"><u>U</u></button>
+                      <button type="button" data-comment-cmd="strikeThrough"><s>S</s></button>
+                      <button type="button" data-comment-action="upper">AA</button>
+                      <button type="button" data-comment-cmd="insertUnorderedList">• List</button>
+                      <button type="button" data-comment-cmd="insertOrderedList">1. List</button>
+                      <button type="button" data-comment-block="blockquote">❞</button>
+                      <button type="button" data-comment-block="code">&lt;/&gt;</button>
+                      <button type="button" data-comment-action="clear">Tx</button>
+                    </div>
+                    <div class="comment-editor" contenteditable="true" data-placeholder="Viết trả lời..." spellcheck="true"></div>
+                    <textarea class="comment-source" name="body" maxlength="8000" hidden required></textarea>
+                  </div>
+                  <div class="comment-reply-footer">
+                    <button type="button" class="comment-reply-cancel" data-reply-toggle={`reply-${c.id}`}>Hủy</button>
+                    <button class="button small-button" type="submit">Gửi trả lời</button>
+                  </div>
+                </form>}
+            </div>
+          </article>
+        </div>
+      )}
+    </div>}
+</section>
+
+</div>}
 
 {allowed&&
 <nav class="reader-bottom-nav" aria-label="Điều hướng chapter">
@@ -70,6 +229,112 @@ const nextChapter=currentIndex>=0?chapterList[currentIndex-1]||null:null;
 @media(max-width:480px){.reader-protection-card{padding:25px 18px}.reader-protection-card strong{font-size:16px}}
 @media(prefers-reduced-motion:reduce){.reader-protection-notice{transition:none}}
 </style>
+<script>
+function setupCommentForm(commentForm){
+  if(!(commentForm instanceof HTMLFormElement) || commentForm.dataset.ready==='1') return;
+  commentForm.dataset.ready='1';
+
+  const editor=commentForm.querySelector('.comment-editor');
+  const source=commentForm.querySelector('.comment-source');
+  if(!(editor instanceof HTMLElement) || !(source instanceof HTMLTextAreaElement)) return;
+
+  const sync=()=>{source.value=editor.innerHTML.trim()};
+  const focus=()=>editor.focus();
+
+  commentForm.querySelectorAll('[data-comment-cmd]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      focus();
+      document.execCommand(btn.getAttribute('data-comment-cmd')||'',false);
+      sync();
+    });
+  });
+
+  commentForm.querySelectorAll('[data-comment-block]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      focus();
+      const block=btn.getAttribute('data-comment-block')||'p';
+      document.execCommand('formatBlock',false,block);
+      sync();
+    });
+  });
+
+  commentForm.querySelectorAll('[data-comment-action]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const action=btn.getAttribute('data-comment-action');
+      focus();
+      if(action==='clear') document.execCommand('removeFormat',false);
+      if(action==='upper'){
+        const selection=window.getSelection();
+        if(selection && selection.rangeCount && !selection.isCollapsed){
+          const range=selection.getRangeAt(0);
+          const text=selection.toString();
+          if(text){
+            range.deleteContents();
+            range.insertNode(document.createTextNode(text.toUpperCase()));
+            selection.removeAllRanges();
+          }
+        }
+      }
+      sync();
+    });
+  });
+
+  editor.addEventListener('input',sync);
+  editor.addEventListener('blur',sync);
+  commentForm.addEventListener('submit',e=>{
+    sync();
+    const plain=(editor.innerText||'').trim();
+    if(!plain){
+      e.preventDefault();
+      alert('Bình luận không được để trống.');
+      return;
+    }
+    if(plain.length>2000){
+      e.preventDefault();
+      alert('Bình luận tối đa 2.000 ký tự.');
+    }
+  });
+  sync();
+}
+
+document.querySelectorAll('[data-comment-form]').forEach(setupCommentForm);
+
+document.querySelectorAll('[data-comment-like]').forEach(btn=>{
+  btn.addEventListener('click',async()=>{
+    if(btn.dataset.busy==='1')return;
+    const id=btn.dataset.commentLike;
+    const seriesId=btn.dataset.seriesId;
+    btn.dataset.busy='1';
+    btn.disabled=true;
+    try{
+      const response=await fetch('/api/comments/like',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({comment_id:Number(id),series_id:seriesId})});
+      if(response.status===401){window.location.href='/login?next='+encodeURIComponent(location.pathname+'#comments');return;}
+      const data=await response.json();
+      if(!response.ok)throw new Error(data.error||'Không thể thả tim bình luận.');
+      btn.classList.toggle('is-liked',!!data.liked);
+      btn.setAttribute('aria-pressed',String(!!data.liked));
+      const heart=btn.querySelector('.comment-like-heart');if(heart)heart.textContent=data.liked?'♥':'♡';
+      const count=btn.querySelector('.comment-like-count');if(count&&typeof data.count==='number'&&Number.isFinite(data.count))count.textContent=String(data.count);
+      btn.classList.remove('like-pop');void btn.offsetWidth;btn.classList.add('like-pop');
+    }catch(e){alert(e instanceof Error?e.message:'Không thể thả tim bình luận.');}
+    finally{btn.disabled=false;delete btn.dataset.busy;}
+  });
+});
+
+document.querySelectorAll('[data-reply-toggle]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const id=btn.getAttribute('data-reply-toggle');
+    if(!id) return;
+    const form=document.getElementById(id);
+    if(!(form instanceof HTMLFormElement)) return;
+    const willOpen=form.hidden;
+    form.hidden=!form.hidden;
+    if(willOpen){
+      form.querySelector('.comment-editor')?.focus();
+    }
+  });
+});
+</script>
 </BaseLayout>
 <script>
 const chapterJump=document.querySelector('[data-chapter-jump]');
@@ -417,5 +682,40 @@ if(protectionNotice){
       e.preventDefault();e.stopPropagation();showProtectionNotice();
     }
   },{capture:true});
+}
+</script>
+
+<script>
+const reactionRoot=document.querySelector('[data-chapter-reactions]');
+if(reactionRoot instanceof HTMLElement){
+  const chapterId=reactionRoot.dataset.chapterId;
+  const status=reactionRoot.querySelector('[data-reaction-status]');
+  const buttons=[...reactionRoot.querySelectorAll('[data-reaction]')];
+  const setStatus=(message)=>{if(status)status.textContent=message};
+  const render=(data)=>{
+    for(const button of buttons){
+      const key=button.dataset.reaction;
+      const count=button.querySelector('[data-count]');
+      if(count)count.textContent=String(data.counts?.[key]||0);
+      const selected=!!data.mine?.includes(key);
+      button.classList.toggle('is-selected',selected);
+      button.setAttribute('aria-pressed',String(selected));
+    }
+  };
+  fetch('/api/chapter-reactions?chapter_id='+encodeURIComponent(chapterId||''),{credentials:'same-origin'})
+    .then(async r=>{const data=await r.json();if(!r.ok)throw new Error(data.error||'Không tải được cảm xúc.');return data})
+    .then(render).catch(e=>setStatus(e.message));
+  buttons.forEach(button=>button.addEventListener('click',async()=>{
+    if(reactionRoot.dataset.authenticated!=='1'){
+      location.href='/login?next='+encodeURIComponent(location.pathname+location.search);return;
+    }
+    if(button.disabled)return;
+    button.disabled=true;setStatus('');
+    try{
+      const response=await fetch('/api/chapter-reactions',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({chapter_id:chapterId,reaction:button.dataset.reaction})});
+      const data=await response.json();if(!response.ok)throw new Error(data.error||'Không thể lưu cảm xúc.');render(data);
+    }catch(e){setStatus(e instanceof Error?e.message:'Có lỗi xảy ra.');}
+    finally{button.disabled=false;}
+  }));
 }
 </script>
