@@ -70,7 +70,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
 
 
 {allowed&&<section class="chapter-reactions" data-chapter-reactions data-chapter-id={current.id} data-authenticated={session?'1':'0'}>
-  <h2>Bạn thấy chapter này thế nào?</h2><p>Chọn những cảm xúc của cậu nhé 💕</p>
+  <h2>Bạn thấy chapter này thế nào?</h2><p>Có thể chọn nhiều cảm xúc nè 💕</p>
   <div class="chapter-reaction-grid">{[
     ['support','👍','Ủng hộ'],['happy','😄','Vui'],['love','😍','Yêu thích'],['surprised','😮','Ngạc nhiên'],['angry','😡','Tức giận'],['sad','😢','Buồn']
   ].map(([key,emoji,label])=><button type="button" class="chapter-reaction" data-reaction={key} aria-pressed="false"><span class="chapter-reaction-pill"><span aria-hidden="true">{emoji}</span> <strong data-count>0</strong></span><span class="chapter-reaction-label">{label}</span></button>)}</div>
