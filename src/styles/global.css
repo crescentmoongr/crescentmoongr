@@ -4129,3 +4129,7 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .chapter-shared-comments{margin-top:26px}
 @media(max-width:600px){.chapter-reaction-grid{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:16px}.chapter-reactions{padding:18px 10px}}
 @media(prefers-reduced-motion:reduce){.chapter-reaction-pill{transition:none}}
+
+/* Donate — Cứu trợ cột sống */
+.donate-page{max-width:680px;margin:25px auto 50px;text-align:center;padding:30px 22px;border-radius:24px;background:linear-gradient(135deg,#fff8fc,#f6f0ff);box-shadow:0 8px 28px #b85c9a18;color:#654c73}
+.donate-page h1{color:#a45a9e}.donate-page>p{line-height:1.7}.donate-moon{font-size:2.8rem}.donate-qr-card{max-width:370px;margin:22px auto;padding:20px;border:1px solid #f3c5e7;border-radius:20px;background:white;box-shadow:0 4px 16px #b36c9a12}.donate-qr-card h2{font-size:1.25rem;color:#a25a9e}.donate-qr-card img{width:min(100%,280px);height:auto;aspect-ratio:1;object-fit:contain}.donate-qr-card p{overflow-wrap:anywhere}.donate-unavailable{padding:25px;border-radius:15px;background:#fff}.chapter-donate-cta{margin:20px auto;padding:15px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;border-radius:16px;background:linear-gradient(110deg,#fff0f7,#f3eaff);color:#8b548b;text-align:center}.chapter-donate-cta .button{white-space:normal}

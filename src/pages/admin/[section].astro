@@ -6,7 +6,7 @@ import { getAdminSeriesList, getAllAdminChapters, statusLabel, getSiteSetting, g
 import { requireAdminSession } from '../../lib/auth';
 export const prerender=false;
 
-const allowed=['announcement','social','ads','add-series','series','comments','members','authors','genres','tags'];
+const allowed=['announcement','social','ads','donate','add-series','series','comments','members','authors','genres','tags'];
 const section=String(Astro.params.section||'series');
 if(!allowed.includes(section)) return Astro.redirect('/admin/series');
 const adminSession=await requireAdminSession(Astro.cookies);
@@ -18,7 +18,7 @@ const success=Astro.url.searchParams.get('success');const error=Astro.url.search
 let rows:any[]=[]; const chapterCounts=new Map<string,number>(); const latestChapterAt=new Map<string,number>(); const seriesViews=new Map<string,number>();
 const adminRankIconMap:any={mam_trang:'🌱',trang_non:'🌙',trang_tron:'🌕',anh_sao:'✨',sao_sang:'🌟',tinh_nguyet:'💫'}; let adminCommentRewardMap=new Map<string,any>();
 let relatedChoices:any[]=[];
-let announcementHtml=''; let adHtml=''; let socialLinks:any={}; let members:any[]=[]; let membersError=''; let adminComments:any[]=[]; let commentsError=''; let authors:any[]=[]; let genresManaged:any[]=[]; let tagsManaged:any[]=[];
+let announcementHtml=''; let adHtml=''; let donate:any={}; let socialLinks:any={}; let members:any[]=[]; let membersError=''; let adminComments:any[]=[]; let commentsError=''; let authors:any[]=[]; let genresManaged:any[]=[]; let tagsManaged:any[]=[];
 
 try{
   if(section==='series'){
@@ -40,6 +40,7 @@ try{
     });
   }
   if(section==='announcement') announcementHtml=(await getServiceSiteSetting('site_announcement_html'))?.value||'';
+  if(section==='donate'){try{donate=JSON.parse((await getServiceSiteSetting('donate_config'))?.value||'{}')}catch{donate={}}}
   if(section==='ads') adHtml=(await getSiteSetting('reader_ad_html',token))?.value||'';
   if(section==='social'){
     const raw=(await getSiteSetting('social_links',token))?.value||''; const parsed=raw?JSON.parse(raw):{}; if(parsed&&typeof parsed==='object')socialLinks=parsed;
@@ -57,7 +58,7 @@ try{
     relatedChoices=await getAdminSeriesList(token).catch(()=>[]);
   }
 }catch{}
-const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội',ads:'Quảng cáo','add-series':'Thêm truyện',series:'Quản lý truyện',comments:'Quản lý bình luận',members:'Quản lý thành viên',authors:'Quản lý tác giả',genres:'Quản lý thể loại',tags:'Quản lý Tag'};
+const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội',ads:'Quảng cáo',donate:'Donate','add-series':'Thêm truyện',series:'Quản lý truyện',comments:'Quản lý bình luận',members:'Quản lý thành viên',authors:'Quản lý tác giả',genres:'Quản lý thể loại',tags:'Quản lý Tag'};
 ---
 <BaseLayout title={`${pageTitles[section]} — Admin — Crescent Moon Translation`}>
 <section class="admin-card admin-wide"><div class="admin-top"><div><h1>Admin</h1><p class="meta">Đăng nhập: {admin.email}</p></div></div>
@@ -88,6 +89,19 @@ const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội'
     <label class="field"><span>Telegram</span><input name="telegram" type="url" maxlength="1000" value={socialLinks.telegram||''} placeholder="https://t.me/..."/></label>
     <label class="field"><span>Discord</span><input name="discord" type="url" maxlength="1000" value={socialLinks.discord||''} placeholder="https://discord.gg/..."/></label>
   </div><button class="button" type="submit">Lưu mạng xã hội</button></form>
+</section>}
+
+{section==='donate' && <section class="admin-card admin-wide admin-anchor-section">
+  <div class="section-title"><div><h2>Donate</h2><p class="meta">Quản lý QR chuyển khoản cho mục “Cứu trợ cột sống” trên website.</p></div></div>
+  <form method="POST" action="/api/admin/settings/donate" enctype="multipart/form-data" class="admin-form">
+    <label class="field"><span>Tên ngân hàng</span><input name="bank" maxlength="100" value={donate.bank||''} placeholder="Ví dụ: Vietcombank"/></label>
+    <label class="field"><span>Tên chủ tài khoản</span><input name="holder" maxlength="120" value={donate.holder||''}/></label>
+    <label class="field"><span>Số tài khoản</span><input name="account" maxlength="40" value={donate.account||''}/></label>
+    <label class="field"><span>Ảnh QR chuyển khoản (PNG, JPG, WebP; tối đa 250 KB)</span><input name="qr" type="file" accept="image/png,image/jpeg,image/webp"/></label>
+    {donate.qr&&<div><img src={donate.qr} alt="QR hiện tại" style="width:190px;max-width:100%;border-radius:14px"/><p class="meta">Để trống ô ảnh nếu muốn giữ QR hiện tại.</p></div>}
+    <label class="check-row"><input type="checkbox" name="enabled" value="1" checked={donate.enabled===true}/><span>Hiển thị donate trên website</span></label>
+    <button class="button" type="submit">Lưu Donate</button>
+  </form>
 </section>}
 
 {section==='ads' && <section class="admin-card admin-wide admin-anchor-section">

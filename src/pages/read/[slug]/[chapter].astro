@@ -76,6 +76,7 @@ const commentSuccess=Astro.url.searchParams.get('comment')==='success';
   ].map(([key,emoji,label])=><button type="button" class="chapter-reaction" data-reaction={key} aria-pressed="false"><span class="chapter-reaction-pill"><span aria-hidden="true">{emoji}</span> <strong data-count>0</strong></span><span class="chapter-reaction-label">{label}</span></button>)}</div>
   <p class="chapter-reaction-status" data-reaction-status aria-live="polite"></p>
 </section>}
+{allowed&&<div class="chapter-donate-cta"><span>🩹 Chiếc lưng nhà Trăng đang cần tiếp viện!</span> <a href="/donate" class="button secondary">Cứu trợ cột sống</a></div>}
 {allowed&&<div class="chapter-shared-comments"><section class="comments-section" id="comments">
   <div class="section-title"><h2 class="major-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Bình luận</h2><span class="meta">{comments.length} bình luận</span></div>
   {commentSuccess&&<div class="notice success">Đã gửi bình luận.</div>}
