@@ -451,6 +451,7 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
       cover.className='notification-cover';
       if(item.cover){
         const img=document.createElement('img');
+        img.addEventListener('error',()=>{img.remove();cover.textContent='☾';},{once:true});
         img.src=String(item.cover);
         img.alt='';
         img.loading='lazy';
@@ -572,6 +573,8 @@ const hasSocialLinks=!!(socialLinks.facebook||socialLinks.telegram||socialLinks.
   EMOJIS.forEach(e=>{const b=document.createElement('button');b.type='button';b.className='emoji-choice';b.textContent=e;b.title=e;b.addEventListener('click',()=>insertEmoji(e));grid.appendChild(b)});
 
   function eligible(el){
+    // Donate bank details must not receive emoji insertion buttons.
+    if(el.closest?.('form[action="/api/admin/settings/donate"]')) return false;
     // Taxonomy names (Admin > Tác giả / Thể loại) are metadata, not content fields.
     if(el.closest?.('.taxonomy-create-form, .taxonomy-admin-row, [data-admin-tag-editor]')) return false;
     if(el.matches?.('[contenteditable="true"]')) return true;

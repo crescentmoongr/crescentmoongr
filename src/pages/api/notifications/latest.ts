@@ -20,6 +20,11 @@ export const GET:APIRoute=async({cookies})=>{
     })() : Promise.resolve([]);
     const [chapters,series,replies,achievements,likes]=await Promise.all([getAllPublicChapters(),getSeriesList(),replyPromise,achievementsPromise,likesPromise]);
     const seriesMap=new Map(series.map(s=>[s.id,s]));
+    const seriesBySlug=new Map(series.map(s=>[s.slug,s]));
+    const commentCover=(slug:unknown)=>{
+      const s=seriesBySlug.get(String(slug||''));
+      return s?.cover_key?`/api/cover/${s.id}`:null;
+    };
     const cutoff=Date.now()-7*24*60*60*1000;
     const chapterItems=chapters.filter(ch=>{
       const d=ch.published_at||ch.created_at;
@@ -33,14 +38,14 @@ export const GET:APIRoute=async({cookies})=>{
     const replyItems=(replies||[]).map((n:any)=>({
       id:`reply:${n.id}`,notification_id:n.id,type:'comment_reply',actor_name:n.actor_name||'Thành viên',
       title:n.series_title||'Truyện',preview:n.reply_preview||'',href:`/manga/${n.series_slug}#comment-${n.comment_id}`,
-      cover:n.actor_user_id?`/api/avatar/${encodeURIComponent(n.actor_user_id)}`:null,
+      cover:commentCover(n.series_slug),
       created_at:n.created_at,is_read:!!n.is_read
     }));
     const achievementItems=(achievements||[]).map((n:any)=>({
       id:`achievement:${n.id}`,notification_id:n.id,type:'achievement',title:n.achievement,
       href:'/account#achievements',cover:null,created_at:n.created_at,is_read:!!n.is_read
     }));
-    const likeItems=(likes||[]).map((n:any)=>({id:`like:${n.id}`,notification_id:n.id,type:'comment_like',actor_name:n.actor_name||'Thành viên',title:n.series_title||'Truyện',href:`/manga/${n.series_slug}#comment-${n.comment_id}`,cover:n.actor_user_id?`/api/avatar/${encodeURIComponent(n.actor_user_id)}`:null,created_at:n.created_at,is_read:!!n.is_read}));
+    const likeItems=(likes||[]).map((n:any)=>({id:`like:${n.id}`,notification_id:n.id,type:'comment_like',actor_name:n.actor_name||'Thành viên',title:n.series_title||'Truyện',href:`/manga/${n.series_slug}#comment-${n.comment_id}`,cover:commentCover(n.series_slug),created_at:n.created_at,is_read:!!n.is_read}));
     const items=[...likeItems,...achievementItems,...replyItems,...chapterItems].sort((a:any,b:any)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,30);
     return new Response(JSON.stringify({items}),{headers:{'content-type':'application/json; charset=utf-8','cache-control':'private, no-store'}});
   }catch{

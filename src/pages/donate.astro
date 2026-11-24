@@ -10,7 +10,7 @@ try { donate=JSON.parse((await getServiceSiteSetting('donate_config'))?.value||'
   <div class="donate-moon">🌙 🩹</div>
   <h1>Cứu trợ cột sống</h1>
   <p>Sau những đêm còng lưng dịch truyện, chiếc cột sống của nhà Trăng đang phát tín hiệu SOS! 🆘</p>
-  <p>Nếu yêu thương Trăng, hãy góp chút kinh phí mua thuốc chống đau lưng và cao dán cho nhóm nhé! 💕</p>
+  <p>Nếu bạn yêu mến Trăng, bạn có thể góp chút cao dán và thuốc chống đau lưng cho Trăng nhó! ٩(ˊᗜˋ*)و ♡</p>
   {donate.enabled&&donate.qr ? <div class="donate-qr-card">
     <h2>🩹 QR cứu trợ cột sống</h2>
     <img src={donate.qr} alt="Mã QR chuyển khoản ủng hộ Crescent Moon" width="280" height="280"/>
@@ -18,7 +18,7 @@ try { donate=JSON.parse((await getServiceSiteSetting('donate_config'))?.value||'
     {donate.holder&&<p><strong>Chủ tài khoản:</strong> {donate.holder}</p>}
     {donate.account&&<p><strong>Số tài khoản:</strong> {donate.account}</p>}
     <p class="meta">Quét QR bằng ứng dụng ngân hàng để chuyển khoản trực tiếp.</p>
-  </div> : <p class="donate-unavailable">Nhà Trăng chưa mở nhận cứu trợ. Hẹn cậu quay lại sau nhé! 🌷</p>}
+  </div> : <p class="donate-unavailable">Nhà Trăng chưa mở nhận cứu trợ. Hẹn bạn quay lại sau nhé! 🌷</p>}
   <p class="meta">Ủng hộ hoàn toàn tự nguyện, không ảnh hưởng đến quyền đọc truyện.</p>
 </section>
 </BaseLayout>
