@@ -1,7 +1,7 @@
 import type {APIRoute} from 'astro';
 import {requireAdminSession} from '../../../../lib/auth';
 import {getServiceSiteSetting} from '../../../../lib/supabase';
-import {supabaseGet,supabasePatch,supabasePost} from '../../../../lib/supabase';
+import {env} from 'cloudflare:workers';
 export const prerender=false;
 const text=(form:FormData,key:string,max:number)=>String(form.get(key)||'').trim().slice(0,max);
 export const POST:APIRoute=async({request,cookies})=>{
@@ -25,9 +25,21 @@ export const POST:APIRoute=async({request,cookies})=>{
       qr=`data:${mime};base64,${btoa(binary)}`;
     }
     const value=JSON.stringify({bank:text(form,'bank',100),holder:text(form,'holder',120),account:text(form,'account',40),enabled:form.get('enabled')==='1',qr});
-    const existing=await supabaseGet<any[]>('site_settings?select=key&key=eq.donate_config&limit=1',admin.token);
-    if(existing.length)await supabasePatch('site_settings?key=eq.donate_config',admin.token,{value,updated_at:new Date().toISOString()});
-    else await supabasePost('site_settings',admin.token,{key:'donate_config',value,updated_at:new Date().toISOString()});
+    // Only a verified Admin may reach this point. Keep the service key server-side.
+    const url=String(env.SUPABASE_URL||'').replace(/\/$/,'');
+    const serviceKey=String(env.SUPABASE_SERVICE_ROLE_KEY||'').trim();
+    if(!url||!serviceKey)throw new Error('Thiếu cấu hình Supabase service role trên Cloudflare.');
+    const response=await fetch(`${url}/rest/v1/site_settings?on_conflict=key`,{
+      method:'POST',
+      headers:{
+        apikey:serviceKey,
+        Authorization:`Bearer ${serviceKey}`,
+        'Content-Type':'application/json',
+        Prefer:'resolution=merge-duplicates,return=minimal'
+      },
+      body:JSON.stringify({key:'donate_config',value,updated_at:new Date().toISOString()})
+    });
+    if(!response.ok)throw new Error(`Supabase ${response.status}: ${await response.text()}`);
     return redirect('success','Đã lưu Donate.');
   }catch(e:any){return redirect('error',e?.message||'Không lưu được Donate.');}
 };
