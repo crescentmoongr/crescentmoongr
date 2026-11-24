@@ -116,8 +116,17 @@ const COMMENT_ALLOWED_TAGS = new Set([
   'p','br','strong','b','em','i','u','s','strike','ul','ol','li','blockquote','code'
 ]);
 
+// Normalize editor-generated non-breaking spaces, including previously double-encoded
+// entities. Only comment content uses this helper; preserve formatting and emoji.
+function normalizeCommentSpaces(value: string) {
+  return value
+    .replace(/&amp;(?:amp;)*nbsp;/gi, ' ')
+    .replace(/&nbsp;|&#0*160;|&#x0*a0;/gi, ' ')
+    .replace(/\u00a0/g, ' ');
+}
+
 export function sanitizeCommentRichText(input: string | null | undefined) {
-  let value = String(input || '').trim().slice(0, 8000);
+  let value = normalizeCommentSpaces(String(input || '')).trim().slice(0, 8000);
   if (!value) return '';
 
   if (!/<[a-z][\s\S]*>/i.test(value)) return plainTextToHtml(value);
