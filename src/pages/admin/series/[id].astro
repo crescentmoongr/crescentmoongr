@@ -49,7 +49,7 @@ const formatViews=(n:number)=>new Intl.NumberFormat('vi-VN').format(n);
 </div>
   <small class="meta">Dùng cùng kiểu soạn thảo với phần Bình luận để tránh lỗi định dạng.</small>
 </div>
-<label class="field"><span>Thay ảnh bìa</span><input name="cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif"/></label>
+<label class="field" data-cover-preview><span>Thay ảnh bìa</span><input name="cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif"/><img data-cover-preview-image class="admin-cover-preview" src={series.cover_key?`/api/cover/${series.id}?admin=1`:undefined} alt="Ảnh bìa hiện tại hoặc ảnh mới" hidden={!series.cover_key}/></label>
 <div class="field series-notify-field"><span>Thông báo chapter mới</span><div class="series-notify-options">
   <label class="notify-switch"><input name="notify_discord" type="checkbox" value="true" checked={series.notify_discord !== false}/><span class="notify-switch-ui" aria-hidden="true"></span><span><b>Discord</b><small>Tự động gửi chapter mới</small></span></label>
   <label class="notify-switch"><input name="notify_telegram" type="checkbox" value="true" checked={series.notify_telegram !== false}/><span class="notify-switch-ui" aria-hidden="true"></span><span><b>Telegram</b><small>Tự động gửi chapter mới</small></span></label>
@@ -405,3 +405,30 @@ setupAdminCommentEditors();
 </BaseLayout>
 
 <script is:inline src="/js/admin-tag-entry.js"></script>
+
+<style is:global>
+.admin-cover-preview{display:block;width:160px;max-width:100%;height:auto;max-height:260px;object-fit:contain;object-position:left center;margin-top:12px;border-radius:12px;box-shadow:0 2px 12px rgba(95,54,99,.12)}
+.admin-cover-preview[hidden]{display:none}
+</style>
+<script>
+  document.querySelectorAll<HTMLElement>('[data-cover-preview]').forEach((wrapper) => {
+    const input = wrapper.querySelector<HTMLInputElement>('input[type="file"][name="cover"]');
+    const image = wrapper.querySelector<HTMLImageElement>('[data-cover-preview-image]');
+    if (!input || !image) return;
+    const initialSrc = image.getAttribute('src') || '';
+    let objectUrl: string | null = null;
+    input.addEventListener('change', () => {
+      if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+      const file = input.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        objectUrl = URL.createObjectURL(file);
+        image.src = objectUrl;
+        image.hidden = false;
+      } else {
+        if (initialSrc) image.src = initialSrc; else image.removeAttribute('src');
+        image.hidden = !initialSrc;
+      }
+    });
+    window.addEventListener('pagehide', () => { if (objectUrl) URL.revokeObjectURL(objectUrl); }, { once: true });
+  });
+</script>
