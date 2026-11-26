@@ -4133,3 +4133,11 @@ button.home-more-button:hover span{transform:translateY(2px);}
 /* Donate — Cứu trợ cột sống */
 .donate-page{max-width:680px;margin:25px auto 50px;text-align:center;padding:30px 22px;border-radius:24px;background:linear-gradient(135deg,#fff8fc,#f6f0ff);box-shadow:0 8px 28px #b85c9a18;color:#654c73}
 .donate-page h1{color:#a45a9e}.donate-page>p{line-height:1.7}.donate-moon{font-size:2.8rem}.donate-qr-card{max-width:370px;margin:22px auto;padding:20px;border:1px solid #f3c5e7;border-radius:20px;background:white;box-shadow:0 4px 16px #b36c9a12}.donate-qr-card h2{font-size:1.25rem;color:#a25a9e}.donate-qr-card img{width:min(100%,280px);height:auto;aspect-ratio:1;object-fit:contain}.donate-qr-card p{overflow-wrap:anywhere}.donate-unavailable{padding:25px;border-radius:15px;background:#fff}.chapter-donate-cta{margin:20px auto;padding:15px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;border-radius:16px;background:linear-gradient(110deg,#fff0f7,#f3eaff);color:#8b548b;text-align:center}.chapter-donate-cta .button{white-space:normal}
+
+/* v13.39 — recent chapter status filters */
+.home-recent-filters{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;margin-bottom:18px}
+.home-recent-filter{appearance:none;cursor:pointer;border:1px solid #edc9e3;border-radius:999px;padding:9px 17px;background:rgba(255,250,255,.86);color:#985a91;font:inherit;font-weight:700;font-size:13px;line-height:1.35;box-shadow:0 2px 7px rgba(173,93,158,.07);transition:transform .28s ease,box-shadow .28s ease,background .28s ease,border-color .28s ease,color .28s ease}
+.home-recent-filter:hover,.home-recent-filter:focus-visible{background:linear-gradient(115deg,#ffe0ef,#e9d6ff);border-color:#d78ccf;box-shadow:0 5px 15px rgba(192,104,186,.24);transform:translateY(-2px)}
+.home-recent-filter.is-active{background:linear-gradient(115deg,#f8bbdc,#d8b4f5);color:#71376e;border-color:#c989d0;box-shadow:0 4px 13px rgba(177,91,180,.25),inset 0 1px 0 rgba(255,255,255,.5)}
+.home-recent-filter:active{transform:translateY(0) scale(.97)}
+@media(prefers-reduced-motion:reduce){.home-recent-filter{transition:none}.home-recent-filter:hover{transform:none}}

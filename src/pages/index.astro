@@ -190,6 +190,12 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
 
 <div class="section-title home-section-head" id="home-recent-heading"><h2 class="home-section-title moon-heading"><img src="/half-moon.png" alt="" aria-hidden="true"/>Mới cập nhật</h2></div>
 {recent.length? <>
+<div class="home-recent-filters home-section-content" role="group" aria-label="Lọc truyện mới cập nhật theo trạng thái" data-recent-filters>
+  <button type="button" class="home-recent-filter is-active" data-recent-status="all" aria-pressed="true">Tất cả</button>
+  <button type="button" class="home-recent-filter" data-recent-status="ongoing" aria-pressed="false">Đang tiến hành</button>
+  <button type="button" class="home-recent-filter" data-recent-status="completed" aria-pressed="false">Hoàn thành</button>
+  <button type="button" class="home-recent-filter" data-recent-status="dropped" aria-pressed="false">Drop</button>
+</div>
 <section class="grid home-section-content" data-recent-grid aria-label="Danh sách truyện mới cập nhật">{recent.map(item=><a class="card" href={`/manga/${item.slug}`}><div class="cover card-cover">{statusBadgeLabel(item.status)&&<span class={`cover-badge ${statusBadgeClass(item.status)}`}>{statusBadgeLabel(item.status)}</span>}{item.cover_key?<img src={`/api/cover/${item.id}`} alt={`Bìa ${item.title}`} loading="lazy"/>:<span>{item.title}</span>}</div><div class="card-body"><h3>{item.title}</h3><div class="meta">{hasNewChapter(item.id)&&<img class="recent-new-star" src="/icons8-star.gif" alt="" aria-hidden="true" />}{latestChapter.has(item.id)?<span class="recent-chapter-number">{`Chap ${latestChapter.get(item.id)}`}</span>:null}{hasNewChapter(item.id)?<><span class="recent-new-separator" aria-hidden="true">-</span><span class="recent-new-tag" aria-label="Chapter mới trong 48 giờ">NEW</span><img class="recent-new-star" src="/icons8-star.gif" alt="" aria-hidden="true" /></>:<span>{statusLabel(item.status)}</span>}</div></div></a>)}</section>
 <nav class="home-recent-pagination" aria-label="Phân trang truyện mới cập nhật" data-recent-pagination>
   <div class="home-recent-pagination-controls" data-recent-page-controls></div>
@@ -431,8 +437,11 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
     let items=[];
     try{items=JSON.parse(recentDataNode.textContent||'[]')}catch{}
     const pageSize=12;
-    const pageCount=Math.max(1,Math.ceil(items.length/pageSize));
+    let filteredItems=items;
+    let pageCount=Math.max(1,Math.ceil(filteredItems.length/pageSize));
     let currentPage=1;
+    const filterButtons=Array.from(document.querySelectorAll('[data-recent-filters] [data-recent-status]'));
+    let renderedStatus='all';
     const statusText={completed:'Hoàn thành',ongoing:'Đang tiến hành',hiatus:'Tạm ngưng',dropped:'Đã drop',upcoming:'Sắp ra mắt'};
     const badgeText={completed:'FULL',ongoing:'ONGOING',hiatus:'HIATUS',dropped:'DROP',upcoming:'UPCOMING'};
     const badgeClass={completed:'full',ongoing:'ongoing',hiatus:'hiatus',dropped:'drop',upcoming:'upcoming'};
@@ -477,17 +486,33 @@ try{latestCommentRewardMap=new Map((await getCommentMemberRewards(latestComments
     };
     const renderPage=(page,scroll)=>{
       if(!Number.isInteger(page)||page<1||page>pageCount)return;
-      if(page!==currentPage){
+      if(page!==currentPage || renderedStatus!=='all' || recentGrid.dataset.status!=='all'){
         const fragment=document.createDocumentFragment();
-        items.slice((page-1)*pageSize,page*pageSize).forEach(item=>fragment.appendChild(makeCard(item)));
+        filteredItems.slice((page-1)*pageSize,page*pageSize).forEach(item=>fragment.appendChild(makeCard(item)));
         recentGrid.replaceChildren(fragment);
       }
+      recentGrid.dataset.status=renderedStatus;
       currentPage=page;
       renderControls();
-      const start=items.length?(page-1)*pageSize+1:0;
-      pageSummary.textContent=`Hiển thị ${start}–${Math.min(page*pageSize,items.length)} trong ${items.length} truyện`;
+      const start=filteredItems.length?(page-1)*pageSize+1:0;
+      pageSummary.textContent=filteredItems.length?`Hiển thị ${start}–${Math.min(page*pageSize,filteredItems.length)} trong ${filteredItems.length} truyện`:'Không có truyện ở trạng thái này';
       if(scroll)document.getElementById('home-recent-heading')?.scrollIntoView({behavior:'smooth',block:'start'});
     };
+    recentGrid.dataset.status='all';
+    filterButtons.forEach(button=>button.addEventListener('click',()=>{
+      const status=button.dataset.recentStatus||'all';
+      if(status===renderedStatus)return;
+      renderedStatus=status;
+      filteredItems=status==='all'?items:items.filter(item=>item.status===status);
+      pageCount=Math.max(1,Math.ceil(filteredItems.length/pageSize));
+      filterButtons.forEach(b=>{
+        const active=b===button;
+        b.classList.toggle('is-active',active);
+        b.setAttribute('aria-pressed',String(active));
+      });
+      currentPage=0;
+      renderPage(1,false);
+    }));
     renderPage(1,false);
   }
 
