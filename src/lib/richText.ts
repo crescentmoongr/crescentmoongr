@@ -1,3 +1,4 @@
+import {renderStickers} from './stickers';
 const ALLOWED_TAGS = new Set([
   'p','br','strong','b','em','i','u','h3','h4','ul','ol','li','hr','blockquote','a'
 ]);
@@ -63,7 +64,7 @@ export function sanitizeRichText(input: string | null | undefined) {
 }
 
 export function richTextToHtml(input: string | null | undefined) {
-  return sanitizeRichText(input);
+  return renderStickers(sanitizeRichText(input));
 }
 
 
@@ -152,5 +153,5 @@ export function sanitizeCommentRichText(input: string | null | undefined) {
 }
 
 export function commentRichTextToHtml(input: string | null | undefined) {
-  return sanitizeCommentRichText(input);
+  return renderStickers(sanitizeCommentRichText(input));
 }

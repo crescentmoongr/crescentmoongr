@@ -6,7 +6,7 @@ import { getAdminSeriesList, getAllAdminChapters, statusLabel, getSiteSetting, g
 import { requireAdminSession } from '../../lib/auth';
 export const prerender=false;
 
-const allowed=['announcement','social','ads','donate','add-series','series','comments','members','authors','genres','tags'];
+const allowed=['announcement','social','ads','donate','stickers','add-series','series','comments','members','authors','genres','tags'];
 const section=String(Astro.params.section||'series');
 if(!allowed.includes(section)) return Astro.redirect('/admin/series');
 const adminSession=await requireAdminSession(Astro.cookies);
@@ -15,7 +15,7 @@ const token=adminSession.token;const admin=adminSession.user;
 const success=Astro.url.searchParams.get('success');const error=Astro.url.searchParams.get('error');
 
 
-let rows:any[]=[]; const chapterCounts=new Map<string,number>(); const latestChapterAt=new Map<string,number>(); const seriesViews=new Map<string,number>();
+let stickers:any[]=[]; let rows:any[]=[]; const chapterCounts=new Map<string,number>(); const latestChapterAt=new Map<string,number>(); const seriesViews=new Map<string,number>();
 const adminRankIconMap:any={mam_trang:'🌱',trang_non:'🌙',trang_tron:'🌕',anh_sao:'✨',sao_sang:'🌟',tinh_nguyet:'💫'}; let adminCommentRewardMap=new Map<string,any>();
 let relatedChoices:any[]=[];
 let announcementHtml=''; let adHtml=''; let donate:any={}; let socialLinks:any={}; let members:any[]=[]; let membersError=''; let adminComments:any[]=[]; let commentsError=''; let authors:any[]=[]; let genresManaged:any[]=[]; let tagsManaged:any[]=[];
@@ -40,6 +40,7 @@ try{
     });
   }
   if(section==='announcement') announcementHtml=(await getServiceSiteSetting('site_announcement_html'))?.value||'';
+  if(section==='stickers') stickers=await (await import('../../lib/stickers')).getStickers();
   if(section==='donate'){try{donate=JSON.parse((await getServiceSiteSetting('donate_config'))?.value||'{}')}catch{donate={}}}
   if(section==='ads') adHtml=(await getSiteSetting('reader_ad_html',token))?.value||'';
   if(section==='social'){
@@ -58,7 +59,7 @@ try{
     relatedChoices=await getAdminSeriesList(token).catch(()=>[]);
   }
 }catch{}
-const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội',ads:'Quảng cáo',donate:'Donate','add-series':'Thêm truyện',series:'Quản lý truyện',comments:'Quản lý bình luận',members:'Quản lý thành viên',authors:'Quản lý tác giả',genres:'Quản lý thể loại',tags:'Quản lý Tag'};
+const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội',ads:'Quảng cáo',donate:'Donate',stickers:'Sticker','add-series':'Thêm truyện',series:'Quản lý truyện',comments:'Quản lý bình luận',members:'Quản lý thành viên',authors:'Quản lý tác giả',genres:'Quản lý thể loại',tags:'Quản lý Tag'};
 ---
 <BaseLayout title={`${pageTitles[section]} — Admin — Crescent Moon Translation`}>
 <section class="admin-card admin-wide"><div class="admin-top"><div><h1>Admin</h1><p class="meta">Đăng nhập: {admin.email}</p></div></div>
@@ -103,6 +104,8 @@ const pageTitles:any={announcement:'Thông báo chung',social:'Mạng xã hội'
     <button class="button" type="submit">Lưu Donate</button>
   </form>
 </section>}
+
+{section==='stickers' && <section class="admin-card admin-wide admin-anchor-section"><div class="section-title"><h2>Sticker</h2><p class="meta">Kho sticker dùng chung, hiển thị 72px ở mọi nơi. GIF, WebP động, PNG; tối đa 500 KB/file.</p></div><form class="admin-form" method="POST" action="/api/admin/stickers/manage" enctype="multipart/form-data"><input type="hidden" name="action" value="upload"/><label class="field"><span>Tải nhiều sticker</span><input type="file" name="files" accept="image/gif,image/webp,image/png" multiple required/></label><button class="button" type="submit">Tải sticker lên</button></form><div class="cm-sticker-admin-grid">{stickers.map((st:any)=><div class="cm-sticker-admin-item"><img class="cm-sticker" src={`/api/stickers/${st.id}`} width="72" height="72" loading="lazy" alt="Sticker"/><span>{st.enabled?'Đang bật':'Đã tắt'}</span><div class="cm-sticker-actions">{['up','down','toggle','delete'].map(action=><form method="POST" action="/api/admin/stickers/manage"><input type="hidden" name="id" value={st.id}/><input type="hidden" name="action" value={action}/><button type="submit" onclick={action==='delete'?"return confirm('Xóa sticker này?')":undefined}>{({up:'↑',down:'↓',toggle:st.enabled?'Ẩn':'Bật',delete:'Xóa'} as any)[action]}</button></form>)}</div></div>)}</div></section>}
 
 {section==='ads' && <section class="admin-card admin-wide admin-anchor-section">
   <div class="section-title"><h2>Quảng cáo</h2></div><form method="POST" action="/api/admin/settings/ads" class="admin-form"><label class="field"><span>HTML / Script quảng cáo</span><textarea name="ad_html" rows="20" spellcheck="false" placeholder="Dán nguyên code HTML / script của bên quảng cáo vào đây...">{adHtml}</textarea></label><p class="meta">Hỗ trợ mã dài (tối đa 2 MB UTF-8). Mã này được chạy trên toàn bộ website, trừ trang Admin.</p><button class="button" type="submit">Lưu quảng cáo</button></form>
