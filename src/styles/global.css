@@ -4141,3 +4141,7 @@ button.home-more-button:hover span{transform:translateY(2px);}
 .home-recent-filter.is-active{background:linear-gradient(115deg,#f8bbdc,#d8b4f5);color:#71376e;border-color:#c989d0;box-shadow:0 4px 13px rgba(177,91,180,.25),inset 0 1px 0 rgba(255,255,255,.5)}
 .home-recent-filter:active{transform:translateY(0) scale(.97)}
 @media(prefers-reduced-motion:reduce){.home-recent-filter{transition:none}.home-recent-filter:hover{transform:none}}
+
+/* v13.40: sticker admin heading */
+.section-title.cm-sticker-section-title{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:8px;}
+.cm-sticker-section-title .meta{margin:0;line-height:1.5;overflow-wrap:anywhere;}
